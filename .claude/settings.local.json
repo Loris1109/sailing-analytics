@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__claude_ai_Figma__get_design_context",
+      "mcp__e13614f4-81c7-49e7-bf28-26e2922240fb__get_metadata",
+      "mcp__e13614f4-81c7-49e7-bf28-26e2922240fb__get_screenshot",
+      "WebSearch",
+      "WebFetch(domain:pub.dev)",
+      "Read(//c/Users/Loren/Downloads/**)",
+      "Bash(powershell Expand-Archive -Path \"flutter-icons-f889ad5a.zip\" -DestinationPath \"flutter-icons-extracted\" -Force)"
+    ]
+  }
+}

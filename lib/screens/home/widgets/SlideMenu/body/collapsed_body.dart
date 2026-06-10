@@ -1,11 +1,18 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:sailing_analytics/controllers/recording_controller.dart';
+import 'package:sailing_analytics/data/entities/session.dart';
 import 'package:sailing_analytics/providers/repository_providers.dart';
+import 'package:sailing_analytics/providers/ui_providers.dart';
+import 'package:sailing_analytics/screens/home/shadow_icon_button.dart';
 import 'package:sailing_analytics/screens/home/widgets/SlideMenu/body/session_stats_bar.dart';
 import 'package:sailing_analytics/screens/home/widgets/SlideMenu/body/rec_button.dart';
 import 'package:sailing_analytics/screens/home/widgets/compassPanel/BoatMenu/boat_menu.dart';
 import 'package:sailing_analytics/screens/racing/racing_container_screen.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:top_snackbar_flutter/custom_snack_bar.dart';
 import 'package:top_snackbar_flutter/top_snack_bar.dart';
 
@@ -15,6 +22,7 @@ class CollapsedBody extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final controller = ref.read(recordingControllerProvider.notifier);
+    final selectedSession = ref.watch(selectedSessionProvider);
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -26,13 +34,66 @@ class CollapsedBody extends ConsumerWidget {
           // Session Stats
           const Expanded(child: SessionStatsBar()),
 
-          // Upload – Placeholder
-          IconButton(
-            icon: const Icon(Icons.upload_rounded),
-            onPressed: null, // noch nicht implementiert
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            spacing: 8,
+            children: [
+              // GPX-Export — nur aktiv wenn eine Session ausgewählt ist
+              ShadowIconButton(
+                icon: Icons.share_rounded,
+                onTap: selectedSession == null
+                    ? null
+                    : () => _exportGpx(context, ref, selectedSession),
+              ),
+
+              // Upload – Placeholder (Supabase-Sync)
+              ShadowIconButton(
+                icon: Icons.upload_rounded,
+                onTap: null, // noch nicht implementiert
+              ),
+            ],
           ),
         ],
       ),
+    );
+  }
+
+  Future<void> _exportGpx(
+    BuildContext context,
+    WidgetRef ref,
+    SessionEntity session,
+  ) async {
+    final points = await ref
+        .read(sessionRepositoryProvider)
+        .getPointsForSession(session.id);
+
+    if (points.isEmpty) {
+      if (context.mounted) {
+        showTopSnackBar(
+          Overlay.of(context),
+          const CustomSnackBar.info(
+            message: 'Diese Session hat keine GPS-Punkte.',
+          ),
+        );
+      }
+      return;
+    }
+
+    // Boot kann gelöscht worden sein — Export läuft dann ohne Bootsinfos
+    final boat = await ref
+        .read(boatRepositoryProvider)
+        .getBoatById(session.boatId);
+
+    final service = ref.read(gpxExportServiceProvider);
+    final gpx = service.buildGpx(session, boat, points);
+
+    final dir = await getTemporaryDirectory();
+    final file = File('${dir.path}/${service.fileNameFor(session)}');
+
+    await file.writeAsString(gpx);
+
+    await SharePlus.instance.share(
+      ShareParams(files: [XFile(file.path, mimeType: 'application/gpx+xml')]),
     );
   }
 

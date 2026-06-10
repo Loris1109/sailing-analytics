@@ -19,7 +19,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 4;
+  int get schemaVersion => 5;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -72,6 +72,11 @@ class AppDatabase extends _$AppDatabase {
     sessions,
   )..where((s) => s.id.equals(id))).write(SessionsCompanion(name: Value(name)));
 
+  Future<void> updateWindDirection(String id, double windDirection) =>
+      (update(sessions)..where((s) => s.id.equals(id))).write(
+        SessionsCompanion(windDirection: Value(windDirection)),
+      );
+
   // ── GPS point queries ──────────────────────────────────────────
 
   // Insert one point — called every GPS fix during recording
@@ -112,6 +117,10 @@ class AppDatabase extends _$AppDatabase {
 
   Future<Boat?> getActiveBoat() =>
       (select(boats)..where((b) => b.isActive.equals(true))).getSingleOrNull();
+
+  // Nullable on purpose — the boat may have been deleted since the session
+  Future<Boat?> getBoatById(String id) =>
+      (select(boats)..where((b) => b.id.equals(id))).getSingleOrNull();
 
   Future<void> setActiveBoat(String id) async {
     await (update(boats)).write(const BoatsCompanion(isActive: Value(false)));

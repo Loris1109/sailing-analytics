@@ -511,6 +511,17 @@ class $SessionsTable extends Sessions with TableInfo<$SessionsTable, Session> {
     type: DriftSqlType.double,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _windDirectionMeta = const VerificationMeta(
+    'windDirection',
+  );
+  @override
+  late final GeneratedColumn<double> windDirection = GeneratedColumn<double>(
+    'wind_direction',
+    aliasedName,
+    true,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -521,6 +532,7 @@ class $SessionsTable extends Sessions with TableInfo<$SessionsTable, Session> {
     isComplete,
     isSynced,
     distance,
+    windDirection,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -587,6 +599,15 @@ class $SessionsTable extends Sessions with TableInfo<$SessionsTable, Session> {
         distance.isAcceptableOrUnknown(data['distance']!, _distanceMeta),
       );
     }
+    if (data.containsKey('wind_direction')) {
+      context.handle(
+        _windDirectionMeta,
+        windDirection.isAcceptableOrUnknown(
+          data['wind_direction']!,
+          _windDirectionMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -628,6 +649,10 @@ class $SessionsTable extends Sessions with TableInfo<$SessionsTable, Session> {
         DriftSqlType.double,
         data['${effectivePrefix}distance'],
       ),
+      windDirection: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}wind_direction'],
+      ),
     );
   }
 
@@ -646,6 +671,7 @@ class Session extends DataClass implements Insertable<Session> {
   final bool isComplete;
   final bool isSynced;
   final double? distance;
+  final double? windDirection;
   const Session({
     required this.id,
     required this.name,
@@ -655,6 +681,7 @@ class Session extends DataClass implements Insertable<Session> {
     required this.isComplete,
     required this.isSynced,
     this.distance,
+    this.windDirection,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -670,6 +697,9 @@ class Session extends DataClass implements Insertable<Session> {
     map['is_synced'] = Variable<bool>(isSynced);
     if (!nullToAbsent || distance != null) {
       map['distance'] = Variable<double>(distance);
+    }
+    if (!nullToAbsent || windDirection != null) {
+      map['wind_direction'] = Variable<double>(windDirection);
     }
     return map;
   }
@@ -688,6 +718,9 @@ class Session extends DataClass implements Insertable<Session> {
       distance: distance == null && nullToAbsent
           ? const Value.absent()
           : Value(distance),
+      windDirection: windDirection == null && nullToAbsent
+          ? const Value.absent()
+          : Value(windDirection),
     );
   }
 
@@ -705,6 +738,7 @@ class Session extends DataClass implements Insertable<Session> {
       isComplete: serializer.fromJson<bool>(json['isComplete']),
       isSynced: serializer.fromJson<bool>(json['isSynced']),
       distance: serializer.fromJson<double?>(json['distance']),
+      windDirection: serializer.fromJson<double?>(json['windDirection']),
     );
   }
   @override
@@ -719,6 +753,7 @@ class Session extends DataClass implements Insertable<Session> {
       'isComplete': serializer.toJson<bool>(isComplete),
       'isSynced': serializer.toJson<bool>(isSynced),
       'distance': serializer.toJson<double?>(distance),
+      'windDirection': serializer.toJson<double?>(windDirection),
     };
   }
 
@@ -731,6 +766,7 @@ class Session extends DataClass implements Insertable<Session> {
     bool? isComplete,
     bool? isSynced,
     Value<double?> distance = const Value.absent(),
+    Value<double?> windDirection = const Value.absent(),
   }) => Session(
     id: id ?? this.id,
     name: name ?? this.name,
@@ -740,6 +776,9 @@ class Session extends DataClass implements Insertable<Session> {
     isComplete: isComplete ?? this.isComplete,
     isSynced: isSynced ?? this.isSynced,
     distance: distance.present ? distance.value : this.distance,
+    windDirection: windDirection.present
+        ? windDirection.value
+        : this.windDirection,
   );
   Session copyWithCompanion(SessionsCompanion data) {
     return Session(
@@ -753,6 +792,9 @@ class Session extends DataClass implements Insertable<Session> {
           : this.isComplete,
       isSynced: data.isSynced.present ? data.isSynced.value : this.isSynced,
       distance: data.distance.present ? data.distance.value : this.distance,
+      windDirection: data.windDirection.present
+          ? data.windDirection.value
+          : this.windDirection,
     );
   }
 
@@ -766,7 +808,8 @@ class Session extends DataClass implements Insertable<Session> {
           ..write('endTime: $endTime, ')
           ..write('isComplete: $isComplete, ')
           ..write('isSynced: $isSynced, ')
-          ..write('distance: $distance')
+          ..write('distance: $distance, ')
+          ..write('windDirection: $windDirection')
           ..write(')'))
         .toString();
   }
@@ -781,6 +824,7 @@ class Session extends DataClass implements Insertable<Session> {
     isComplete,
     isSynced,
     distance,
+    windDirection,
   );
   @override
   bool operator ==(Object other) =>
@@ -793,7 +837,8 @@ class Session extends DataClass implements Insertable<Session> {
           other.endTime == this.endTime &&
           other.isComplete == this.isComplete &&
           other.isSynced == this.isSynced &&
-          other.distance == this.distance);
+          other.distance == this.distance &&
+          other.windDirection == this.windDirection);
 }
 
 class SessionsCompanion extends UpdateCompanion<Session> {
@@ -805,6 +850,7 @@ class SessionsCompanion extends UpdateCompanion<Session> {
   final Value<bool> isComplete;
   final Value<bool> isSynced;
   final Value<double?> distance;
+  final Value<double?> windDirection;
   final Value<int> rowid;
   const SessionsCompanion({
     this.id = const Value.absent(),
@@ -815,6 +861,7 @@ class SessionsCompanion extends UpdateCompanion<Session> {
     this.isComplete = const Value.absent(),
     this.isSynced = const Value.absent(),
     this.distance = const Value.absent(),
+    this.windDirection = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   SessionsCompanion.insert({
@@ -826,6 +873,7 @@ class SessionsCompanion extends UpdateCompanion<Session> {
     this.isComplete = const Value.absent(),
     this.isSynced = const Value.absent(),
     this.distance = const Value.absent(),
+    this.windDirection = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        name = Value(name),
@@ -840,6 +888,7 @@ class SessionsCompanion extends UpdateCompanion<Session> {
     Expression<bool>? isComplete,
     Expression<bool>? isSynced,
     Expression<double>? distance,
+    Expression<double>? windDirection,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -851,6 +900,7 @@ class SessionsCompanion extends UpdateCompanion<Session> {
       if (isComplete != null) 'is_complete': isComplete,
       if (isSynced != null) 'is_synced': isSynced,
       if (distance != null) 'distance': distance,
+      if (windDirection != null) 'wind_direction': windDirection,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -864,6 +914,7 @@ class SessionsCompanion extends UpdateCompanion<Session> {
     Value<bool>? isComplete,
     Value<bool>? isSynced,
     Value<double?>? distance,
+    Value<double?>? windDirection,
     Value<int>? rowid,
   }) {
     return SessionsCompanion(
@@ -875,6 +926,7 @@ class SessionsCompanion extends UpdateCompanion<Session> {
       isComplete: isComplete ?? this.isComplete,
       isSynced: isSynced ?? this.isSynced,
       distance: distance ?? this.distance,
+      windDirection: windDirection ?? this.windDirection,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -906,6 +958,9 @@ class SessionsCompanion extends UpdateCompanion<Session> {
     if (distance.present) {
       map['distance'] = Variable<double>(distance.value);
     }
+    if (windDirection.present) {
+      map['wind_direction'] = Variable<double>(windDirection.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -923,6 +978,7 @@ class SessionsCompanion extends UpdateCompanion<Session> {
           ..write('isComplete: $isComplete, ')
           ..write('isSynced: $isSynced, ')
           ..write('distance: $distance, ')
+          ..write('windDirection: $windDirection, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -1913,6 +1969,7 @@ typedef $$SessionsTableCreateCompanionBuilder =
       Value<bool> isComplete,
       Value<bool> isSynced,
       Value<double?> distance,
+      Value<double?> windDirection,
       Value<int> rowid,
     });
 typedef $$SessionsTableUpdateCompanionBuilder =
@@ -1925,6 +1982,7 @@ typedef $$SessionsTableUpdateCompanionBuilder =
       Value<bool> isComplete,
       Value<bool> isSynced,
       Value<double?> distance,
+      Value<double?> windDirection,
       Value<int> rowid,
     });
 
@@ -2010,6 +2068,11 @@ class $$SessionsTableFilterComposer
 
   ColumnFilters<double> get distance => $composableBuilder(
     column: $table.distance,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get windDirection => $composableBuilder(
+    column: $table.windDirection,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -2106,6 +2169,11 @@ class $$SessionsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<double> get windDirection => $composableBuilder(
+    column: $table.windDirection,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   $$BoatsTableOrderingComposer get boatId {
     final $$BoatsTableOrderingComposer composer = $composerBuilder(
       composer: this,
@@ -2161,6 +2229,11 @@ class $$SessionsTableAnnotationComposer
 
   GeneratedColumn<double> get distance =>
       $composableBuilder(column: $table.distance, builder: (column) => column);
+
+  GeneratedColumn<double> get windDirection => $composableBuilder(
+    column: $table.windDirection,
+    builder: (column) => column,
+  );
 
   $$BoatsTableAnnotationComposer get boatId {
     final $$BoatsTableAnnotationComposer composer = $composerBuilder(
@@ -2247,6 +2320,7 @@ class $$SessionsTableTableManager
                 Value<bool> isComplete = const Value.absent(),
                 Value<bool> isSynced = const Value.absent(),
                 Value<double?> distance = const Value.absent(),
+                Value<double?> windDirection = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => SessionsCompanion(
                 id: id,
@@ -2257,6 +2331,7 @@ class $$SessionsTableTableManager
                 isComplete: isComplete,
                 isSynced: isSynced,
                 distance: distance,
+                windDirection: windDirection,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -2269,6 +2344,7 @@ class $$SessionsTableTableManager
                 Value<bool> isComplete = const Value.absent(),
                 Value<bool> isSynced = const Value.absent(),
                 Value<double?> distance = const Value.absent(),
+                Value<double?> windDirection = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => SessionsCompanion.insert(
                 id: id,
@@ -2279,6 +2355,7 @@ class $$SessionsTableTableManager
                 isComplete: isComplete,
                 isSynced: isSynced,
                 distance: distance,
+                windDirection: windDirection,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0

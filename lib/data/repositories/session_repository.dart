@@ -62,6 +62,9 @@ class SessionRepository {
   Future<void> updateSessionName(String id, String name) =>
       _db.updateSessionName(id, name);
 
+  Future<void> updateWindDirection(String id, double windDirection) =>
+      _db.updateWindDirection(id, windDirection);
+
   Stream<List<SessionWithBoat>> watchSessionsWithBoat() {
     return _db.watchSessionsWithBoat();
   }

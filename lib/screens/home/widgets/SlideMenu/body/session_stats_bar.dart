@@ -1,6 +1,7 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:sailing_analytics/data/services/performance_calc.dart';
 import 'package:sailing_analytics/providers/session_providers.dart';
 import 'package:sailing_analytics/providers/ui_providers.dart';
 
@@ -23,13 +24,28 @@ class SessionStatsBar extends ConsumerWidget {
         ? null
         : speeds.reduce((a, b) => a + b) / speeds.length;
 
+    // Ø VMG über die Am-Wind-Punkte (|TWA| < 90°) — über Wenden hinweg
+    // gemittelt wäre der Wert sonst wertlos. Ohne Windrichtung bleibt "—".
+    final wind = session?.windDirection;
+    double? avgVmgUpwind;
+    if (wind != null && points.isNotEmpty) {
+      final upwindVmgs = points
+          .map((p) => vmg(p.sog as double, twa(p.cog as double, wind)))
+          .where((v) => v > 0)
+          .toList();
+      if (upwindVmgs.isNotEmpty) {
+        avgVmgUpwind =
+            upwindVmgs.reduce((a, b) => a + b) / upwindVmgs.length;
+      }
+    }
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       children: [
         _StatItem(label: 'Max', value: maxSpeed, unit: 'kn'),
         _StatItem(label: 'AVG', value: avgSpeed, unit: 'kn'),
         _StatItem(label: 'Dist', value: session?.distance, unit: 'm'),
-        const _StatItem(label: 'VMG', value: null, unit: 'kn'),
+        _StatItem(label: 'VMG', value: avgVmgUpwind, unit: 'kn'),
       ],
     );
   }

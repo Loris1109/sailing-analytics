@@ -2,6 +2,7 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:sailing_analytics/providers/repository_providers.dart';
 import 'package:sailing_analytics/providers/ui_providers.dart';
 
 class Compass extends ConsumerWidget {
@@ -20,6 +21,21 @@ class Compass extends ConsumerWidget {
         double degrees = atan2(dx, -dy) * 180 / pi;
         if (degrees < 0) degrees += 360;
         ref.read(windDirectionProvider.notifier).set(degrees);
+      },
+      // Beim Loslassen in die ausgewählte Session speichern — nicht bei jedem
+      // Drag-Event, sonst gäbe es hunderte DB-Writes pro Drehung
+      onPanEnd: (_) {
+        final session = ref.read(selectedSessionProvider);
+        if (session == null) return;
+        final degrees = ref.read(windDirectionProvider);
+        ref
+            .read(sessionRepositoryProvider)
+            .updateWindDirection(session.id, degrees);
+        // Snapshot im Provider mitziehen, sonst rechnet die StatsBar
+        // weiter mit dem alten Wind
+        ref
+            .read(selectedSessionProvider.notifier)
+            .select(session.copyWith(windDirection: degrees));
       },
       child: SizedBox(
         width: 80,

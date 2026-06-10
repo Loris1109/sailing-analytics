@@ -26,6 +26,10 @@ class Sessions extends Table {
   BoolColumn get isSynced =>
       boolean().named('is_synced').withDefault(const Constant(false))();
   RealColumn get distance => real().named('distance').nullable()();
+  // Where the wind came FROM, set by the user post-session via CompassPanel.
+  // Nullable: "no wind entered" is a valid state, stats show "—" then.
+  RealColumn get windDirection =>
+      real().named('wind_direction').nullable()();
 
   // Tell drift which column is the primary key
   @override

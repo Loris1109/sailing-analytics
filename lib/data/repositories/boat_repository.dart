@@ -21,6 +21,10 @@ class BoatRepository {
     (boat) => boat != null ? BoatEntity.fromDb(boat) : null,
   );
 
+  Future<BoatEntity?> getBoatById(String id) => _db.getBoatById(id).then(
+    (boat) => boat != null ? BoatEntity.fromDb(boat) : null,
+  );
+
   Future<void> addBoat(BoatEntity boat) => _db.insertBoat(
     BoatsCompanion.insert(
       id: const Uuid().v4(),

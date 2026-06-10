@@ -2,6 +2,7 @@
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:sailing_analytics/data/services/gps_service.dart';
+import 'package:sailing_analytics/data/services/gpx_export_service.dart';
 import '../data/repositories/boat_repository.dart';
 import '../data/database/app_database.dart';
 import '../data/repositories/session_repository.dart';
@@ -25,6 +26,11 @@ final boatRepositoryProvider = Provider<BoatRepository>((ref) {
 //Services - one per hardware source
 final gpsServiceProvider = Provider<GpsService>((ref) {
   return GpsService();
+});
+
+// Pure string builder — no state, no hardware
+final gpxExportServiceProvider = Provider<GpxExportService>((ref) {
+  return GpxExportService();
 });
 
 //sensor service

@@ -7,6 +7,7 @@ class SessionEntity {
   final DateTime startTime;
   final DateTime? endTime;
   final double? distance;
+  final double? windDirection;
   final bool isComplete;
 
   const SessionEntity({
@@ -16,6 +17,7 @@ class SessionEntity {
     required this.startTime,
     this.endTime,
     this.distance,
+    this.windDirection,
     this.isComplete = false,
   });
 
@@ -26,6 +28,7 @@ class SessionEntity {
     startTime: row.startTime,
     endTime: row.endTime,
     distance: row.distance,
+    windDirection: row.windDirection,
     isComplete: row.isComplete,
   );
 
@@ -35,6 +38,7 @@ class SessionEntity {
     DateTime? startTime,
     DateTime? endTime,
     double? distance,
+    double? windDirection,
     bool? isComplete,
   }) {
     return SessionEntity(
@@ -44,6 +48,7 @@ class SessionEntity {
       startTime: startTime ?? this.startTime,
       endTime: endTime ?? this.endTime,
       distance: distance ?? this.distance,
+      windDirection: windDirection ?? this.windDirection,
       isComplete: isComplete ?? this.isComplete,
     );
   }

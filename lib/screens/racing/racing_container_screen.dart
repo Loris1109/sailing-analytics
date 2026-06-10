@@ -31,10 +31,7 @@ class _RacingContainerScreenState extends ConsumerState<RacingContainerScreen> {
   @override
   void initState() {
     super.initState();
-    SystemChrome.setPreferredOrientations([
-      DeviceOrientation.landscapeLeft,
-      DeviceOrientation.landscapeRight,
-    ]);
+    SystemChrome.setPreferredOrientations([DeviceOrientation.landscapeLeft]);
     WakelockPlus.enable();
     VolumeListener.addListener(_onVolumeKey);
   }

@@ -7,7 +7,8 @@
       "WebSearch",
       "WebFetch(domain:pub.dev)",
       "Read(//c/Users/Loren/Downloads/**)",
-      "Bash(powershell Expand-Archive -Path \"flutter-icons-f889ad5a.zip\" -DestinationPath \"flutter-icons-extracted\" -Force)"
+      "Bash(powershell Expand-Archive -Path \"flutter-icons-f889ad5a.zip\" -DestinationPath \"flutter-icons-extracted\" -Force)",
+      "PowerShell(flutter analyze)"
     ]
   }
 }

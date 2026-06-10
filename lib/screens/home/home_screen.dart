@@ -56,6 +56,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       _mapController.rotate(newDirection);
     });
 
+    // Session ausgewählt → gespeicherte Windrichtung in den Kompass laden
+    // (rotiert über den Listener oben auch gleich die Karte mit)
+    ref.listen(selectedSessionProvider, (_, session) {
+      if (session?.windDirection != null) {
+        ref.read(windDirectionProvider.notifier).set(session!.windDirection!);
+      }
+    });
+
     ref.listen(recordingControllerProvider, (prev, next) {
       if (prev != null && !prev.isRecording && next.isRecording) {
         ref.read(selectedSessionProvider.notifier).clear();

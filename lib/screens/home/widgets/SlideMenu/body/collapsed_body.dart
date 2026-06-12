@@ -10,6 +10,7 @@ import 'package:sailing_analytics/providers/ui_providers.dart';
 import 'package:sailing_analytics/screens/home/shadow_icon_button.dart';
 import 'package:sailing_analytics/screens/home/widgets/SlideMenu/body/session_stats_bar.dart';
 import 'package:sailing_analytics/screens/home/widgets/SlideMenu/body/rec_button.dart';
+import 'package:sailing_analytics/screens/home/widgets/SlideMenu/body/upload_dialog.dart';
 import 'package:sailing_analytics/screens/home/widgets/compassPanel/BoatMenu/boat_menu.dart';
 import 'package:sailing_analytics/screens/racing/racing_container_screen.dart';
 import 'package:share_plus/share_plus.dart';
@@ -46,10 +47,16 @@ class CollapsedBody extends ConsumerWidget {
                     : () => _exportGpx(context, ref, selectedSession),
               ),
 
-              // Upload – Placeholder (Supabase-Sync)
+              // In ein Training einreichen — nur aktiv wenn Session ausgewählt
               ShadowIconButton(
                 icon: Icons.upload_rounded,
-                onTap: null, // noch nicht implementiert
+                onTap: selectedSession == null
+                    ? null
+                    : () => showDialog(
+                        context: context,
+                        barrierDismissible: false,
+                        builder: (_) => UploadDialog(session: selectedSession),
+                      ),
               ),
             ],
           ),

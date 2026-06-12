@@ -3,6 +3,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:sailing_analytics/data/services/gps_service.dart';
 import 'package:sailing_analytics/data/services/gpx_export_service.dart';
+import 'package:sailing_analytics/data/services/upload_service.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../data/repositories/boat_repository.dart';
 import '../data/database/app_database.dart';
 import '../data/repositories/session_repository.dart';
@@ -31,6 +33,10 @@ final gpsServiceProvider = Provider<GpsService>((ref) {
 // Pure string builder — no state, no hardware
 final gpxExportServiceProvider = Provider<GpxExportService>((ref) {
   return GpxExportService();
+});
+
+final uploadServiceProvider = Provider<UploadService>((ref) {
+  return UploadService(Supabase.instance.client);
 });
 
 //sensor service

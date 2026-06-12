@@ -9,9 +9,7 @@ class BoatMenuBody extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final boats = ref
-        .watch(boatsProvider)
-        .when(data: (s) => s, error: (_, _) => [], loading: () => []);
+    final boats = ref.watch(boatsProvider).value ?? [];
 
     if (boats.isEmpty) {
       return Container(
@@ -100,13 +98,8 @@ class BoatMenuBody extends ConsumerWidget {
                   },
                   child: BoatListItem(
                     boat: boat,
-                    isSelected: ref
-                        .watch(activeBoatProvider)
-                        .when(
-                          data: (active) => active?.id == boat.id,
-                          error: (_, _) => false,
-                          loading: () => false,
-                        ),
+                    isSelected:
+                        ref.watch(activeBoatProvider).value?.id == boat.id,
                     onTap: () =>
                         ref.read(boatRepositoryProvider).setActiveBoat(boat.id),
                   ),

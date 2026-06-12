@@ -10,9 +10,7 @@ class ExpandedBody extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final sessionsWithBoats = ref
-        .watch(sessionsWithBoatProvider)
-        .when(data: (s) => s, error: (_, _) => [], loading: () => []);
+    final sessionsWithBoats = ref.watch(sessionsWithBoatProvider).value ?? [];
 
     if (sessionsWithBoats.isEmpty) {
       return const Center(

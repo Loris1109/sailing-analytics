@@ -38,3 +38,17 @@ class IsExpandedNotifier extends Notifier<bool> {
   void close() => state = false;
   void setExpanded(bool value) => state = value;
 }
+
+enum PathMode { speed, dynamicSpeed, heel }
+
+final pathModeProvider = NotifierProvider<PathModeNotifier, PathMode>(
+  PathModeNotifier.new,
+);
+
+class PathModeNotifier extends Notifier<PathMode> {
+  @override
+  PathMode build() => PathMode.speed;
+
+  void next() =>
+      state = PathMode.values[(state.index + 1) % PathMode.values.length];
+}

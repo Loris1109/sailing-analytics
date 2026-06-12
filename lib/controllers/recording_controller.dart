@@ -88,10 +88,7 @@ class RecordingController extends Notifier<RecordingState> {
     }
 
     final repo = ref.read(sessionRepositoryProvider);
-    final sessionId = await repo.createSession(
-      name: name,
-      boatId: boatId,
-    );
+    final sessionId = await repo.createSession(name: name, boatId: boatId);
 
     _gyroSub = SensorService.getGyroscopeStream().listen((e) {
       _heel = _calculateHeel(e);

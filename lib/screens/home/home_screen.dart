@@ -35,18 +35,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   Widget build(BuildContext context) {
     final selectedSession = ref.watch(selectedSessionProvider);
     final gpsPoints = selectedSession != null
-        ? ref
-              .watch(sessionPointsProvider(selectedSession.id))
-              .when(
-                data: (pts) => pts,
-                error: (_, _) => <GpsPointEntity>[],
-                loading: () => <GpsPointEntity>[],
-              )
+        ? ref.watch(sessionPointsProvider(selectedSession.id)).value ??
+              <GpsPointEntity>[]
         : <GpsPointEntity>[];
 
-    final curPosition = ref
-        .watch(currentPositionProvider)
-        .when(data: (pos) => pos, error: (_, _) => null, loading: () => null);
+    final curPosition = ref.watch(currentPositionProvider).value;
 
     final curLatLng = curPosition != null
         ? LatLng(curPosition.latitude, curPosition.longitude)
@@ -95,6 +88,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       });
     });
 
+    final boat = selectedSession != null
+        ? ref.watch(boatByIdProvider(selectedSession.boatId)).value
+        : null;
+
+    final maxKnots = boat?.maxSpeed ?? 10.0;
+
+    final pathMode = ref.watch(pathModeProvider);
+
     return Scaffold(
       body: Stack(
         children: [
@@ -103,6 +104,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             gpsPoints: gpsPoints,
             curPosition: curLatLng,
             onMapEvent: _onMapEvent,
+            pathMode: pathMode,
+            maxKnots: maxKnots,
           ), // SlideMenu am unteren Rand
           Positioned(bottom: 0, left: 0, right: 0, child: SlideMenu()),
 

@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:sailing_analytics/data/entities/boat.dart';
 import 'package:sailing_analytics/data/entities/gps_point.dart';
 import 'package:sailing_analytics/data/entities/session.dart';
 import 'package:sailing_analytics/data/entities/session_with_boat.dart';
@@ -32,4 +33,11 @@ final currentPositionProvider = FutureProvider<Position?>((ref) async {
 
 final sessionsWithBoatProvider = StreamProvider<List<SessionWithBoat>>((ref) {
   return ref.watch(sessionRepositoryProvider).watchSessionsWithBoat();
+});
+
+final boatByIdProvider = FutureProvider.family<BoatEntity?, String>((
+  ref,
+  boatId,
+) {
+  return ref.watch(boatRepositoryProvider).getBoatById(boatId);
 });

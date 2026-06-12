@@ -2,12 +2,14 @@ import 'package:flutter/material.dart';
 
 class ShadowIconButton extends StatefulWidget {
   final IconData icon;
+  final String? label;
   final double size;
   final VoidCallback? onTap;
 
   const ShadowIconButton({
     super.key,
     required this.icon,
+    this.label,
     this.onTap,
     this.size = 24,
   });
@@ -21,19 +23,29 @@ class _ShadowIconButtonState extends State<ShadowIconButton> {
 
   @override
   Widget build(BuildContext context) {
-    final enabled = widget.onTap != null;
     return GestureDetector(
-      onTapDown: (_) => enabled ? (_) => setState(() => _pressed = true) : null,
-      onTapUp: (_) => enabled ? (_) => setState(() => _pressed = false) : null,
+      onTapDown: (_) => setState(() => _pressed = true),
+      onTapUp: (_) => setState(() => _pressed = false),
       onTapCancel: () => setState(() => _pressed = false),
       onTap: widget.onTap,
-      child: Icon(
-        widget.icon,
-        size: widget.size,
-        color: enabled ? null : Theme.of(context).disabledColor,
-        shadows: enabled && !_pressed
-            ? const [Shadow(color: Colors.black26, blurRadius: 15.0)]
-            : [],
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            widget.icon,
+            size: widget.size,
+            shadows: _pressed
+                ? []
+                : const [Shadow(color: Colors.black38, blurRadius: 15.0)],
+          ),
+          if (widget.label != null) ...[
+            Text(
+              widget.label!,
+              style: const TextStyle(fontSize: 12, color: Colors.grey),
+            ),
+            const SizedBox(height: 8),
+          ],
+        ],
       ),
     );
   }

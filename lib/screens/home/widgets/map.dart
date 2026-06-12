@@ -1,19 +1,26 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:sailing_analytics/data/entities/gps_point.dart';
+import 'package:sailing_analytics/providers/ui_providers.dart';
 
 class MapWidget extends StatefulWidget {
   final List<GpsPointEntity> gpsPoints;
   final LatLng? curPosition;
   final MapController mapController;
   final Function(MapEvent)? onMapEvent;
+  final PathMode pathMode;
+  final double maxKnots;
 
   const MapWidget({
     super.key,
     required this.gpsPoints,
     required this.curPosition,
     required this.mapController,
+    required this.pathMode,
+    required this.maxKnots,
     this.onMapEvent,
   });
 
@@ -22,6 +29,8 @@ class MapWidget extends StatefulWidget {
 }
 
 class _MapWidgetState extends State<MapWidget> {
+  static const _heelThreshold = 5.0;
+
   @override
   void didUpdateWidget(MapWidget old) {
     super.didUpdateWidget(old);
@@ -82,7 +91,25 @@ class _MapWidgetState extends State<MapWidget> {
                     ),
                   ],
                   strokeWidth: 4.0,
-                  color: _speedToColor(widget.gpsPoints[i].sog, 0.0, 10),
+                  color: switch (widget.pathMode) {
+                    PathMode.speed => _speedToColor(
+                      widget.gpsPoints[i].sog,
+                      0.0,
+                      //max Speed from session
+                      widget.maxKnots,
+                    ),
+                    PathMode.dynamicSpeed => _speedToColor(
+                      widget.gpsPoints[i].sog,
+                      widget.gpsPoints.map((p) => p.sog).reduce(min),
+                      //max Speed from session
+                      widget.gpsPoints.map((p) => p.sog).reduce(max),
+                    ),
+                    PathMode.heel => _heelToColor(
+                      widget.gpsPoints[i].heel,
+                      widget.gpsPoints.map((p) => p.heel).reduce(min),
+                      widget.gpsPoints.map((p) => p.heel).reduce(max),
+                    ),
+                  },
                 ),
             ],
           ),
@@ -94,5 +121,14 @@ class _MapWidgetState extends State<MapWidget> {
     final t = ((knots - minKnots) / (maxKnots - minKnots)).clamp(0.0, 1.0);
     final hue = 240.0 * (1.0 - t);
     return HSVColor.fromAHSV(1.0, hue, 1.0, 1.0).toColor();
+  }
+
+  Color _heelToColor(double heel, double minHeel, double maxHeel) {
+    if (heel.abs() < minHeel) return Colors.blue;
+
+    final t = ((heel.abs() - minHeel) / (maxHeel - minHeel)).clamp(0.0, 1.0);
+
+    final base = heel > 0 ? Colors.green : Colors.red;
+    return Color.lerp(base.shade200, base.shade900, t)!;
   }
 }

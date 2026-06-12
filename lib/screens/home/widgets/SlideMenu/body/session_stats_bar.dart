@@ -1,6 +1,7 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:sailing_analytics/data/entities/gps_point.dart';
 import 'package:sailing_analytics/data/services/performance_calc.dart';
 import 'package:sailing_analytics/providers/session_providers.dart';
 import 'package:sailing_analytics/providers/ui_providers.dart';
@@ -13,12 +14,11 @@ class SessionStatsBar extends ConsumerWidget {
     final session = ref.watch(selectedSessionProvider);
 
     final points = session != null
-        ? ref
-              .watch(sessionPointsProvider(session.id))
-              .when(data: (pts) => pts, error: (_, _) => [], loading: () => [])
-        : [];
+        ? ref.watch(sessionPointsProvider(session.id)).value ??
+              <GpsPointEntity>[]
+        : <GpsPointEntity>[];
 
-    final speeds = points.map((p) => p.sog as double).toList();
+    final speeds = points.map((p) => p.sog).toList();
     final maxSpeed = speeds.isEmpty ? null : speeds.reduce(max);
     final avgSpeed = speeds.isEmpty
         ? null
@@ -30,7 +30,7 @@ class SessionStatsBar extends ConsumerWidget {
     double? avgVmgUpwind;
     if (wind != null && points.isNotEmpty) {
       final upwindVmgs = points
-          .map((p) => vmg(p.sog as double, twa(p.cog as double, wind)))
+          .map((p) => vmg(p.sog, twa(p.cog, wind)))
           .where((v) => v > 0)
           .toList();
       if (upwindVmgs.isNotEmpty) {

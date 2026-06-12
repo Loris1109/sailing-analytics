@@ -7,13 +7,7 @@ class ExpandedHeader extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final count = ref
-        .watch(sessionsStreamProvider)
-        .when(
-          data: (sessions) => sessions.length,
-          error: (_, _) => 0,
-          loading: () => 0,
-        );
+    final count = ref.watch(sessionsStreamProvider).value?.length ?? 0;
 
     return Row(
       children: [

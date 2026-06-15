@@ -1,14 +1,14 @@
 import 'dart:async';
 import 'dart:developer' as dev;
-import 'dart:math';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart' show Position;
 import 'package:latlong2/latlong.dart';
-import 'package:sensors_plus/sensors_plus.dart';
+import 'package:sailing_analytics/providers/sensor_providers.dart';
 import '../data/entities/gps_point.dart';
 import '../data/repositories/session_repository.dart';
 import '../data/services/gps_service.dart';
+import '../data/services/sensor_math.dart';
 import '../data/services/sensor_service.dart';
 import '../providers/repository_providers.dart';
 
@@ -67,8 +67,8 @@ final recordingControllerProvider =
 
 class RecordingController extends Notifier<RecordingState> {
   StreamSubscription<Position>? _gpsSub;
-  StreamSubscription<GyroscopeEvent>? _gyroSub;
-  StreamSubscription<MagnetometerEvent>? _magSub;
+  StreamSubscription? _accelSub;
+  StreamSubscription? _magSub;
 
   double _heel = 0;
   double _pitch = 0;
@@ -81,6 +81,9 @@ class RecordingController extends Notifier<RecordingState> {
     required String name,
     required String boatId,
   }) async {
+    // Doppelstart würde die alten Subscriptions unkündbar überschreiben
+    if (state.isRecording) return;
+
     final hasPermission = await GpsService.requestPermission();
     if (!hasPermission) {
       state = state.copyWith(permissionDenied: true);
@@ -90,23 +93,31 @@ class RecordingController extends Notifier<RecordingState> {
     final repo = ref.read(sessionRepositoryProvider);
     final sessionId = await repo.createSession(name: name, boatId: boatId);
 
-    _gyroSub = SensorService.getGyroscopeStream().listen((e) {
-      _heel = _calculateHeel(e);
-      _pitch = _calculatePitch(e);
-    });
-
-    _magSub = SensorService.getMagnetometerStream().listen((e) {
-      _magHeading = _calculateHeading(e);
-    });
-
     _gpsSub = GpsService.getStream().listen(
       (pos) => _onPosition(pos, sessionId, repo),
     );
+
+    // Sensoren kontinuierlich mithören — _onPosition sampelt beim Speichern
+    // den jeweils letzten Wert. Kalibrierung ändert sich nur im Dialog,
+    // einmal lesen beim Start reicht.
+    final calibration = ref.read(calibrationOffsetProvider);
+    _accelSub = SensorService.getAccelerometerStream().listen((e) {
+      _heel = rawHeel(e) - calibration.heel;
+      _pitch = rawPitch(e) - calibration.pitch;
+    });
+    _magSub = SensorService.getMagnetometerStream().listen((e) {
+      _magHeading = headingFromMag(e);
+    });
 
     state = RecordingState(isRecording: true, activeSessionId: sessionId);
   }
 
   DateTime? _lastPositionTime;
+
+  // Referenz für den Sprung-Filter: der letzte AKZEPTIERTE Punkt —
+  // nicht der letzte empfangene, sonst validieren Ausreißer einander
+  LatLng? _lastAcceptedPos;
+  DateTime? _lastAcceptedTime;
 
   Future<void> _onPosition(
     Position pos,
@@ -118,14 +129,55 @@ class RecordingController extends Notifier<RecordingState> {
         ? now.difference(_lastPositionTime!).inMilliseconds
         : null;
     dev.log(
-      'GPS point received — gap: ${gap != null ? '${gap}ms' : 'first point'}',
+      'GPS point received — gap: ${gap != null ? '${gap}ms' : 'first point'}, '
+      'accuracy: ${pos.accuracy.toStringAsFixed(1)}m',
     );
     _lastPositionTime = now;
+
+    // ── GPS-Korrekturen ────────────────────────────────────────────
+    // Alle Filter, die Roh-Fixe verwerfen oder korrigieren, leben hier.
+    // Verworfene Punkte werden geloggt, damit die Schwellen mit echten
+    // Wasserdaten kalibriert werden können.
+
+    // Stufe 1: ungenaue Fixe verwerfen
+    if (pos.accuracy > 20) {
+      dev.log(
+        'Point rejected — accuracy ${pos.accuracy.toStringAsFixed(1)}m > 20m',
+      );
+      return;
+    }
+
+    // Stufe 2: physikalisch unmögliche Sprünge verwerfen
+    final newPos = LatLng(pos.latitude, pos.longitude);
+    if (_lastAcceptedPos != null && _lastAcceptedTime != null) {
+      final meters = const Distance()(_lastAcceptedPos!, newPos);
+      final seconds = now.difference(_lastAcceptedTime!).inMilliseconds / 1000;
+      if (seconds > 0) {
+        final impliedKnots = (meters / seconds) * 1.94384;
+        if (impliedKnots > 40) {
+          dev.log(
+            'Point rejected — implied speed ${impliedKnots.toStringAsFixed(1)}kn '
+            '(${meters.toStringAsFixed(1)}m in ${seconds.toStringAsFixed(1)}s)',
+          );
+          return;
+        }
+      }
+    }
+    _lastAcceptedPos = newPos;
+    _lastAcceptedTime = now;
+
+    // Stufe 3 (geplant): Stillstands-Filter — Punkt verwerfen, wenn
+    // pos.speed < 0.3 m/s und meters < pos.accuracy. Erst nach Auswertung
+    // der Wassertest-Logs entscheiden (Trade-off: Lücken bei Flaute/Kenterung).
+
+    // Stufe 4 (geplant): Glättung (gleitender Mittelwert / Kalman),
+    // falls Stufe 1+2 auf dem Wasser nicht reichen.
+    // ───────────────────────────────────────────────────────────────
 
     await repo.savePoint(
       GpsPointEntity(
         sessionId: sessionId,
-        timestamp: DateTime.now(),
+        timestamp: now,
         lat: pos.latitude,
         lon: pos.longitude,
         sog: pos.speed * 1.94384, // m/s → knots
@@ -147,11 +199,17 @@ class RecordingController extends Notifier<RecordingState> {
 
   Future<void> stopRecording() async {
     await _gpsSub?.cancel();
-    await _gyroSub?.cancel();
+    await _accelSub?.cancel();
     await _magSub?.cancel();
     _gpsSub = null;
-    _gyroSub = null;
+    _accelSub = null;
     _magSub = null;
+
+    // Filter-Referenzen zurücksetzen — die nächste Session darf nicht
+    // gegen den letzten Punkt dieser Session vergleichen
+    _lastAcceptedPos = null;
+    _lastAcceptedTime = null;
+    _lastPositionTime = null;
 
     final finishedId = state.activeSessionId;
     if (finishedId != null) {
@@ -160,15 +218,5 @@ class RecordingController extends Notifier<RecordingState> {
     }
 
     state = RecordingState(completedSessionId: finishedId);
-  }
-
-  //Heel on Phone in Landscape
-  double _calculateHeel(GyroscopeEvent e) => e.z;
-  //Pitch on Phone in Landscape
-  double _calculatePitch(GyroscopeEvent e) => e.y;
-
-  double _calculateHeading(MagnetometerEvent e) {
-    double h = atan2(e.y, e.x) * (180 / pi);
-    return h < 0 ? h + 360 : h;
   }
 }

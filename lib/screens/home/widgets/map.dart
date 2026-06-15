@@ -29,8 +29,6 @@ class MapWidget extends StatefulWidget {
 }
 
 class _MapWidgetState extends State<MapWidget> {
-  static const _heelThreshold = 5.0;
-
   @override
   void didUpdateWidget(MapWidget old) {
     super.didUpdateWidget(old);
@@ -63,6 +61,9 @@ class _MapWidgetState extends State<MapWidget> {
 
   @override
   Widget build(BuildContext context) {
+    final speeds = widget.gpsPoints.map((p) => p.sog);
+    final minSpeed = speeds.isEmpty ? 0.0 : speeds.reduce(min);
+    final maxSpeed = speeds.isEmpty ? 1.0 : speeds.reduce(max);
     return FlutterMap(
       mapController: widget.mapController,
       options: MapOptions(
@@ -100,15 +101,11 @@ class _MapWidgetState extends State<MapWidget> {
                     ),
                     PathMode.dynamicSpeed => _speedToColor(
                       widget.gpsPoints[i].sog,
-                      widget.gpsPoints.map((p) => p.sog).reduce(min),
+                      minSpeed,
                       //max Speed from session
-                      widget.gpsPoints.map((p) => p.sog).reduce(max),
+                      maxSpeed,
                     ),
-                    PathMode.heel => _heelToColor(
-                      widget.gpsPoints[i].heel,
-                      widget.gpsPoints.map((p) => p.heel).reduce(min),
-                      widget.gpsPoints.map((p) => p.heel).reduce(max),
-                    ),
+                    PathMode.heel => _heelToColor(widget.gpsPoints[i].heel, 45),
                   },
                 ),
             ],
@@ -123,12 +120,14 @@ class _MapWidgetState extends State<MapWidget> {
     return HSVColor.fromAHSV(1.0, hue, 1.0, 1.0).toColor();
   }
 
-  Color _heelToColor(double heel, double minHeel, double maxHeel) {
-    if (heel.abs() < minHeel) return Colors.blue;
+  Color _heelToColor(double heel, double maxHeel) {
+    // -1 (volle Backbordlage) … 0 (aufrecht) … +1 (volle Steuerbordlage)
+    final t = (heel / maxHeel).clamp(-1.0, 1.0);
 
-    final t = ((heel.abs() - minHeel) / (maxHeel - minHeel)).clamp(0.0, 1.0);
+    const neutral = Color(0xFFCE93D8); // helles Lila
 
-    final base = heel > 0 ? Colors.green : Colors.red;
-    return Color.lerp(base.shade200, base.shade900, t)!;
+    return t >= 0
+        ? Color.lerp(neutral, Colors.green.shade900, t)!
+        : Color.lerp(neutral, Colors.red.shade900, -t)!;
   }
 }

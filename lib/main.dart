@@ -19,8 +19,8 @@ Future<void> main() async {
       debugPrint('Schon angemeldet als: ${auth.currentUser?.id}');
     }
   } catch (e) {
-    debugPrint('Anon sign-in failed: $e');
     // Offline beim Start ist ok — Anmeldung wird beim Upload nachgeholt
+    debugPrint('Anon sign-in failed: $e');
   }
 
   runApp(const ProviderScope(child: MyApp()));

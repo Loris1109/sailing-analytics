@@ -8,6 +8,7 @@ import 'package:sailing_analytics/data/entities/session.dart';
 import 'package:sailing_analytics/providers/repository_providers.dart';
 import 'package:sailing_analytics/providers/ui_providers.dart';
 import 'package:sailing_analytics/screens/home/shadow_icon_button.dart';
+import 'package:sailing_analytics/screens/home/widgets/SlideMenu/body/callibration_dialog.dart';
 import 'package:sailing_analytics/screens/home/widgets/SlideMenu/body/session_stats_bar.dart';
 import 'package:sailing_analytics/screens/home/widgets/SlideMenu/body/rec_button.dart';
 import 'package:sailing_analytics/screens/home/widgets/SlideMenu/body/upload_dialog.dart';
@@ -130,6 +131,15 @@ class CollapsedBody extends ConsumerWidget {
       return;
     }
     final now = DateTime.now();
+    if (!context.mounted) return;
+    // Kalibrierung
+    final calibrated = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const CalibrationDialog(),
+    );
+    if (calibrated != true) return; // User hat abgebrochen
+
     await controller.startRecording(
       name: 'Training ${now.day}.${now.month}.${now.year % 100}',
       boatId: activeBoot.id,

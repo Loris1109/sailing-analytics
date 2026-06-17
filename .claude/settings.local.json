@@ -8,7 +8,12 @@
       "WebFetch(domain:pub.dev)",
       "Read(//c/Users/Loren/Downloads/**)",
       "Bash(powershell Expand-Archive -Path \"flutter-icons-f889ad5a.zip\" -DestinationPath \"flutter-icons-extracted\" -Force)",
-      "PowerShell(flutter analyze)"
+      "PowerShell(flutter analyze)",
+      "mcp__visualize__read_me",
+      "mcp__visualize__show_widget",
+      "mcp__e13614f4-81c7-49e7-bf28-26e2922240fb__get_design_context",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)"
     ]
   }
 }

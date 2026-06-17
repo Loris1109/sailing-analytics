@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:sailing_analytics/data/services/sensor_math.dart';
 import 'package:sailing_analytics/data/services/sensor_service.dart';
@@ -21,8 +23,7 @@ class CalibrationNotifier extends Notifier<CalibrationOffset> {
 
   void calibrate(List<AccelerometerEvent> events) {
     if (events.isEmpty) return;
-    final avgHeel =
-        events.map(rawHeel).reduce((a, b) => a + b) / events.length;
+    final avgHeel = events.map(rawHeel).reduce((a, b) => a + b) / events.length;
     final avgPitch =
         events.map(rawPitch).reduce((a, b) => a + b) / events.length;
     state = CalibrationOffset(heel: avgHeel, pitch: avgPitch);
@@ -54,5 +55,27 @@ final pitchProvider = StreamProvider.autoDispose<double>((ref) {
 });
 
 final headingProvider = StreamProvider.autoDispose<double>((ref) {
-  return SensorService.getMagnetometerStream().map(headingFromMag);
+  final controller = StreamController<double>();
+  AccelerometerEvent? lastAccel;
+
+  final accelSub = SensorService.getAccelerometerStream().listen((a) {
+    lastAccel = a;
+  });
+
+  final magSub = SensorService.getMagnetometerStream().listen((m) {
+    if (lastAccel != null) {
+      controller.add(headingFromMag(m, lastAccel!));
+    }
+  });
+
+  ref.onDispose(() {
+    accelSub.cancel();
+    magSub.cancel();
+    controller.close();
+  });
+
+  return controller.stream;
+});
+final rawMagProvider = StreamProvider.autoDispose<MagnetometerEvent>((ref) {
+  return SensorService.getMagnetometerStream();
 });

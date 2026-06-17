@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:sailing_analytics/controllers/recording_controller.dart';
+import 'package:sailing_analytics/providers/sensor_providers.dart';
 import 'widgets/gps_status.dart';
 import 'widgets/heading_display.dart';
 
@@ -14,6 +15,19 @@ class HeadingScreen extends ConsumerWidget {
       backgroundColor: Colors.black,
       body: Stack(
         children: [
+          Consumer(
+            builder: (context, ref, _) {
+              final mag = ref.watch(rawMagProvider);
+              return mag.when(
+                data: (m) => Text(
+                  'mx:${m.x.toStringAsFixed(1)}  my:${m.y.toStringAsFixed(1)}  mz:${m.z.toStringAsFixed(1)}',
+                  style: const TextStyle(color: Colors.yellow, fontSize: 14),
+                ),
+                loading: () => const SizedBox(),
+                error: (_, __) => const SizedBox(),
+              );
+            },
+          ),
           Align(
             alignment: Alignment.topCenter,
             child: GpsStatus(

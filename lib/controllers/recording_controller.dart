@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart' show Position;
 import 'package:latlong2/latlong.dart';
 import 'package:sailing_analytics/providers/sensor_providers.dart';
+import 'package:sensors_plus/sensors_plus.dart';
 import '../data/entities/gps_point.dart';
 import '../data/repositories/session_repository.dart';
 import '../data/services/gps_service.dart';
@@ -101,12 +102,14 @@ class RecordingController extends Notifier<RecordingState> {
     // den jeweils letzten Wert. Kalibrierung ändert sich nur im Dialog,
     // einmal lesen beim Start reicht.
     final calibration = ref.read(calibrationOffsetProvider);
+    AccelerometerEvent? _lastAccel;
     _accelSub = SensorService.getAccelerometerStream().listen((e) {
       _heel = rawHeel(e) - calibration.heel;
       _pitch = rawPitch(e) - calibration.pitch;
+      _lastAccel = e;
     });
     _magSub = SensorService.getMagnetometerStream().listen((e) {
-      _magHeading = headingFromMag(e);
+      _magHeading = headingFromMag(e, _lastAccel!);
     });
 
     state = RecordingState(isRecording: true, activeSessionId: sessionId);

@@ -41,7 +41,8 @@ class GpsService {
         ? AndroidSettings(
             accuracy: LocationAccuracy.best,
             distanceFilter: 0,
-            intervalDuration: const Duration(seconds: 1),
+            intervalDuration: const Duration(milliseconds: 250),
+            forceLocationManager: true,
           )
         : AppleSettings(
             accuracy: LocationAccuracy.bestForNavigation,

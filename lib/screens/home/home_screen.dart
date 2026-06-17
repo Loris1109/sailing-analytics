@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -9,6 +11,7 @@ import 'package:sailing_analytics/screens/home/widgets/SlideMenu/slide_menu.dart
 import 'package:sailing_analytics/screens/home/widgets/compassPanel/compass_panel.dart';
 import 'package:sailing_analytics/screens/home/widgets/map.dart';
 import 'package:sailing_analytics/providers/session_providers.dart';
+import 'package:sailing_analytics/screens/home/widgets/status_bar.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -96,6 +99,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
     final pathMode = ref.watch(pathModeProvider);
 
+    final speeds = gpsPoints.map((p) => p.sog);
+    final minKnotsActual = speeds.isEmpty ? 0.0 : speeds.reduce(min);
+    final maxKnotsActual = speeds.isEmpty ? maxKnots : speeds.reduce(max);
+
     return Scaffold(
       body: Stack(
         children: [
@@ -111,7 +118,20 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
           SafeArea(
             child: Stack(
-              children: [Positioned(top: 16, right: 16, child: CompassPanel())],
+              children: [
+                Positioned(top: 16, right: 16, child: CompassPanel()),
+                if (gpsPoints.isNotEmpty)
+                  Positioned(
+                    top: 16,
+                    left: 16,
+                    child: StatusBar(
+                      pathMode: pathMode,
+                      maxKnots: maxKnots,
+                      minKnotsActual: minKnotsActual,
+                      maxKnotsActual: maxKnotsActual,
+                    ),
+                  ),
+              ],
             ),
           ), // for notch/safe area on top
         ],

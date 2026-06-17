@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:sensors_plus/sensors_plus.dart';
@@ -48,35 +49,41 @@ class _CalibrationDialogState extends ConsumerState<CalibrationDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
-      title: const Text('Kalibrierung'),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Text('Bringe dein Handy ans Boot und lege es gerade.'),
-          const SizedBox(height: 16),
-          if (_measuring) ...[
-            Text(
-              '$_countdown',
-              style: const TextStyle(fontSize: 48, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 8),
-            const Text('Messung läuft...'),
-          ],
-        ],
-      ),
-      actions: _measuring
-          ? []
-          : [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(false),
-                child: const Text('Abbrechen'),
+    return RotatedBox(
+      quarterTurns: 1,
+      child: AlertDialog(
+        title: const Text('Kalibrierung'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text('Bringe dein Handy ans Boot und lege es gerade.'),
+            const SizedBox(height: 16),
+            if (_measuring) ...[
+              Text(
+                '$_countdown',
+                style: const TextStyle(
+                  fontSize: 48,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
-              ElevatedButton(
-                onPressed: _startMeasurement,
-                child: const Text('Kalibrieren'),
-              ),
+              const SizedBox(height: 8),
+              const Text('Messung läuft...'),
             ],
+          ],
+        ),
+        actions: _measuring
+            ? []
+            : [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(false),
+                  child: const Text('Abbrechen'),
+                ),
+                ElevatedButton(
+                  onPressed: _startMeasurement,
+                  child: const Text('Kalibrieren'),
+                ),
+              ],
+      ),
     );
   }
 }

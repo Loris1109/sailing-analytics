@@ -5,6 +5,7 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:sailing_analytics/data/entities/gps_point.dart';
 import 'package:sailing_analytics/providers/ui_providers.dart';
+import 'package:sailing_analytics/util/color_utils.dart';
 
 class MapWidget extends StatefulWidget {
   final List<GpsPointEntity> gpsPoints;
@@ -93,41 +94,24 @@ class _MapWidgetState extends State<MapWidget> {
                   ],
                   strokeWidth: 4.0,
                   color: switch (widget.pathMode) {
-                    PathMode.speed => _speedToColor(
+                    PathMode.speed => speedToColor(
                       widget.gpsPoints[i].sog,
                       0.0,
                       //max Speed from session
                       widget.maxKnots,
                     ),
-                    PathMode.dynamicSpeed => _speedToColor(
+                    PathMode.dynamicSpeed => speedToColor(
                       widget.gpsPoints[i].sog,
                       minSpeed,
                       //max Speed from session
                       maxSpeed,
                     ),
-                    PathMode.heel => _heelToColor(widget.gpsPoints[i].heel, 45),
+                    PathMode.heel => heelToColor(widget.gpsPoints[i].heel, 45),
                   },
                 ),
             ],
           ),
       ],
     );
-  }
-
-  Color _speedToColor(double knots, double minKnots, double maxKnots) {
-    final t = ((knots - minKnots) / (maxKnots - minKnots)).clamp(0.0, 1.0);
-    final hue = 240.0 * (1.0 - t);
-    return HSVColor.fromAHSV(1.0, hue, 1.0, 1.0).toColor();
-  }
-
-  Color _heelToColor(double heel, double maxHeel) {
-    // -1 (volle Backbordlage) … 0 (aufrecht) … +1 (volle Steuerbordlage)
-    final t = (heel / maxHeel).clamp(-1.0, 1.0);
-
-    const neutral = Color(0xFFCE93D8); // helles Lila
-
-    return t >= 0
-        ? Color.lerp(neutral, Colors.green.shade900, t)!
-        : Color.lerp(neutral, Colors.red.shade900, -t)!;
   }
 }

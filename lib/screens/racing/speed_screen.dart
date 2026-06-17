@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:sailing_analytics/controllers/recording_controller.dart';
+import 'package:sailing_analytics/screens/racing/widgets/heel_indicator.dart';
 import 'widgets/gps_status.dart';
 import 'widgets/speed_display.dart';
 
@@ -21,6 +22,7 @@ class SpeedScreen extends ConsumerWidget {
               lastAccuracy: state.lastAccuracy,
             ),
           ),
+          Positioned(bottom: 16, left: 16, child: HeelIndicator()),
           Align(
             alignment: Alignment.bottomCenter,
             child: FittedBox(

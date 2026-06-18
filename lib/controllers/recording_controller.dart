@@ -5,7 +5,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart' show Position;
 import 'package:latlong2/latlong.dart';
 import 'package:sailing_analytics/providers/sensor_providers.dart';
-import 'package:sensors_plus/sensors_plus.dart';
 import '../data/entities/gps_point.dart';
 import '../data/repositories/session_repository.dart';
 import '../data/services/gps_service.dart';
@@ -69,7 +68,7 @@ final recordingControllerProvider =
 class RecordingController extends Notifier<RecordingState> {
   StreamSubscription<Position>? _gpsSub;
   StreamSubscription? _accelSub;
-  StreamSubscription? _magSub;
+  StreamSubscription? _orientationSub;
 
   double _heel = 0;
   double _pitch = 0;
@@ -102,14 +101,13 @@ class RecordingController extends Notifier<RecordingState> {
     // den jeweils letzten Wert. Kalibrierung ändert sich nur im Dialog,
     // einmal lesen beim Start reicht.
     final calibration = ref.read(calibrationOffsetProvider);
-    AccelerometerEvent? _lastAccel;
     _accelSub = SensorService.getAccelerometerStream().listen((e) {
       _heel = rawHeel(e) - calibration.heel;
       _pitch = rawPitch(e) - calibration.pitch;
-      _lastAccel = e;
     });
-    _magSub = SensorService.getMagnetometerStream().listen((e) {
-      _magHeading = headingFromMag(e, _lastAccel!);
+    _orientationSub = SensorService.getOrientationStream().listen((e) {
+      final az = e.eulerAngles.azimuth;
+      _magHeading = az < 0 ? az * (180 / pi) + 360 : az * (180 / pi);
     });
 
     state = RecordingState(isRecording: true, activeSessionId: sessionId);
@@ -203,10 +201,10 @@ class RecordingController extends Notifier<RecordingState> {
   Future<void> stopRecording() async {
     await _gpsSub?.cancel();
     await _accelSub?.cancel();
-    await _magSub?.cancel();
+    await _orientationSub?.cancel();
     _gpsSub = null;
     _accelSub = null;
-    _magSub = null;
+    _orientationSub = null;
 
     // Filter-Referenzen zurücksetzen — die nächste Session darf nicht
     // gegen den letzten Punkt dieser Session vergleichen

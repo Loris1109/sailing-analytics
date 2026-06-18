@@ -1,14 +1,10 @@
-import 'dart:async';
+import 'dart:math';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_rotation_sensor/flutter_rotation_sensor.dart';
 import 'package:sailing_analytics/data/services/sensor_math.dart';
 import 'package:sailing_analytics/data/services/sensor_service.dart';
 import 'package:sensors_plus/sensors_plus.dart';
-
-// --- Kalibrierung ---
-// Gespeichert wird der WINKEL, den das ruhig liegende Handy gemeldet hat
-// ("so sieht gerade aus") — nicht der rohe Beschleunigungsvektor.
-// Heel/Pitch sind dann einfach: Rohwinkel minus Offset.
 
 class CalibrationOffset {
   final double heel;
@@ -24,8 +20,7 @@ class CalibrationNotifier extends Notifier<CalibrationOffset> {
   void calibrate(List<AccelerometerEvent> events) {
     if (events.isEmpty) return;
     final avgHeel = events.map(rawHeel).reduce((a, b) => a + b) / events.length;
-    final avgPitch =
-        events.map(rawPitch).reduce((a, b) => a + b) / events.length;
+    final avgPitch = events.map(rawPitch).reduce((a, b) => a + b) / events.length;
     state = CalibrationOffset(heel: avgHeel, pitch: avgPitch);
   }
 }
@@ -35,11 +30,17 @@ final calibrationOffsetProvider =
       CalibrationNotifier.new,
     );
 
-// --- Live-Sensorwerte für die UI ---
-// autoDispose: die Sensoren laufen nur, solange ein Widget zuschaut.
-// Der RecordingController hört während der Aufnahme selbst auf die
-// Service-Streams und hängt nicht an diesen Providern.
+// Heading: Rotation Sensor (tilt-kompensiert, Gyroskop-geglättet)
+final orientationProvider = StreamProvider.autoDispose<OrientationEvent>((ref) {
+  return SensorService.getOrientationStream();
+});
 
+final headingProvider = Provider.autoDispose<double>((ref) {
+  final az = ref.watch(orientationProvider).value?.eulerAngles.azimuth ?? 0.0;
+  return az < 0 ? az * (180 / pi) + 360 : az * (180 / pi);
+});
+
+// Heel + Pitch: sensors_plus Accelerometer (keine Euler-Kopplungsprobleme)
 final heelProvider = StreamProvider.autoDispose<double>((ref) {
   final offset = ref.watch(calibrationOffsetProvider);
   return SensorService.getAccelerometerStream().map(
@@ -52,30 +53,4 @@ final pitchProvider = StreamProvider.autoDispose<double>((ref) {
   return SensorService.getAccelerometerStream().map(
     (e) => rawPitch(e) - offset.pitch,
   );
-});
-
-final headingProvider = StreamProvider.autoDispose<double>((ref) {
-  final controller = StreamController<double>();
-  AccelerometerEvent? lastAccel;
-
-  final accelSub = SensorService.getAccelerometerStream().listen((a) {
-    lastAccel = a;
-  });
-
-  final magSub = SensorService.getMagnetometerStream().listen((m) {
-    if (lastAccel != null) {
-      controller.add(headingFromMag(m, lastAccel!));
-    }
-  });
-
-  ref.onDispose(() {
-    accelSub.cancel();
-    magSub.cancel();
-    controller.close();
-  });
-
-  return controller.stream;
-});
-final rawMagProvider = StreamProvider.autoDispose<MagnetometerEvent>((ref) {
-  return SensorService.getMagnetometerStream();
 });

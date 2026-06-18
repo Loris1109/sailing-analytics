@@ -9,12 +9,6 @@ class HeelIndicator extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final heel = ref.watch(heelProvider);
 
-    final degrees = heel.when(
-      data: (v) => v.toStringAsFixed(1),
-      loading: () => '--',
-      error: (_, __) => '--',
-    );
-
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
@@ -22,7 +16,7 @@ class HeelIndicator extends ConsumerWidget {
         borderRadius: BorderRadius.circular(8),
       ),
       child: Text(
-        '$degrees°',
+        '$heel',
         style: const TextStyle(color: Colors.white, fontSize: 18),
       ),
     );

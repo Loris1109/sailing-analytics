@@ -1,4 +1,5 @@
-import 'package:sensors_plus/sensors_plus.dart';
+import 'package:sensors_plus/sensors_plus.dart' hide SensorInterval;
+import 'package:flutter_rotation_sensor/flutter_rotation_sensor.dart';
 
 class SensorService {
   //Rotations Geschwindigkeit
@@ -23,5 +24,14 @@ class SensorService {
       // Sensor not available on this device (common on Android emulators)
       //throw Error incase of UI notification
     });
+  }
+
+  static Stream<OrientationEvent> getOrientationStream() {
+    RotationSensor.samplingPeriod = SensorInterval.fastestInterval;
+    RotationSensor.coordinateSystem = CoordinateSystem.transformed(
+      Axis3.X,
+      -Axis3.Z,
+    );
+    return RotationSensor.orientationStream.handleError((_) {});
   }
 }

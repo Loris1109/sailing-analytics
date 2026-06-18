@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:sailing_analytics/controllers/recording_controller.dart';
+import 'package:sailing_analytics/providers/sensor_providers.dart';
 import 'package:sailing_analytics/screens/racing/widgets/heel_indicator.dart';
 import 'widgets/gps_status.dart';
 import 'widgets/speed_display.dart';
@@ -15,6 +16,15 @@ class SpeedScreen extends ConsumerWidget {
       backgroundColor: Colors.black,
       body: Stack(
         children: [
+          Consumer(
+            builder: (context, ref, _) {
+              final cal = ref.watch(calibrationOffsetProvider);
+              return Text(
+                'offset heel: ${cal.heel.toStringAsFixed(1)}',
+                style: const TextStyle(color: Colors.red, fontSize: 12),
+              );
+            },
+          ),
           Align(
             alignment: Alignment.topCenter,
             child: GpsStatus(

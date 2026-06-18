@@ -15,7 +15,7 @@ class HeadingScreen extends ConsumerWidget {
       backgroundColor: Colors.black,
       body: Stack(
         children: [
-          Consumer(
+          /* Consumer(
             builder: (context, ref, _) {
               final mag = ref.watch(rawMagProvider);
               return mag.when(
@@ -27,7 +27,7 @@ class HeadingScreen extends ConsumerWidget {
                 error: (_, __) => const SizedBox(),
               );
             },
-          ),
+          ), */
           Align(
             alignment: Alignment.topCenter,
             child: GpsStatus(

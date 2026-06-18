@@ -40,6 +40,7 @@ dependencies:
   uuid: ^4.5.3
   drift_db_viewer: ^2.1.0
   sensors_plus: ^7.0.0
+  flutter_rotation_sensor: ^0.2.0
   wakelock_plus: ^1.6.1
   share_plus: ^13.1.0
   supabase_flutter: ^2.14.2

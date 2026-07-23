@@ -15,7 +15,9 @@
       "Bash(git add *)",
       "Bash(git commit -m ' *)",
       "Bash(mkdir -p \"C:\\\\Users\\\\Loren\\\\Documents\\\\Segeln\\\\SailingApp-Flutter\\\\coach_platform\\\\app\\\\trainings\\\\[id]\\\\components\")",
-      "PowerShell(Remove-Item \"C:\\\\Users\\\\Loren\\\\.claude\\\\projects\\\\C--Users-Loren-Documents-Segeln-SailingApp-Flutter-sailing-analytics\\\\memory\\\\project_speed_heatmap_settings.md\" -Confirm:$false)"
+      "PowerShell(Remove-Item \"C:\\\\Users\\\\Loren\\\\.claude\\\\projects\\\\C--Users-Loren-Documents-Segeln-SailingApp-Flutter-sailing-analytics\\\\memory\\\\project_speed_heatmap_settings.md\" -Confirm:$false)",
+      "PowerShell(git -C \"C:\\\\Users\\\\Loren\\\\Documents\\\\Segeln\\\\SailingApp-Flutter\\\\coach_platform\" remote -v)",
+      "PowerShell(git -C \"C:\\\\Users\\\\Loren\\\\Documents\\\\Segeln\\\\SailingApp-Flutter\\\\coach_platform\" branch -vv)"
     ]
   }
 }

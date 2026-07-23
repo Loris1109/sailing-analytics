@@ -16,15 +16,6 @@ class SpeedScreen extends ConsumerWidget {
       backgroundColor: Colors.black,
       body: Stack(
         children: [
-          Consumer(
-            builder: (context, ref, _) {
-              final cal = ref.watch(calibrationOffsetProvider);
-              return Text(
-                'offset heel: ${cal.heel.toStringAsFixed(1)}',
-                style: const TextStyle(color: Colors.red, fontSize: 12),
-              );
-            },
-          ),
           Align(
             alignment: Alignment.topCenter,
             child: GpsStatus(
@@ -32,7 +23,6 @@ class SpeedScreen extends ConsumerWidget {
               lastAccuracy: state.lastAccuracy,
             ),
           ),
-          Positioned(bottom: 16, left: 16, child: HeelIndicator()),
           Align(
             alignment: Alignment.bottomCenter,
             child: FittedBox(

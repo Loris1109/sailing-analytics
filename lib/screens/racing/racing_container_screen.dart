@@ -19,7 +19,7 @@ class RacingContainerScreen extends ConsumerStatefulWidget {
 }
 
 class _RacingContainerScreenState extends ConsumerState<RacingContainerScreen> {
-  static const _bothButtonWindow = Duration(milliseconds: 500);
+  static const _bothButtonWindow = Duration(milliseconds: 750);
   static const _pageCount = 3;
 
   final _pageController = PageController();
@@ -28,12 +28,18 @@ class _RacingContainerScreenState extends ConsumerState<RacingContainerScreen> {
   Timer? _volumeTimer;
   VolumeKey? _pendingKey;
 
+  bool _showHint = true;
+  Timer? _hintTimer;
+
   @override
   void initState() {
     super.initState();
     SystemChrome.setPreferredOrientations([DeviceOrientation.landscapeLeft]);
     WakelockPlus.enable();
     VolumeListener.addListener(_onVolumeKey);
+    _hintTimer = Timer(const Duration(seconds: 4), () {
+      if (mounted) setState(() => _showHint = false);
+    });
   }
 
   void _onVolumeKey(VolumeKey key) {
@@ -78,6 +84,7 @@ class _RacingContainerScreenState extends ConsumerState<RacingContainerScreen> {
   @override
   void dispose() {
     _volumeTimer?.cancel();
+    _hintTimer?.cancel();
     VolumeListener.removeListener();
     WakelockPlus.disable();
     SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
@@ -87,10 +94,41 @@ class _RacingContainerScreenState extends ConsumerState<RacingContainerScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return PageView(
-      controller: _pageController,
-      physics: const NeverScrollableScrollPhysics(),
-      children: const [SpeedScreen(), HeadingScreen(), RacingScreen()],
+    return Stack(
+      children: [
+        PageView(
+          controller: _pageController,
+          physics: const NeverScrollableScrollPhysics(),
+          children: const [SpeedScreen(), HeadingScreen(), RacingScreen()],
+        ),
+        AnimatedOpacity(
+          opacity: _showHint ? 1.0 : 0.0,
+          duration: const Duration(milliseconds: 600),
+          child: Align(
+            alignment: Alignment.topCenter,
+            child: Padding(
+              padding: const EdgeInsets.only(top: 20),
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 10,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.black54,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Material(
+                  color: Colors.transparent,
+                  child: const Text(
+                    '↑ / ↓  Screen wechseln  ·  Beide Tasten = Session beenden',
+                    style: TextStyle(color: Colors.white70, fontSize: 14),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

@@ -42,8 +42,6 @@ class UploadService {
   ) async {
     await _ensureSignedIn();
 
-    // Deterministisch: gleiche Session + gleiches Training → gleiche ID.
-    // Macht Retries idempotent und erlaubt mehrere Trainings pro Session.
     final uploadId = const Uuid().v5(
       Namespace.url.value,
       '${session.id}/$trainingId',
@@ -67,26 +65,25 @@ class UploadService {
       await supabaseClient
           .from('gps_points')
           .upsert(
-            batch
-                .map(
-                  (p) => {
-                    'id': const Uuid().v5(
-                      Namespace.url.value,
-                      '$uploadId/${p.timestamp.millisecondsSinceEpoch}',
-                    ),
-                    'upload_id': uploadId,
-                    'timestamp': p.timestamp.toUtc().toIso8601String(),
-                    'lat': p.lat,
-                    'lon': p.lon,
-                    'sog': p.sog,
-                    'cog': p.cog,
-                    'heel': p.heel,
-                    'pitch': p.pitch,
-                    'mag_heading': p.magHeading,
-                    'accuracy': p.accuracy,
-                  },
-                )
-                .toList(),
+            batch.asMap().entries.map((entry) {
+              final p = entry.value;
+              return {
+                'id': const Uuid().v5(
+                  Namespace.url.value,
+                  '$uploadId/${i + entry.key}',
+                ),
+                'upload_id': uploadId,
+                'timestamp': p.timestamp.toUtc().toIso8601String(),
+                'lat': p.lat,
+                'lon': p.lon,
+                'sog': p.sog,
+                'cog': p.cog,
+                'heel': p.heel,
+                'pitch': p.pitch,
+                'mag_heading': p.magHeading,
+                'accuracy': p.accuracy,
+              };
+            }).toList(),
           );
     }
   }

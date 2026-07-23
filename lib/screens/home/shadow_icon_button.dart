@@ -5,6 +5,7 @@ class ShadowIconButton extends StatefulWidget {
   final String? label;
   final double size;
   final VoidCallback? onTap;
+  final Color? color;
 
   const ShadowIconButton({
     super.key,
@@ -12,6 +13,7 @@ class ShadowIconButton extends StatefulWidget {
     this.label,
     this.onTap,
     this.size = 24,
+    this.color,
   });
 
   @override
@@ -34,6 +36,7 @@ class _ShadowIconButtonState extends State<ShadowIconButton> {
           Icon(
             widget.icon,
             size: widget.size,
+            color: widget.color,
             shadows: _pressed
                 ? []
                 : const [Shadow(color: Colors.black38, blurRadius: 15.0)],

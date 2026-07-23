@@ -51,6 +51,7 @@ class CollapsedBody extends ConsumerWidget {
               // In ein Training einreichen — nur aktiv wenn Session ausgewählt
               ShadowIconButton(
                 icon: Icons.upload_rounded,
+                color: Colors.black,
                 onTap: selectedSession == null
                     ? null
                     : () => showDialog(
@@ -58,6 +59,23 @@ class CollapsedBody extends ConsumerWidget {
                         barrierDismissible: false,
                         builder: (_) => UploadDialog(session: selectedSession),
                       ),
+                /* onTap: () => showDialog(
+                  context: context,
+                  builder: (ctx) => AlertDialog(
+                    title: const Text('Demnächst verfügbar'),
+                    content: const Text(
+                      'Das Einreichen von Sessions ist Teil der Coach Platform, '
+                      'welche genauere Analysen der gesamten Trainingsgruppe ermöglichen soll. '
+                      'Diese Funktion wird in der kommenden Version freigeschaltet.',
+                    ),
+                    actions: [
+                      FilledButton(
+                        onPressed: () => Navigator.pop(ctx),
+                        child: const Text('OK'),
+                      ),
+                    ],
+                  ),
+                ), */
               ),
             ],
           ),

@@ -13,7 +13,9 @@
       "mcp__visualize__show_widget",
       "mcp__e13614f4-81c7-49e7-bf28-26e2922240fb__get_design_context",
       "Bash(git add *)",
-      "Bash(git commit -m ' *)"
+      "Bash(git commit -m ' *)",
+      "Bash(mkdir -p \"C:\\\\Users\\\\Loren\\\\Documents\\\\Segeln\\\\SailingApp-Flutter\\\\coach_platform\\\\app\\\\trainings\\\\[id]\\\\components\")",
+      "PowerShell(Remove-Item \"C:\\\\Users\\\\Loren\\\\.claude\\\\projects\\\\C--Users-Loren-Documents-Segeln-SailingApp-Flutter-sailing-analytics\\\\memory\\\\project_speed_heatmap_settings.md\" -Confirm:$false)"
     ]
   }
 }

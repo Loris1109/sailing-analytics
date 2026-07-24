@@ -49,6 +49,14 @@ class _SlideMenuState extends ConsumerState<SlideMenu> {
     ref.read(isExpandedProvider.notifier).setExpanded(shouldExpand);
   }
 
+  void _togglePanel() {
+    final isExpanded = ref.read(isExpandedProvider);
+    setState(() {
+      _currentHeight = isExpanded ? collapsedHeight : expandedHeight;
+    });
+    ref.read(isExpandedProvider.notifier).setExpanded(!isExpanded);
+  }
+
   @override
   Widget build(BuildContext context) {
     final isExpanded = ref.watch(isExpandedProvider);
@@ -68,6 +76,7 @@ class _SlideMenuState extends ConsumerState<SlideMenu> {
           isExpanded: isExpanded,
           onSwipe: _onDragUpdate,
           onSwipeEnd: _onDragEnd,
+          onTap: _togglePanel,
         ),
       ],
     );

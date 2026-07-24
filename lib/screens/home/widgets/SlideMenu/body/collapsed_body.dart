@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:sailing_analytics/ble-spike/ble_spike_screen.dart';
 import 'package:sailing_analytics/controllers/recording_controller.dart';
 import 'package:sailing_analytics/data/entities/session.dart';
 import 'package:sailing_analytics/providers/repository_providers.dart';
@@ -76,6 +77,16 @@ class CollapsedBody extends ConsumerWidget {
                     ],
                   ),
                 ), */
+              ),
+
+              // SPIKE: temporärer Einstieg in den BLE-Test — fliegt nach dem
+              // Spike wieder raus
+              ShadowIconButton(
+                icon: Icons.bluetooth_searching,
+                color: Colors.blue,
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const BleSpikeScreen()),
+                ),
               ),
             ],
           ),

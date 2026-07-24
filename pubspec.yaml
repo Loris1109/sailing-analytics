@@ -41,8 +41,11 @@ dependencies:
   drift_db_viewer: ^2.1.0
   sensors_plus: ^7.0.0
   flutter_rotation_sensor: ^0.2.0
-  wakelock_plus: ^1.6.1
+  wakelock_plus: 1.6.1 # 1.7.0 ist kaputt: Messages.g.kt ohne package-Deklaration, K2-Compiler-Fehler
   share_plus: ^13.1.0
+  flutter_blue_plus: ^2.0.3
+  flutter_ble_peripheral: ^2.1.1
+  permission_handler: ^12.0.3
   supabase_flutter: ^2.14.2
 
   # The following adds the Cupertino Icons font to your application.

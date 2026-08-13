@@ -11,16 +11,22 @@ class BleSpikeScreen extends StatefulWidget {
 
 class _BleSpikeScreenState extends State<BleSpikeScreen> {
   final _controller = BleSpikeController();
-  late final TextEditingController _idField;
   late final TextEditingController _labelField;
   bool _permissionsOk = false;
 
   @override
   void initState() {
     super.initState();
-    _idField = TextEditingController(text: _controller.myId);
     _labelField = TextEditingController();
     _requestPermissions();
+    _loadSailNumber();
+  }
+
+  Future<void> _loadSailNumber() async {
+    // Keine Riverpod Abhängigkeit im Spike — einfach hardcoded für jetzt
+    // Im produktiven Code würde das von BoatRepository kommen
+    // TODO: später an echte Boot-Daten koppeln
+    _controller.setSailNumber('Boat');
   }
 
   Future<void> _requestPermissions() async {
@@ -31,7 +37,6 @@ class _BleSpikeScreenState extends State<BleSpikeScreen> {
   @override
   void dispose() {
     _controller.dispose();
-    _idField.dispose();
     _labelField.dispose();
     super.dispose();
   }
@@ -88,15 +93,22 @@ class _BleSpikeScreenState extends State<BleSpikeScreen> {
                 ),
 
               // ---- Konfiguration ----
-              TextField(
-                controller: _idField,
-                decoration: const InputDecoration(
-                  labelText: 'Meine ID (im Advertisement, max. ~8 Zeichen)',
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Meine ID', style: Theme.of(context).textTheme.labelMedium),
+                      Text(
+                        _controller.myId,
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
+                    ],
+                  ),
                 ),
-                enabled: !_controller.isAdvertising,
-                onChanged: (v) => _controller.myId = v,
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 16),
               TextField(
                 controller: _labelField,
                 decoration: const InputDecoration(

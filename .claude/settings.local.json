@@ -22,7 +22,12 @@
       "PowerShell(git push origin ble-spike)",
       "PowerShell(git push -u origin ble-spike)",
       "PowerShell(git symbolic-ref HEAD)",
-      "PowerShell(git push -u origin BLE-Spike)"
+      "PowerShell(git push -u origin BLE-Spike)",
+      "PowerShell(flutter devices)",
+      "PowerShell(flutter run)",
+      "PowerShell(flutter clean)",
+      "PowerShell(flutter pub get)",
+      "PowerShell(flutter run -d 41021JEHN17267)"
     ]
   }
 }

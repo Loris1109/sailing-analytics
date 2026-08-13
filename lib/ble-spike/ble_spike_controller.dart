@@ -50,7 +50,7 @@ class BleSpikeController extends ChangeNotifier {
   bool isAdvertising = false;
   bool isScanning = false;
 
-  /// Eigene Kennung im Advertisement (z. B. "P7P"). Vor dem Start setzen.
+  /// Eigene Kennung im Advertisement myId= segelnummer aus dem Bootsmenu
   String myId = 'P7P';
 
   /// Frei wählbares Label, wird in jede Logzeile geschrieben
@@ -207,6 +207,11 @@ class BleSpikeController extends ChangeNotifier {
   void clearLog() {
     log.clear();
     seenDevices.clear();
+    notifyListeners();
+  }
+
+  void setSailNumber(String sailNumber) {
+    myId = sailNumber.isEmpty ? 'unknown' : sailNumber;
     notifyListeners();
   }
 

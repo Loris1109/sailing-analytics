@@ -159,6 +159,13 @@ class AppDatabase extends _$AppDatabase {
       (update(rangeMeasurements)..where((m) => m.id.equals(id))).write(
         RangeMeasurementsCompanion(tech: Value(tech)),
       );
+
+  Future<List<RangeMeasurement>> getRangeMeasurementsForSession(
+    String sessionId,
+  ) =>
+      (select(
+        rangeMeasurements,
+      )..where((m) => m.sessionId.equals(sessionId))).get();
 }
 
 // How drift opens the SQLite file

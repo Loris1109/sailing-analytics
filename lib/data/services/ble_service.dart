@@ -21,17 +21,18 @@ class BLEService {
     // 1️ App-Permissions checken (das was du machen musst)
     final statuses = await [
       Permission.bluetoothScan,
+      Permission.bluetoothAdvertise,
       Permission.bluetoothConnect,
     ].request();
 
     if (!statuses.values.every((s) => s.isGranted)) {
-      print("Bluetooth permissions denied");
+      //Bluetooth permissions denied"
       return false;
     }
 
     // 2️ Device-Level: Ist Bluetooth an?
     if (await FlutterBluePlus.isSupported == false) {
-      print("Bluetooth not supported");
+      //Bluetooth not supported
       return false;
     }
 

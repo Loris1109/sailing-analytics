@@ -118,9 +118,12 @@ class RecordingController extends Notifier<RecordingState> {
     );
 
     final activeBoat = await ref.watch(boatRepositoryProvider).getActiveBoat();
+
     _bleSub = BLEService.startScan(
       activeBoat!.sailNumber,
     ).listen(_onBleAdvertisement);
+
+    await BLEService.startAdvertising(activeBoat.sailNumber);
 
     _gpsSub = GpsService.getStream().listen(
       (pos) => _onPosition(pos, sessionId, sessionRepo, rmRepo),
@@ -211,6 +214,7 @@ class RecordingController extends Notifier<RecordingState> {
 
     final gpsPointId = await sessionRepo.savePoint(
       GpsPointEntity(
+        id:const Uuid().v4(),
         sessionId: sessionId,
         timestamp: now,
         lat: pos.latitude,
@@ -260,6 +264,8 @@ class RecordingController extends Notifier<RecordingState> {
     _accelSub = null;
     _orientationSub = null;
     _bleSub = null;
+
+    await BLEService.stopAdvertising();
 
     // Filter-Referenzen zurücksetzen — die nächste Session darf nicht
     // gegen den letzten Punkt dieser Session vergleichen

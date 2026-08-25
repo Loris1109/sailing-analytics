@@ -92,6 +92,10 @@ class _UploadDialogState extends ConsumerState<UploadDialog> {
         return;
       }
 
+      final rangeMeasurements = await ref
+        .read(rangeMeasurementRepositoryProvider)
+        .getRangeMeasurementsForSession(widget.session.id);
+
       // Boot kann gelöscht worden sein — Upload läuft dann ohne Bootsinfos
       final boat = await ref
           .read(boatRepositoryProvider)
@@ -99,7 +103,7 @@ class _UploadDialogState extends ConsumerState<UploadDialog> {
 
       await ref
           .read(uploadServiceProvider)
-          .uploadSession(widget.session, boat, points, training.id);
+          .uploadSession(widget.session, boat, points, rangeMeasurements, training.id);
 
       if (!mounted) return;
       setState(() => _step = _UploadStep.done);

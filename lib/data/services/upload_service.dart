@@ -1,7 +1,9 @@
 import 'dart:math';
 
+import 'package:sailing_analytics/data/database/tables.dart';
 import 'package:sailing_analytics/data/entities/boat.dart';
 import 'package:sailing_analytics/data/entities/gps_point.dart';
+import 'package:sailing_analytics/data/entities/range_measurements.dart';
 import 'package:sailing_analytics/data/entities/session.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
@@ -38,6 +40,7 @@ class UploadService {
     SessionEntity session,
     BoatEntity? boat,
     List<GpsPointEntity> points,
+    List<RangeMeasurementEntity> rangeMeasurements,
     String trainingId,
   ) async {
     await _ensureSignedIn();
@@ -63,30 +66,50 @@ class UploadService {
     for (var i = 0; i < points.length; i += _batchSize) {
       final batch = points.sublist(i, min(i + _batchSize, points.length));
       await supabaseClient
-          .from('gps_points')
-          .upsert(
-            batch.asMap().entries.map((entry) {
-              final p = entry.value;
-              return {
-                'id': const Uuid().v5(
-                  Namespace.url.value,
-                  '$uploadId/${i + entry.key}',
-                ),
-                'upload_id': uploadId,
-                'timestamp': p.timestamp.toUtc().toIso8601String(),
-                'lat': p.lat,
-                'lon': p.lon,
-                'sog': p.sog,
-                'cog': p.cog,
-                'heel': p.heel,
-                'pitch': p.pitch,
-                'mag_heading': p.magHeading,
-                'accuracy': p.accuracy,
-              };
-            }).toList(),
-          );
+        .from('gps_points')
+        .upsert(
+          batch.asMap().entries.map((entry) {
+            final p = entry.value;
+            return {
+              'id': const Uuid().v5(
+                Namespace.url.value,
+                '$uploadId/${i + entry.key}',
+              ),
+              'upload_id': uploadId,
+              'timestamp': p.timestamp.toUtc().toIso8601String(),
+              'lat': p.lat,
+              'lon': p.lon,
+              'sog': p.sog,
+              'cog': p.cog,
+              'heel': p.heel,
+              'pitch': p.pitch,
+              'mag_heading': p.magHeading,
+              'accuracy': p.accuracy,
+            };
+          }).toList(),
+        );
     }
+    await uploadRangeMeasurements(uploadId, rangeMeasurements);
   }
+
+  Future<void> uploadRangeMeasurements(
+  String uploadId,
+  List<RangeMeasurementEntity> measurements,
+) async {
+  for (var i = 0; i < measurements.length; i += _batchSize) {
+    final batch = measurements.sublist(i, min(i + _batchSize, measurements.length));
+    await supabaseClient.from('range_measurements').upsert(
+      batch.map((m) => {
+        'id': m.id,
+        'upload_id': uploadId,
+        'peer_id': m.peerId,
+        'tech': m.tech,
+        'rssi': m.rssi,
+        'timestamp': m.timestamp.toUtc().toIso8601String(),
+      }).toList(),
+    );
+  }
+}
 }
 
 class ResolvedTraining {

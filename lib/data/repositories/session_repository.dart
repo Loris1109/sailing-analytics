@@ -72,10 +72,9 @@ class SessionRepository {
   // ── GPS Points ─────────────────────────────────────────────────
 
   Future<String> savePoint(GpsPointEntity point) async {
-    final id = const Uuid().v4();
     await _db.insertGpsPoint(
       GpsPointsCompanion.insert(
-        id: id,
+        id: point.id,
         sessionId: point.sessionId,
         timestamp: point.timestamp,
         lat: point.lat,
@@ -88,7 +87,7 @@ class SessionRepository {
         accuracy: point.accuracy,
       ),
     );
-    return id; // ID zurückgeben, damit z.B. Range Measurements darauf verweisen können
+    return point.id; // ID zurückgeben, damit z.B. Range Measurements darauf verweisen können
   }
 
   Future<List<GpsPointEntity>> getPointsForSession(String sessionId) async {

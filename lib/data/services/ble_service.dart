@@ -1,6 +1,8 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter_ble_peripheral/flutter_ble_peripheral.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:permission_handler/permission_handler.dart';
 
@@ -62,5 +64,31 @@ class BLEService {
 
   static Future<void> stopScan() async {
     await FlutterBluePlus.stopScan();
+  }
+
+  static Future<void> startAdvertising(String sailNumber) async {
+    final list = utf8.encode(sailNumber);
+    final payload = Uint8List.fromList(list);
+    await FlutterBlePeripheral().start(
+      advertiseData: AdvertiseData(
+        manufacturerId: 0xFFFF,
+        manufacturerData: payload,
+      ),
+      advertiseSettings: AdvertiseSettings(
+        // Legacy-Advertising: am breitesten unterstützt
+        advertiseSet: false,
+        // 0 = kein Timeout. Default wäre 400 ms — dann wäre nach einer
+        // halben Sekunde Schluss!
+        timeout: 0,
+        // ~10 Advertisements/s statt ~1/s — unsere Messrate
+        advertiseMode: AdvertiseMode.advertiseModeLowLatency,
+        // volle Sendeleistung = maximale Reichweite. Messparameter der BA!
+        txPowerLevel: AdvertiseTxPower.advertiseTxPowerHigh,
+      )
+    );
+  }
+
+  static Future<void> stopAdvertising() async {
+    await FlutterBlePeripheral().stop();
   }
 }

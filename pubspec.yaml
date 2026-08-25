@@ -44,6 +44,7 @@ dependencies:
   wakelock_plus: ^1.6.1
   share_plus: ^13.1.0
   flutter_blue_plus: ^2.3.12
+  flutter_ble_peripheral: ^2.1.1
   flutter_uwb: ^1.0.1
   supabase_flutter: ^2.14.2
   permission_handler: ^13.0.1

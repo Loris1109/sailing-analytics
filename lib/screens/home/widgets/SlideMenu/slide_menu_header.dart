@@ -7,17 +7,20 @@ class SlideMenuHeader extends StatelessWidget {
   final bool isExpanded;
   final void Function(DragUpdateDetails) onSwipe;
   final void Function(DragEndDetails) onSwipeEnd;
+  final VoidCallback onTap;
 
   const SlideMenuHeader({
     super.key,
     required this.isExpanded,
     required this.onSwipe,
     required this.onSwipeEnd,
+    required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
+      onTap: onTap,
       onVerticalDragUpdate: onSwipe,
       onVerticalDragEnd: onSwipeEnd,
       child: CompassPanelBg(
@@ -25,10 +28,25 @@ class SlideMenuHeader extends StatelessWidget {
         child: SizedBox(
           height: 28,
           width: double.infinity,
-          child: Center(
-            child: isExpanded
-                ? const ExpandedHeader()
-                : const CollapsedHeader(),
+          child: Column(
+            children: [
+              Container(
+                height: 4,
+                width: 40,
+                margin: const EdgeInsets.only(bottom: 4),
+                decoration: BoxDecoration(
+                  color: Colors.grey.withValues(alpha: 0.6),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              Expanded(
+                child: Center(
+                  child: isExpanded
+                      ? const ExpandedHeader()
+                      : const CollapsedHeader(),
+                ),
+              ),
+            ],
           ),
         ),
       ),

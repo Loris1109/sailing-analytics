@@ -459,14 +459,6 @@ packages:
     description: flutter
     source: sdk
     version: "0.0.0"
-  flutter_uwb:
-    dependency: "direct main"
-    description:
-      name: flutter_uwb
-      sha256: "5d85733393c1379d9a79355afb259f2ff50b6eb0b5f254894e0fbfbf9f5a3513"
-      url: "https://pub.dev"
-    source: hosted
-    version: "1.0.1"
   flutter_web_plugins:
     dependency: transitive
     description: flutter

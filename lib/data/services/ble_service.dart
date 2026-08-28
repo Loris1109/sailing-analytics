@@ -1,4 +1,6 @@
+import 'dart:async';
 import 'dart:convert';
+import 'dart:developer' as dev;
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
@@ -18,9 +20,19 @@ class BleAdvertisement {
   });
 }
 
-class BLEService {
+class BleService {
+  // Callbacks für Scan-Results
+  Function(List<ScanResult>)? onScanResults;
+
+  // State
+  StreamSubscription? _scanSub;
+  Timer? _rateTimer;
+  int _eventCounter = 0;
+  int eventsPerSecond = 0;
+  bool isScanning = false;
+  bool isAdvertising = false;
+
   static Future<bool> requestPermission() async {
-    // 1️ App-Permissions checken (das was du machen musst)
     final statuses = await [
       Permission.bluetoothScan,
       Permission.bluetoothAdvertise,
@@ -28,17 +40,15 @@ class BLEService {
     ].request();
 
     if (!statuses.values.every((s) => s.isGranted)) {
-      //Bluetooth permissions denied"
+      dev.log('❌ BLE permission denied');
       return false;
     }
 
-    // 2️ Device-Level: Ist Bluetooth an?
     if (await FlutterBluePlus.isSupported == false) {
-      //Bluetooth not supported
+      dev.log('❌ BLE not supported');
       return false;
     }
 
-    // Optional: Bluetooth an, wenn aus
     if (!kIsWeb && Platform.isAndroid) {
       await FlutterBluePlus.turnOn();
     }
@@ -46,49 +56,111 @@ class BLEService {
     return true;
   }
 
-  // ownerPeerId = die Segelnummer deines Boots (z. B. "GER1775")
-  static Stream<BleAdvertisement> startScan(String ownerPeerId) {
-    return FlutterBluePlus.onScanResults
-        .expand((results) => results)
-        .where((r) => r.advertisementData.manufacturerData.containsKey(0xFFFF))
-        .map((r) {
-          final bytes = r.advertisementData.manufacturerData[0xFFFF]!;
-          return BleAdvertisement(
-            peerId: String.fromCharCodes(bytes),
-            rssi: r.rssi,
-            timestamp: DateTime.now(),
-          );
-        })
-        .where((advertisement) => advertisement.peerId != ownerPeerId);
+  // ─── Advertising ───────────────────────────────────────────
+  Future<void> startAdvertising(String sailNumber) async {
+    dev.log('🚀 BLE Advertising STARTING: $sailNumber');
+    try {
+      final list = utf8.encode(sailNumber);
+      final payload = Uint8List.fromList(list);
+      dev.log('  Payload: ${list.length} bytes = $sailNumber');
+
+      await FlutterBlePeripheral().start(
+        advertiseData: AdvertiseData(
+          manufacturerId: 0xFFFF,
+          manufacturerData: payload,
+        ),
+        advertiseSettings: AdvertiseSettings(
+          advertiseSet: false,
+          timeout: 0,
+          advertiseMode: AdvertiseMode.advertiseModeLowLatency,
+          txPowerLevel: AdvertiseTxPower.advertiseTxPowerHigh,
+        ),
+      );
+      isAdvertising = true;
+      dev.log('✅ BLE Advertising STARTED: $sailNumber');
+    } catch (e) {
+      dev.log('❌ BLE Advertising FAILED: $e', error: e);
+      rethrow;
+    }
   }
 
-  static Future<void> stopScan() async {
-    await FlutterBluePlus.stopScan();
+  Future<void> stopAdvertising() async {
+    dev.log('⏹️ BLE Advertising STOPPING');
+    try {
+      await FlutterBlePeripheral().stop();
+      isAdvertising = false;
+      dev.log('✅ BLE Advertising STOPPED');
+    } catch (e) {
+      dev.log('⚠️ Error stopping advertising: $e', error: e);
+    }
   }
 
-  static Future<void> startAdvertising(String sailNumber) async {
-    final list = utf8.encode(sailNumber);
-    final payload = Uint8List.fromList(list);
-    await FlutterBlePeripheral().start(
-      advertiseData: AdvertiseData(
-        manufacturerId: 0xFFFF,
-        manufacturerData: payload,
-      ),
-      advertiseSettings: AdvertiseSettings(
-        // Legacy-Advertising: am breitesten unterstützt
-        advertiseSet: false,
-        // 0 = kein Timeout. Default wäre 400 ms — dann wäre nach einer
-        // halben Sekunde Schluss!
-        timeout: 0,
-        // ~10 Advertisements/s statt ~1/s — unsere Messrate
-        advertiseMode: AdvertiseMode.advertiseModeLowLatency,
-        // volle Sendeleistung = maximale Reichweite. Messparameter der BA!
-        txPowerLevel: AdvertiseTxPower.advertiseTxPowerHigh,
-      )
+  // ─── Scanning ──────────────────────────────────────────────
+  Future<void> startScanning() async {
+    dev.log('🔍 BLE Scan STARTING');
+
+    // Warten bis Adapter wirklich AN ist
+    dev.log('  Waiting for Bluetooth adapter to be ON...');
+    await FlutterBluePlus.adapterState
+        .where((s) => s == BluetoothAdapterState.on)
+        .first;
+    dev.log('  ✅ Bluetooth adapter is ON');
+
+    // Listener registrieren BEVOR startScan()
+    _scanSub = FlutterBluePlus.onScanResults.listen(_onScanResults);
+
+    // Jetzt startScan()
+    dev.log('  Starting FlutterBluePlus.startScan()...');
+    await FlutterBluePlus.startScan(
+      timeout: const Duration(seconds: 0),
+      oneByOne: true,
+      androidScanMode: AndroidScanMode.lowLatency,
+      androidUsesFineLocation: true,
     );
+
+    // Rate Timer starten
+    _rateTimer = Timer.periodic(const Duration(seconds: 1), (_) {
+      eventsPerSecond = _eventCounter;
+      _eventCounter = 0;
+    });
+
+    isScanning = true;
+    dev.log('✅ BLE Scan STARTED');
   }
 
-  static Future<void> stopAdvertising() async {
-    await FlutterBlePeripheral().stop();
+  Future<void> stopScanning() async {
+    dev.log('⏹️ BLE Scan STOPPING');
+    await FlutterBluePlus.stopScan();
+    await _scanSub?.cancel();
+    _scanSub = null;
+    _rateTimer?.cancel();
+    _rateTimer = null;
+    eventsPerSecond = 0;
+    _eventCounter = 0;
+    isScanning = false;
+    dev.log('✅ BLE Scan STOPPED');
+  }
+
+  void _onScanResults(List<ScanResult> results) {
+    if (results.isEmpty) return;
+
+    dev.log('  📡 Raw scan results: ${results.length} devices');
+
+    // Filter & zähle
+    final filtered = <ScanResult>[];
+    for (final r in results) {
+      if (r.advertisementData.manufacturerData.containsKey(0xFFFF)) {
+        final bytes = r.advertisementData.manufacturerData[0xFFFF]!;
+        final peerId = String.fromCharCodes(bytes);
+        dev.log('📡 BLE Advertisement RECEIVED: $peerId (RSSI: ${r.rssi}dBm)');
+        filtered.add(r);
+        _eventCounter++;
+      }
+    }
+
+    // Callback aufrufen
+    if (filtered.isNotEmpty) {
+      onScanResults?.call(filtered);
+    }
   }
 }

@@ -1,3 +1,4 @@
+import 'dart:developer' as dev;
 import 'dart:math';
 
 import 'package:sailing_analytics/data/database/tables.dart';
@@ -43,7 +44,9 @@ class UploadService {
     List<RangeMeasurementEntity> rangeMeasurements,
     String trainingId,
   ) async {
+    dev.log('📤 UPLOAD START: ${points.length} GPS points, ${rangeMeasurements.length} measurements');
     await _ensureSignedIn();
+    dev.log('✅ Supabase auth ensured');
 
     final uploadId = const Uuid().v5(
       Namespace.url.value,
@@ -63,8 +66,11 @@ class UploadService {
       'boat_class': boat?.boatClass,
     });
 
+    // Upload GPS points in batches
+    dev.log('📤 Uploading GPS points (${points.length} total)...');
     for (var i = 0; i < points.length; i += _batchSize) {
       final batch = points.sublist(i, min(i + _batchSize, points.length));
+      dev.log('  📦 Batch ${i ~/ _batchSize + 1}/${(points.length / _batchSize).ceil()}: ${batch.length} points');
       await supabaseClient
         .from('gps_points')
         .upsert(
@@ -88,16 +94,29 @@ class UploadService {
             };
           }).toList(),
         );
+      dev.log('  ✅ Batch uploaded');
     }
+    dev.log('✅ All GPS points uploaded');
+
+    // Upload range measurements
     await uploadRangeMeasurements(uploadId, rangeMeasurements);
+    dev.log('✅ UPLOAD COMPLETE');
   }
 
   Future<void> uploadRangeMeasurements(
   String uploadId,
   List<RangeMeasurementEntity> measurements,
 ) async {
+  if (measurements.isEmpty) {
+    dev.log('⚠️ No RangeMeasurements to upload');
+    return;
+  }
+
+  dev.log('📤 Uploading RangeMeasurements (${measurements.length} total)...');
   for (var i = 0; i < measurements.length; i += _batchSize) {
     final batch = measurements.sublist(i, min(i + _batchSize, measurements.length));
+    dev.log('  📦 Batch ${i ~/ _batchSize + 1}/${(measurements.length / _batchSize).ceil()}: ${batch.length} measurements');
+
     await supabaseClient.from('range_measurements').upsert(
       batch.map((m) => {
         'id': m.id,
@@ -108,7 +127,9 @@ class UploadService {
         'timestamp': m.timestamp.toUtc().toIso8601String(),
       }).toList(),
     );
+    dev.log('  ✅ Batch uploaded');
   }
+  dev.log('✅ All RangeMeasurements uploaded');
 }
 }
 

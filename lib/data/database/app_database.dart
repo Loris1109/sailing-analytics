@@ -19,7 +19,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 5;
+  int get schemaVersion => 6;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -28,6 +28,7 @@ class AppDatabase extends _$AppDatabase {
       await customStatement('DROP TABLE IF EXISTS gps_points');
       await customStatement('DROP TABLE IF EXISTS sessions');
       await customStatement('DROP TABLE IF EXISTS boats');
+      await customStatement('DROP TABLE IF EXISTS range_measurements');
       await m.createAll();
     },
   );
@@ -162,10 +163,9 @@ class AppDatabase extends _$AppDatabase {
 
   Future<List<RangeMeasurement>> getRangeMeasurementsForSession(
     String sessionId,
-  ) =>
-      (select(
-        rangeMeasurements,
-      )..where((m) => m.sessionId.equals(sessionId))).get();
+  ) => (select(
+    rangeMeasurements,
+  )..where((m) => m.sessionId.equals(sessionId))).get();
 }
 
 // How drift opens the SQLite file

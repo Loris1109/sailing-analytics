@@ -112,7 +112,6 @@ class BleService {
     // Jetzt startScan()
     dev.log('  Starting FlutterBluePlus.startScan()...');
     await FlutterBluePlus.startScan(
-      timeout: const Duration(seconds: 0),
       oneByOne: true,
       androidScanMode: AndroidScanMode.lowLatency,
       androidUsesFineLocation: true,

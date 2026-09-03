@@ -20,7 +20,8 @@ class CalibrationNotifier extends Notifier<CalibrationOffset> {
   void calibrate(List<AccelerometerEvent> events) {
     if (events.isEmpty) return;
     final avgHeel = events.map(rawHeel).reduce((a, b) => a + b) / events.length;
-    final avgPitch = events.map(rawPitch).reduce((a, b) => a + b) / events.length;
+    final avgPitch =
+        events.map(rawPitch).reduce((a, b) => a + b) / events.length;
     state = CalibrationOffset(heel: avgHeel, pitch: avgPitch);
   }
 }
@@ -37,7 +38,8 @@ final orientationProvider = StreamProvider.autoDispose<OrientationEvent>((ref) {
 
 final headingProvider = Provider.autoDispose<double>((ref) {
   final az = ref.watch(orientationProvider).value?.eulerAngles.azimuth ?? 0.0;
-  return az < 0 ? az * (180 / pi) + 360 : az * (180 / pi);
+  final degree = az < 0 ? az * (180 / pi) + 360 : az * (180 / pi);
+  return (degree / 5).round() * 5;
 });
 
 // Heel + Pitch: sensors_plus Accelerometer (keine Euler-Kopplungsprobleme)

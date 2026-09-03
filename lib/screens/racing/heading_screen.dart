@@ -11,6 +11,7 @@ class HeadingScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(recordingControllerProvider);
+    final heading = ref.watch(headingProvider);
     return Scaffold(
       backgroundColor: Colors.black,
       body: Stack(
@@ -30,7 +31,7 @@ class HeadingScreen extends ConsumerWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   HeadingDisplay(
-                    magHeading: state.lastMagHeading,
+                    magHeading: heading,
                     isRacingview: false,
                   ),
                   Text(

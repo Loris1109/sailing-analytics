@@ -4,8 +4,13 @@ import 'dart:developer' as dev;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart' show Position;
 import 'package:latlong2/latlong.dart';
+import 'package:sailing_analytics/data/repositories/range_measurements_repository.dart';
+import 'package:sailing_analytics/data/services/ble_service.dart';
+import 'package:sailing_analytics/providers/ble_state_provider.dart';
 import 'package:sailing_analytics/providers/sensor_providers.dart';
+import 'package:uuid/uuid.dart';
 import '../data/entities/gps_point.dart';
+import '../data/entities/range_measurements.dart';
 import '../data/repositories/session_repository.dart';
 import '../data/services/gps_service.dart';
 import '../data/services/sensor_math.dart';
@@ -74,6 +79,10 @@ class RecordingController extends Notifier<RecordingState> {
   double _pitch = 0;
   double _magHeading = 0;
 
+  // Advertisements, die älter als das hier sind, gelten als veraltet und
+  // werden nicht mehr mit einem neuen GPS-Punkt verknüpft
+  static const _maxAdvertisementAge = Duration(seconds: 5);
+
   @override
   RecordingState build() => const RecordingState();
 
@@ -81,21 +90,53 @@ class RecordingController extends Notifier<RecordingState> {
     required String name,
     required String boatId,
   }) async {
-    // Doppelstart würde die alten Subscriptions unkündbar überschreiben
-    if (state.isRecording) return;
-
-    final hasPermission = await GpsService.requestPermission();
-    if (!hasPermission) {
-      state = state.copyWith(permissionDenied: true);
+    dev.log('🎬 RECORDING START REQUESTED: $name');
+    if (state.isRecording) {
+      dev.log('⚠️ Recording already in progress, ignoring');
       return;
     }
 
-    final repo = ref.read(sessionRepositoryProvider);
-    final sessionId = await repo.createSession(name: name, boatId: boatId);
+    final hasPermission = await GpsService.requestPermission();
+    if (!hasPermission) {
+      dev.log('❌ GPS permission denied');
+      state = state.copyWith(permissionDenied: true);
+      return;
+    }
+    dev.log('✅ GPS permission granted');
 
-    _gpsSub = GpsService.getStream().listen(
-      (pos) => _onPosition(pos, sessionId, repo),
+    final hasBLEPermission = await BleService.requestPermission();
+    if (!hasBLEPermission) {
+      dev.log('❌ BLE permission denied');
+      state = state.copyWith(permissionDenied: true);
+      return;
+    }
+    dev.log('✅ BLE permission granted');
+
+    final rmRepo = ref.read(rangeMeasurementRepositoryProvider);
+    final sessionRepo = ref.read(sessionRepositoryProvider);
+    final sessionId = await sessionRepo.createSession(
+      name: name,
+      boatId: boatId,
     );
+    dev.log('✅ Session created: $sessionId');
+
+    final activeBoat = await ref.watch(boatRepositoryProvider).getActiveBoat();
+    dev.log('✅ Active boat: ${activeBoat?.sailNumber}');
+
+    // BLE: Start Advertising
+    final bleNotifier = ref.read(bleStateProvider.notifier);
+    await bleNotifier.startAdvertising(activeBoat!.sailNumber);
+    dev.log('✅ BLE Advertising started');
+
+    // BLE: Start Scanning
+    await bleNotifier.startScanning();
+    dev.log('✅ BLE Scan subscribed');
+
+    // GPS: Start listening
+    _gpsSub = GpsService.getStream().listen(
+      (pos) => _onPosition(pos, sessionId, sessionRepo, rmRepo),
+    );
+    dev.log('✅ GPS Stream subscribed');
 
     // Sensoren kontinuierlich mithören — _onPosition sampelt beim Speichern
     // den jeweils letzten Wert. Kalibrierung ändert sich nur im Dialog,
@@ -110,6 +151,7 @@ class RecordingController extends Notifier<RecordingState> {
       _magHeading = az < 0 ? az * (180 / pi) + 360 : az * (180 / pi);
     });
 
+    dev.log('✅ Recording started successfully');
     state = RecordingState(isRecording: true, activeSessionId: sessionId);
   }
 
@@ -123,7 +165,8 @@ class RecordingController extends Notifier<RecordingState> {
   Future<void> _onPosition(
     Position pos,
     String sessionId,
-    SessionRepository repo,
+    SessionRepository sessionRepo,
+    RangeMeasurementRepository rmRepo,
   ) async {
     final now = DateTime.now();
     final gap = _lastPositionTime != null
@@ -135,7 +178,7 @@ class RecordingController extends Notifier<RecordingState> {
     );
     _lastPositionTime = now;
 
-    // ── GPS-Korrekturen ────────────────────────────────────────────
+    // ── GPS-Korrektionen ────────────────────────────────────────────
     // Alle Filter, die Roh-Fixe verwerfen oder korrigieren, leben hier.
     // Verworfene Punkte werden geloggt, damit die Schwellen mit echten
     // Wasserdaten kalibriert werden können.
@@ -175,8 +218,9 @@ class RecordingController extends Notifier<RecordingState> {
     // falls Stufe 1+2 auf dem Wasser nicht reichen.
     // ───────────────────────────────────────────────────────────────
 
-    await repo.savePoint(
+    final gpsPointId = await sessionRepo.savePoint(
       GpsPointEntity(
+        id: const Uuid().v4(),
         sessionId: sessionId,
         timestamp: now,
         lat: pos.latitude,
@@ -189,6 +233,33 @@ class RecordingController extends Notifier<RecordingState> {
         accuracy: pos.accuracy,
       ),
     );
+
+    // BLE-Peers mit diesem GPS-Punkt verknüpfen — nur wenn ihr letztes
+    // Advertisement noch aktuell ist, sonst würde eine veraltete RSSI-Messung
+    // fälschlich als "jetzt gemessen" markiert
+    final lastAdvertisements = ref.read(bleStateProvider).lastAdvertisements;
+    dev.log('📊 Processing ${lastAdvertisements.length} BLE advertisements for GPS point ${gpsPointId.substring(0, 8)}...');
+
+    for (final ad in lastAdvertisements.values) {
+      final age = now.difference(ad.timestamp);
+      if (age > _maxAdvertisementAge) {
+        dev.log('⏭️ Skipping stale ad from ${ad.peerId} (age: ${age.inMilliseconds}ms > 5000ms)');
+        continue;
+      }
+      dev.log('💾 Saving RSSI: ${ad.peerId} = ${ad.rssi}dBm for GPS point ${gpsPointId.substring(0, 8)}...');
+      await rmRepo.insertRangeMeasurement(
+        RangeMeasurementEntity(
+          id: const Uuid().v4(),
+          sessionId: sessionId,
+          gpsPointId: gpsPointId,
+          peerId: ad.peerId,
+          tech: 'ble',
+          rssi: ad.rssi,
+          timestamp: now,
+        ),
+      );
+    }
+
     state = state.copyWith(
       pointsSaved: state.pointsSaved + 1,
       lastSog: pos.speed * 1.94384,
@@ -199,12 +270,21 @@ class RecordingController extends Notifier<RecordingState> {
   }
 
   Future<void> stopRecording() async {
+    dev.log('⏹️ RECORDING STOP REQUESTED');
     await _gpsSub?.cancel();
     await _accelSub?.cancel();
     await _orientationSub?.cancel();
     _gpsSub = null;
     _accelSub = null;
     _orientationSub = null;
+    dev.log('✅ All subscriptions cancelled');
+
+    // BLE: Stop
+    final bleNotifier = ref.read(bleStateProvider.notifier);
+    await bleNotifier.stopAdvertising();
+    dev.log('✅ BLE Advertising stopped');
+    await bleNotifier.stopScanning();
+    dev.log('✅ BLE Scan stopped');
 
     // Filter-Referenzen zurücksetzen — die nächste Session darf nicht
     // gegen den letzten Punkt dieser Session vergleichen
@@ -214,8 +294,8 @@ class RecordingController extends Notifier<RecordingState> {
 
     final finishedId = state.activeSessionId;
     if (finishedId != null) {
-      final repo = ref.read(sessionRepositoryProvider);
-      await repo.completeSession(finishedId);
+      final sessionRepo = ref.read(sessionRepositoryProvider);
+      await sessionRepo.completeSession(finishedId);
     }
 
     state = RecordingState(completedSessionId: finishedId);

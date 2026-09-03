@@ -14,12 +14,12 @@ import 'tables.dart';
 // The part() line imports the generated code — doesn't exist yet, that's fine
 part 'app_database.g.dart';
 
-@DriftDatabase(tables: [Sessions, GpsPoints, Boats])
+@DriftDatabase(tables: [Sessions, GpsPoints, Boats, RangeMeasurements])
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 5;
+  int get schemaVersion => 6;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -28,6 +28,7 @@ class AppDatabase extends _$AppDatabase {
       await customStatement('DROP TABLE IF EXISTS gps_points');
       await customStatement('DROP TABLE IF EXISTS sessions');
       await customStatement('DROP TABLE IF EXISTS boats');
+      await customStatement('DROP TABLE IF EXISTS range_measurements');
       await m.createAll();
     },
   );
@@ -143,6 +144,28 @@ class AppDatabase extends _$AppDatabase {
       }).toList(),
     );
   }
+
+  // ── Range Measurement queries ──────────────────────────────────────
+
+  Future<void> insertRangeMeasurement(RangeMeasurementsCompanion m) =>
+      into(rangeMeasurements).insert(m);
+
+  Future<void> insertRangeMeasurements(List<RangeMeasurementsCompanion> ms) =>
+      batch((b) => b.insertAll(rangeMeasurements, ms));
+
+  Future<void> deleteRangeMeasurement(String id) =>
+      (delete(rangeMeasurements)..where((m) => m.id.equals(id))).go();
+
+  Future<void> setRangeMeasurementTech(String id, String tech) =>
+      (update(rangeMeasurements)..where((m) => m.id.equals(id))).write(
+        RangeMeasurementsCompanion(tech: Value(tech)),
+      );
+
+  Future<List<RangeMeasurement>> getRangeMeasurementsForSession(
+    String sessionId,
+  ) => (select(
+    rangeMeasurements,
+  )..where((m) => m.sessionId.equals(sessionId))).get();
 }
 
 // How drift opens the SQLite file

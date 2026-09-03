@@ -4,6 +4,10 @@ import 'package:sailing_analytics/controllers/recording_controller.dart';
 import 'widgets/gps_status.dart';
 import 'widgets/heading_display.dart';
 import 'widgets/speed_display.dart';
+import 'widgets/ble_debug_overlay.dart';
+
+// 🔧 DEBUG: Setze auf false, um BLE-Debug-View zu deaktivieren
+const bool _debugBleEnabled = true;
 
 class RacingScreen extends ConsumerWidget {
   const RacingScreen({super.key});
@@ -38,6 +42,7 @@ class RacingScreen extends ConsumerWidget {
               ),
             ),
           ),
+          if (_debugBleEnabled) const BleDebugOverlay(),
         ],
       ),
     );

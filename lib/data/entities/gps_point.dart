@@ -1,6 +1,7 @@
 import '../database/app_database.dart';
 
 class GpsPointEntity {
+  final String id;
   final String sessionId;
   final DateTime timestamp;
   final double lat;
@@ -13,6 +14,7 @@ class GpsPointEntity {
   final double accuracy;
 
   const GpsPointEntity({
+    required this.id,
     required this.sessionId,
     required this.timestamp,
     required this.lat,
@@ -26,6 +28,7 @@ class GpsPointEntity {
   });
 
   factory GpsPointEntity.fromDb(GpsPoint row) => GpsPointEntity(
+    id: row.id,
     sessionId: row.sessionId,
     timestamp: row.timestamp,
     lat: row.lat,

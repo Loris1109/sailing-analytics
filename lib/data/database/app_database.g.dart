@@ -1630,12 +1630,581 @@ class GpsPointsCompanion extends UpdateCompanion<GpsPoint> {
   }
 }
 
+class $RangeMeasurementsTable extends RangeMeasurements
+    with TableInfo<$RangeMeasurementsTable, RangeMeasurement> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $RangeMeasurementsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _sessionIdMeta = const VerificationMeta(
+    'sessionId',
+  );
+  @override
+  late final GeneratedColumn<String> sessionId = GeneratedColumn<String>(
+    'session_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES sessions (id)',
+    ),
+  );
+  static const VerificationMeta _gpsPointIdMeta = const VerificationMeta(
+    'gpsPointId',
+  );
+  @override
+  late final GeneratedColumn<String> gpsPointId = GeneratedColumn<String>(
+    'gps_point_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES gps_points (id)',
+    ),
+  );
+  static const VerificationMeta _peerIdMeta = const VerificationMeta('peerId');
+  @override
+  late final GeneratedColumn<String> peerId = GeneratedColumn<String>(
+    'peer_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _techMeta = const VerificationMeta('tech');
+  @override
+  late final GeneratedColumn<String> tech = GeneratedColumn<String>(
+    'tech',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _rssiMeta = const VerificationMeta('rssi');
+  @override
+  late final GeneratedColumn<int> rssi = GeneratedColumn<int>(
+    'rssi',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _distanceMeta = const VerificationMeta(
+    'distance',
+  );
+  @override
+  late final GeneratedColumn<int> distance = GeneratedColumn<int>(
+    'distance',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _qualityMeta = const VerificationMeta(
+    'quality',
+  );
+  @override
+  late final GeneratedColumn<int> quality = GeneratedColumn<int>(
+    'quality',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _timestampMeta = const VerificationMeta(
+    'timestamp',
+  );
+  @override
+  late final GeneratedColumn<DateTime> timestamp = GeneratedColumn<DateTime>(
+    'timestamp',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    sessionId,
+    gpsPointId,
+    peerId,
+    tech,
+    rssi,
+    distance,
+    quality,
+    timestamp,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'range_measurements';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<RangeMeasurement> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('session_id')) {
+      context.handle(
+        _sessionIdMeta,
+        sessionId.isAcceptableOrUnknown(data['session_id']!, _sessionIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_sessionIdMeta);
+    }
+    if (data.containsKey('gps_point_id')) {
+      context.handle(
+        _gpsPointIdMeta,
+        gpsPointId.isAcceptableOrUnknown(
+          data['gps_point_id']!,
+          _gpsPointIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_gpsPointIdMeta);
+    }
+    if (data.containsKey('peer_id')) {
+      context.handle(
+        _peerIdMeta,
+        peerId.isAcceptableOrUnknown(data['peer_id']!, _peerIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_peerIdMeta);
+    }
+    if (data.containsKey('tech')) {
+      context.handle(
+        _techMeta,
+        tech.isAcceptableOrUnknown(data['tech']!, _techMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_techMeta);
+    }
+    if (data.containsKey('rssi')) {
+      context.handle(
+        _rssiMeta,
+        rssi.isAcceptableOrUnknown(data['rssi']!, _rssiMeta),
+      );
+    }
+    if (data.containsKey('distance')) {
+      context.handle(
+        _distanceMeta,
+        distance.isAcceptableOrUnknown(data['distance']!, _distanceMeta),
+      );
+    }
+    if (data.containsKey('quality')) {
+      context.handle(
+        _qualityMeta,
+        quality.isAcceptableOrUnknown(data['quality']!, _qualityMeta),
+      );
+    }
+    if (data.containsKey('timestamp')) {
+      context.handle(
+        _timestampMeta,
+        timestamp.isAcceptableOrUnknown(data['timestamp']!, _timestampMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_timestampMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  RangeMeasurement map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return RangeMeasurement(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      sessionId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}session_id'],
+      )!,
+      gpsPointId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}gps_point_id'],
+      )!,
+      peerId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}peer_id'],
+      )!,
+      tech: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}tech'],
+      )!,
+      rssi: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}rssi'],
+      ),
+      distance: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}distance'],
+      ),
+      quality: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}quality'],
+      ),
+      timestamp: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}timestamp'],
+      )!,
+    );
+  }
+
+  @override
+  $RangeMeasurementsTable createAlias(String alias) {
+    return $RangeMeasurementsTable(attachedDatabase, alias);
+  }
+}
+
+class RangeMeasurement extends DataClass
+    implements Insertable<RangeMeasurement> {
+  final String id;
+  final String sessionId;
+  final String gpsPointId;
+  final String peerId;
+  final String tech;
+  final int? rssi;
+  final int? distance;
+  final int? quality;
+  final DateTime timestamp;
+  const RangeMeasurement({
+    required this.id,
+    required this.sessionId,
+    required this.gpsPointId,
+    required this.peerId,
+    required this.tech,
+    this.rssi,
+    this.distance,
+    this.quality,
+    required this.timestamp,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['session_id'] = Variable<String>(sessionId);
+    map['gps_point_id'] = Variable<String>(gpsPointId);
+    map['peer_id'] = Variable<String>(peerId);
+    map['tech'] = Variable<String>(tech);
+    if (!nullToAbsent || rssi != null) {
+      map['rssi'] = Variable<int>(rssi);
+    }
+    if (!nullToAbsent || distance != null) {
+      map['distance'] = Variable<int>(distance);
+    }
+    if (!nullToAbsent || quality != null) {
+      map['quality'] = Variable<int>(quality);
+    }
+    map['timestamp'] = Variable<DateTime>(timestamp);
+    return map;
+  }
+
+  RangeMeasurementsCompanion toCompanion(bool nullToAbsent) {
+    return RangeMeasurementsCompanion(
+      id: Value(id),
+      sessionId: Value(sessionId),
+      gpsPointId: Value(gpsPointId),
+      peerId: Value(peerId),
+      tech: Value(tech),
+      rssi: rssi == null && nullToAbsent ? const Value.absent() : Value(rssi),
+      distance: distance == null && nullToAbsent
+          ? const Value.absent()
+          : Value(distance),
+      quality: quality == null && nullToAbsent
+          ? const Value.absent()
+          : Value(quality),
+      timestamp: Value(timestamp),
+    );
+  }
+
+  factory RangeMeasurement.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return RangeMeasurement(
+      id: serializer.fromJson<String>(json['id']),
+      sessionId: serializer.fromJson<String>(json['sessionId']),
+      gpsPointId: serializer.fromJson<String>(json['gpsPointId']),
+      peerId: serializer.fromJson<String>(json['peerId']),
+      tech: serializer.fromJson<String>(json['tech']),
+      rssi: serializer.fromJson<int?>(json['rssi']),
+      distance: serializer.fromJson<int?>(json['distance']),
+      quality: serializer.fromJson<int?>(json['quality']),
+      timestamp: serializer.fromJson<DateTime>(json['timestamp']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'sessionId': serializer.toJson<String>(sessionId),
+      'gpsPointId': serializer.toJson<String>(gpsPointId),
+      'peerId': serializer.toJson<String>(peerId),
+      'tech': serializer.toJson<String>(tech),
+      'rssi': serializer.toJson<int?>(rssi),
+      'distance': serializer.toJson<int?>(distance),
+      'quality': serializer.toJson<int?>(quality),
+      'timestamp': serializer.toJson<DateTime>(timestamp),
+    };
+  }
+
+  RangeMeasurement copyWith({
+    String? id,
+    String? sessionId,
+    String? gpsPointId,
+    String? peerId,
+    String? tech,
+    Value<int?> rssi = const Value.absent(),
+    Value<int?> distance = const Value.absent(),
+    Value<int?> quality = const Value.absent(),
+    DateTime? timestamp,
+  }) => RangeMeasurement(
+    id: id ?? this.id,
+    sessionId: sessionId ?? this.sessionId,
+    gpsPointId: gpsPointId ?? this.gpsPointId,
+    peerId: peerId ?? this.peerId,
+    tech: tech ?? this.tech,
+    rssi: rssi.present ? rssi.value : this.rssi,
+    distance: distance.present ? distance.value : this.distance,
+    quality: quality.present ? quality.value : this.quality,
+    timestamp: timestamp ?? this.timestamp,
+  );
+  RangeMeasurement copyWithCompanion(RangeMeasurementsCompanion data) {
+    return RangeMeasurement(
+      id: data.id.present ? data.id.value : this.id,
+      sessionId: data.sessionId.present ? data.sessionId.value : this.sessionId,
+      gpsPointId: data.gpsPointId.present
+          ? data.gpsPointId.value
+          : this.gpsPointId,
+      peerId: data.peerId.present ? data.peerId.value : this.peerId,
+      tech: data.tech.present ? data.tech.value : this.tech,
+      rssi: data.rssi.present ? data.rssi.value : this.rssi,
+      distance: data.distance.present ? data.distance.value : this.distance,
+      quality: data.quality.present ? data.quality.value : this.quality,
+      timestamp: data.timestamp.present ? data.timestamp.value : this.timestamp,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('RangeMeasurement(')
+          ..write('id: $id, ')
+          ..write('sessionId: $sessionId, ')
+          ..write('gpsPointId: $gpsPointId, ')
+          ..write('peerId: $peerId, ')
+          ..write('tech: $tech, ')
+          ..write('rssi: $rssi, ')
+          ..write('distance: $distance, ')
+          ..write('quality: $quality, ')
+          ..write('timestamp: $timestamp')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    sessionId,
+    gpsPointId,
+    peerId,
+    tech,
+    rssi,
+    distance,
+    quality,
+    timestamp,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is RangeMeasurement &&
+          other.id == this.id &&
+          other.sessionId == this.sessionId &&
+          other.gpsPointId == this.gpsPointId &&
+          other.peerId == this.peerId &&
+          other.tech == this.tech &&
+          other.rssi == this.rssi &&
+          other.distance == this.distance &&
+          other.quality == this.quality &&
+          other.timestamp == this.timestamp);
+}
+
+class RangeMeasurementsCompanion extends UpdateCompanion<RangeMeasurement> {
+  final Value<String> id;
+  final Value<String> sessionId;
+  final Value<String> gpsPointId;
+  final Value<String> peerId;
+  final Value<String> tech;
+  final Value<int?> rssi;
+  final Value<int?> distance;
+  final Value<int?> quality;
+  final Value<DateTime> timestamp;
+  final Value<int> rowid;
+  const RangeMeasurementsCompanion({
+    this.id = const Value.absent(),
+    this.sessionId = const Value.absent(),
+    this.gpsPointId = const Value.absent(),
+    this.peerId = const Value.absent(),
+    this.tech = const Value.absent(),
+    this.rssi = const Value.absent(),
+    this.distance = const Value.absent(),
+    this.quality = const Value.absent(),
+    this.timestamp = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  RangeMeasurementsCompanion.insert({
+    required String id,
+    required String sessionId,
+    required String gpsPointId,
+    required String peerId,
+    required String tech,
+    this.rssi = const Value.absent(),
+    this.distance = const Value.absent(),
+    this.quality = const Value.absent(),
+    required DateTime timestamp,
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       sessionId = Value(sessionId),
+       gpsPointId = Value(gpsPointId),
+       peerId = Value(peerId),
+       tech = Value(tech),
+       timestamp = Value(timestamp);
+  static Insertable<RangeMeasurement> custom({
+    Expression<String>? id,
+    Expression<String>? sessionId,
+    Expression<String>? gpsPointId,
+    Expression<String>? peerId,
+    Expression<String>? tech,
+    Expression<int>? rssi,
+    Expression<int>? distance,
+    Expression<int>? quality,
+    Expression<DateTime>? timestamp,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (sessionId != null) 'session_id': sessionId,
+      if (gpsPointId != null) 'gps_point_id': gpsPointId,
+      if (peerId != null) 'peer_id': peerId,
+      if (tech != null) 'tech': tech,
+      if (rssi != null) 'rssi': rssi,
+      if (distance != null) 'distance': distance,
+      if (quality != null) 'quality': quality,
+      if (timestamp != null) 'timestamp': timestamp,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  RangeMeasurementsCompanion copyWith({
+    Value<String>? id,
+    Value<String>? sessionId,
+    Value<String>? gpsPointId,
+    Value<String>? peerId,
+    Value<String>? tech,
+    Value<int?>? rssi,
+    Value<int?>? distance,
+    Value<int?>? quality,
+    Value<DateTime>? timestamp,
+    Value<int>? rowid,
+  }) {
+    return RangeMeasurementsCompanion(
+      id: id ?? this.id,
+      sessionId: sessionId ?? this.sessionId,
+      gpsPointId: gpsPointId ?? this.gpsPointId,
+      peerId: peerId ?? this.peerId,
+      tech: tech ?? this.tech,
+      rssi: rssi ?? this.rssi,
+      distance: distance ?? this.distance,
+      quality: quality ?? this.quality,
+      timestamp: timestamp ?? this.timestamp,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (sessionId.present) {
+      map['session_id'] = Variable<String>(sessionId.value);
+    }
+    if (gpsPointId.present) {
+      map['gps_point_id'] = Variable<String>(gpsPointId.value);
+    }
+    if (peerId.present) {
+      map['peer_id'] = Variable<String>(peerId.value);
+    }
+    if (tech.present) {
+      map['tech'] = Variable<String>(tech.value);
+    }
+    if (rssi.present) {
+      map['rssi'] = Variable<int>(rssi.value);
+    }
+    if (distance.present) {
+      map['distance'] = Variable<int>(distance.value);
+    }
+    if (quality.present) {
+      map['quality'] = Variable<int>(quality.value);
+    }
+    if (timestamp.present) {
+      map['timestamp'] = Variable<DateTime>(timestamp.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('RangeMeasurementsCompanion(')
+          ..write('id: $id, ')
+          ..write('sessionId: $sessionId, ')
+          ..write('gpsPointId: $gpsPointId, ')
+          ..write('peerId: $peerId, ')
+          ..write('tech: $tech, ')
+          ..write('rssi: $rssi, ')
+          ..write('distance: $distance, ')
+          ..write('quality: $quality, ')
+          ..write('timestamp: $timestamp, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
   late final $BoatsTable boats = $BoatsTable(this);
   late final $SessionsTable sessions = $SessionsTable(this);
   late final $GpsPointsTable gpsPoints = $GpsPointsTable(this);
+  late final $RangeMeasurementsTable rangeMeasurements =
+      $RangeMeasurementsTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -1644,6 +2213,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     boats,
     sessions,
     gpsPoints,
+    rangeMeasurements,
   ];
 }
 
@@ -1676,7 +2246,7 @@ final class $$BoatsTableReferences
     _$AppDatabase db,
   ) => MultiTypedResultKey.fromTable(
     db.sessions,
-    aliasName: $_aliasNameGenerator(db.boats.id, db.sessions.boatId),
+    aliasName: 'boats__id__sessions__boat_id',
   );
 
   $$SessionsTableProcessedTableManager get sessionsRefs {
@@ -1990,9 +2560,8 @@ final class $$SessionsTableReferences
     extends BaseReferences<_$AppDatabase, $SessionsTable, Session> {
   $$SessionsTableReferences(super.$_db, super.$_table, super.$_typedResult);
 
-  static $BoatsTable _boatIdTable(_$AppDatabase db) => db.boats.createAlias(
-    $_aliasNameGenerator(db.sessions.boatId, db.boats.id),
-  );
+  static $BoatsTable _boatIdTable(_$AppDatabase db) =>
+      db.boats.createAlias('sessions__boat_id__boats__id');
 
   $$BoatsTableProcessedTableManager get boatId {
     final $_column = $_itemColumn<String>('boat_id')!;
@@ -2011,7 +2580,7 @@ final class $$SessionsTableReferences
   static MultiTypedResultKey<$GpsPointsTable, List<GpsPoint>>
   _gpsPointsRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
     db.gpsPoints,
-    aliasName: $_aliasNameGenerator(db.sessions.id, db.gpsPoints.sessionId),
+    aliasName: 'sessions__id__gps_points__session_id',
   );
 
   $$GpsPointsTableProcessedTableManager get gpsPointsRefs {
@@ -2021,6 +2590,27 @@ final class $$SessionsTableReferences
     ).filter((f) => f.sessionId.id.sqlEquals($_itemColumn<String>('id')!));
 
     final cache = $_typedResult.readTableOrNull(_gpsPointsRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+
+  static MultiTypedResultKey<$RangeMeasurementsTable, List<RangeMeasurement>>
+  _rangeMeasurementsRefsTable(_$AppDatabase db) =>
+      MultiTypedResultKey.fromTable(
+        db.rangeMeasurements,
+        aliasName: 'sessions__id__range_measurements__session_id',
+      );
+
+  $$RangeMeasurementsTableProcessedTableManager get rangeMeasurementsRefs {
+    final manager = $$RangeMeasurementsTableTableManager(
+      $_db,
+      $_db.rangeMeasurements,
+    ).filter((f) => f.sessionId.id.sqlEquals($_itemColumn<String>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(
+      _rangeMeasurementsRefsTable($_db),
+    );
     return ProcessedTableManager(
       manager.$state.copyWith(prefetchedData: cache),
     );
@@ -2115,6 +2705,31 @@ class $$SessionsTableFilterComposer
           }) => $$GpsPointsTableFilterComposer(
             $db: $db,
             $table: $db.gpsPoints,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<bool> rangeMeasurementsRefs(
+    Expression<bool> Function($$RangeMeasurementsTableFilterComposer f) f,
+  ) {
+    final $$RangeMeasurementsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.rangeMeasurements,
+      getReferencedColumn: (t) => t.sessionId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$RangeMeasurementsTableFilterComposer(
+            $db: $db,
+            $table: $db.rangeMeasurements,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -2282,6 +2897,32 @@ class $$SessionsTableAnnotationComposer
     );
     return f(composer);
   }
+
+  Expression<T> rangeMeasurementsRefs<T extends Object>(
+    Expression<T> Function($$RangeMeasurementsTableAnnotationComposer a) f,
+  ) {
+    final $$RangeMeasurementsTableAnnotationComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.id,
+          referencedTable: $db.rangeMeasurements,
+          getReferencedColumn: (t) => t.sessionId,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$RangeMeasurementsTableAnnotationComposer(
+                $db: $db,
+                $table: $db.rangeMeasurements,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
+    return f(composer);
+  }
 }
 
 class $$SessionsTableTableManager
@@ -2297,7 +2938,11 @@ class $$SessionsTableTableManager
           $$SessionsTableUpdateCompanionBuilder,
           (Session, $$SessionsTableReferences),
           Session,
-          PrefetchHooks Function({bool boatId, bool gpsPointsRefs})
+          PrefetchHooks Function({
+            bool boatId,
+            bool gpsPointsRefs,
+            bool rangeMeasurementsRefs,
+          })
         > {
   $$SessionsTableTableManager(_$AppDatabase db, $SessionsTable table)
     : super(
@@ -2366,66 +3011,98 @@ class $$SessionsTableTableManager
                 ),
               )
               .toList(),
-          prefetchHooksCallback: ({boatId = false, gpsPointsRefs = false}) {
-            return PrefetchHooks(
-              db: db,
-              explicitlyWatchedTables: [if (gpsPointsRefs) db.gpsPoints],
-              addJoins:
-                  <
-                    T extends TableManagerState<
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic
-                    >
-                  >(state) {
-                    if (boatId) {
-                      state =
-                          state.withJoin(
-                                currentTable: table,
-                                currentColumn: table.boatId,
-                                referencedTable: $$SessionsTableReferences
-                                    ._boatIdTable(db),
-                                referencedColumn: $$SessionsTableReferences
-                                    ._boatIdTable(db)
-                                    .id,
-                              )
-                              as T;
-                    }
+          prefetchHooksCallback:
+              ({
+                boatId = false,
+                gpsPointsRefs = false,
+                rangeMeasurementsRefs = false,
+              }) {
+                return PrefetchHooks(
+                  db: db,
+                  explicitlyWatchedTables: [
+                    if (gpsPointsRefs) db.gpsPoints,
+                    if (rangeMeasurementsRefs) db.rangeMeasurements,
+                  ],
+                  addJoins:
+                      <
+                        T extends TableManagerState<
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic
+                        >
+                      >(state) {
+                        if (boatId) {
+                          state =
+                              state.withJoin(
+                                    currentTable: table,
+                                    currentColumn: table.boatId,
+                                    referencedTable: $$SessionsTableReferences
+                                        ._boatIdTable(db),
+                                    referencedColumn: $$SessionsTableReferences
+                                        ._boatIdTable(db)
+                                        .id,
+                                  )
+                                  as T;
+                        }
 
-                    return state;
+                        return state;
+                      },
+                  getPrefetchedDataCallback: (items) async {
+                    return [
+                      if (gpsPointsRefs)
+                        await $_getPrefetchedData<
+                          Session,
+                          $SessionsTable,
+                          GpsPoint
+                        >(
+                          currentTable: table,
+                          referencedTable: $$SessionsTableReferences
+                              ._gpsPointsRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$SessionsTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).gpsPointsRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.sessionId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
+                      if (rangeMeasurementsRefs)
+                        await $_getPrefetchedData<
+                          Session,
+                          $SessionsTable,
+                          RangeMeasurement
+                        >(
+                          currentTable: table,
+                          referencedTable: $$SessionsTableReferences
+                              ._rangeMeasurementsRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$SessionsTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).rangeMeasurementsRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.sessionId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
+                    ];
                   },
-              getPrefetchedDataCallback: (items) async {
-                return [
-                  if (gpsPointsRefs)
-                    await $_getPrefetchedData<
-                      Session,
-                      $SessionsTable,
-                      GpsPoint
-                    >(
-                      currentTable: table,
-                      referencedTable: $$SessionsTableReferences
-                          ._gpsPointsRefsTable(db),
-                      managerFromTypedResult: (p0) => $$SessionsTableReferences(
-                        db,
-                        table,
-                        p0,
-                      ).gpsPointsRefs,
-                      referencedItemsForCurrentItem: (item, referencedItems) =>
-                          referencedItems.where((e) => e.sessionId == item.id),
-                      typedResults: items,
-                    ),
-                ];
+                );
               },
-            );
-          },
         ),
       );
 }
@@ -2442,7 +3119,11 @@ typedef $$SessionsTableProcessedTableManager =
       $$SessionsTableUpdateCompanionBuilder,
       (Session, $$SessionsTableReferences),
       Session,
-      PrefetchHooks Function({bool boatId, bool gpsPointsRefs})
+      PrefetchHooks Function({
+        bool boatId,
+        bool gpsPointsRefs,
+        bool rangeMeasurementsRefs,
+      })
     >;
 typedef $$GpsPointsTableCreateCompanionBuilder =
     GpsPointsCompanion Function({
@@ -2480,9 +3161,7 @@ final class $$GpsPointsTableReferences
   $$GpsPointsTableReferences(super.$_db, super.$_table, super.$_typedResult);
 
   static $SessionsTable _sessionIdTable(_$AppDatabase db) =>
-      db.sessions.createAlias(
-        $_aliasNameGenerator(db.gpsPoints.sessionId, db.sessions.id),
-      );
+      db.sessions.createAlias('gps_points__session_id__sessions__id');
 
   $$SessionsTableProcessedTableManager get sessionId {
     final $_column = $_itemColumn<String>('session_id')!;
@@ -2495,6 +3174,27 @@ final class $$GpsPointsTableReferences
     if (item == null) return manager;
     return ProcessedTableManager(
       manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+
+  static MultiTypedResultKey<$RangeMeasurementsTable, List<RangeMeasurement>>
+  _rangeMeasurementsRefsTable(_$AppDatabase db) =>
+      MultiTypedResultKey.fromTable(
+        db.rangeMeasurements,
+        aliasName: 'gps_points__id__range_measurements__gps_point_id',
+      );
+
+  $$RangeMeasurementsTableProcessedTableManager get rangeMeasurementsRefs {
+    final manager = $$RangeMeasurementsTableTableManager(
+      $_db,
+      $_db.rangeMeasurements,
+    ).filter((f) => f.gpsPointId.id.sqlEquals($_itemColumn<String>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(
+      _rangeMeasurementsRefsTable($_db),
+    );
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
     );
   }
 }
@@ -2579,6 +3279,31 @@ class $$GpsPointsTableFilterComposer
           ),
     );
     return composer;
+  }
+
+  Expression<bool> rangeMeasurementsRefs(
+    Expression<bool> Function($$RangeMeasurementsTableFilterComposer f) f,
+  ) {
+    final $$RangeMeasurementsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.rangeMeasurements,
+      getReferencedColumn: (t) => t.gpsPointId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$RangeMeasurementsTableFilterComposer(
+            $db: $db,
+            $table: $db.rangeMeasurements,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
   }
 }
 
@@ -2728,6 +3453,32 @@ class $$GpsPointsTableAnnotationComposer
     );
     return composer;
   }
+
+  Expression<T> rangeMeasurementsRefs<T extends Object>(
+    Expression<T> Function($$RangeMeasurementsTableAnnotationComposer a) f,
+  ) {
+    final $$RangeMeasurementsTableAnnotationComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.id,
+          referencedTable: $db.rangeMeasurements,
+          getReferencedColumn: (t) => t.gpsPointId,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$RangeMeasurementsTableAnnotationComposer(
+                $db: $db,
+                $table: $db.rangeMeasurements,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
+    return f(composer);
+  }
 }
 
 class $$GpsPointsTableTableManager
@@ -2743,7 +3494,7 @@ class $$GpsPointsTableTableManager
           $$GpsPointsTableUpdateCompanionBuilder,
           (GpsPoint, $$GpsPointsTableReferences),
           GpsPoint,
-          PrefetchHooks Function({bool sessionId})
+          PrefetchHooks Function({bool sessionId, bool rangeMeasurementsRefs})
         > {
   $$GpsPointsTableTableManager(_$AppDatabase db, $GpsPointsTable table)
     : super(
@@ -2820,7 +3571,512 @@ class $$GpsPointsTableTableManager
                 ),
               )
               .toList(),
-          prefetchHooksCallback: ({sessionId = false}) {
+          prefetchHooksCallback:
+              ({sessionId = false, rangeMeasurementsRefs = false}) {
+                return PrefetchHooks(
+                  db: db,
+                  explicitlyWatchedTables: [
+                    if (rangeMeasurementsRefs) db.rangeMeasurements,
+                  ],
+                  addJoins:
+                      <
+                        T extends TableManagerState<
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic
+                        >
+                      >(state) {
+                        if (sessionId) {
+                          state =
+                              state.withJoin(
+                                    currentTable: table,
+                                    currentColumn: table.sessionId,
+                                    referencedTable: $$GpsPointsTableReferences
+                                        ._sessionIdTable(db),
+                                    referencedColumn: $$GpsPointsTableReferences
+                                        ._sessionIdTable(db)
+                                        .id,
+                                  )
+                                  as T;
+                        }
+
+                        return state;
+                      },
+                  getPrefetchedDataCallback: (items) async {
+                    return [
+                      if (rangeMeasurementsRefs)
+                        await $_getPrefetchedData<
+                          GpsPoint,
+                          $GpsPointsTable,
+                          RangeMeasurement
+                        >(
+                          currentTable: table,
+                          referencedTable: $$GpsPointsTableReferences
+                              ._rangeMeasurementsRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$GpsPointsTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).rangeMeasurementsRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.gpsPointId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
+                    ];
+                  },
+                );
+              },
+        ),
+      );
+}
+
+typedef $$GpsPointsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $GpsPointsTable,
+      GpsPoint,
+      $$GpsPointsTableFilterComposer,
+      $$GpsPointsTableOrderingComposer,
+      $$GpsPointsTableAnnotationComposer,
+      $$GpsPointsTableCreateCompanionBuilder,
+      $$GpsPointsTableUpdateCompanionBuilder,
+      (GpsPoint, $$GpsPointsTableReferences),
+      GpsPoint,
+      PrefetchHooks Function({bool sessionId, bool rangeMeasurementsRefs})
+    >;
+typedef $$RangeMeasurementsTableCreateCompanionBuilder =
+    RangeMeasurementsCompanion Function({
+      required String id,
+      required String sessionId,
+      required String gpsPointId,
+      required String peerId,
+      required String tech,
+      Value<int?> rssi,
+      Value<int?> distance,
+      Value<int?> quality,
+      required DateTime timestamp,
+      Value<int> rowid,
+    });
+typedef $$RangeMeasurementsTableUpdateCompanionBuilder =
+    RangeMeasurementsCompanion Function({
+      Value<String> id,
+      Value<String> sessionId,
+      Value<String> gpsPointId,
+      Value<String> peerId,
+      Value<String> tech,
+      Value<int?> rssi,
+      Value<int?> distance,
+      Value<int?> quality,
+      Value<DateTime> timestamp,
+      Value<int> rowid,
+    });
+
+final class $$RangeMeasurementsTableReferences
+    extends
+        BaseReferences<
+          _$AppDatabase,
+          $RangeMeasurementsTable,
+          RangeMeasurement
+        > {
+  $$RangeMeasurementsTableReferences(
+    super.$_db,
+    super.$_table,
+    super.$_typedResult,
+  );
+
+  static $SessionsTable _sessionIdTable(_$AppDatabase db) =>
+      db.sessions.createAlias('range_measurements__session_id__sessions__id');
+
+  $$SessionsTableProcessedTableManager get sessionId {
+    final $_column = $_itemColumn<String>('session_id')!;
+
+    final manager = $$SessionsTableTableManager(
+      $_db,
+      $_db.sessions,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_sessionIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+
+  static $GpsPointsTable _gpsPointIdTable(_$AppDatabase db) => db.gpsPoints
+      .createAlias('range_measurements__gps_point_id__gps_points__id');
+
+  $$GpsPointsTableProcessedTableManager get gpsPointId {
+    final $_column = $_itemColumn<String>('gps_point_id')!;
+
+    final manager = $$GpsPointsTableTableManager(
+      $_db,
+      $_db.gpsPoints,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_gpsPointIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$RangeMeasurementsTableFilterComposer
+    extends Composer<_$AppDatabase, $RangeMeasurementsTable> {
+  $$RangeMeasurementsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get peerId => $composableBuilder(
+    column: $table.peerId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get tech => $composableBuilder(
+    column: $table.tech,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get rssi => $composableBuilder(
+    column: $table.rssi,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get distance => $composableBuilder(
+    column: $table.distance,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get quality => $composableBuilder(
+    column: $table.quality,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get timestamp => $composableBuilder(
+    column: $table.timestamp,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$SessionsTableFilterComposer get sessionId {
+    final $$SessionsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.sessionId,
+      referencedTable: $db.sessions,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$SessionsTableFilterComposer(
+            $db: $db,
+            $table: $db.sessions,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$GpsPointsTableFilterComposer get gpsPointId {
+    final $$GpsPointsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.gpsPointId,
+      referencedTable: $db.gpsPoints,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$GpsPointsTableFilterComposer(
+            $db: $db,
+            $table: $db.gpsPoints,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$RangeMeasurementsTableOrderingComposer
+    extends Composer<_$AppDatabase, $RangeMeasurementsTable> {
+  $$RangeMeasurementsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get peerId => $composableBuilder(
+    column: $table.peerId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get tech => $composableBuilder(
+    column: $table.tech,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get rssi => $composableBuilder(
+    column: $table.rssi,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get distance => $composableBuilder(
+    column: $table.distance,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get quality => $composableBuilder(
+    column: $table.quality,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get timestamp => $composableBuilder(
+    column: $table.timestamp,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$SessionsTableOrderingComposer get sessionId {
+    final $$SessionsTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.sessionId,
+      referencedTable: $db.sessions,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$SessionsTableOrderingComposer(
+            $db: $db,
+            $table: $db.sessions,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$GpsPointsTableOrderingComposer get gpsPointId {
+    final $$GpsPointsTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.gpsPointId,
+      referencedTable: $db.gpsPoints,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$GpsPointsTableOrderingComposer(
+            $db: $db,
+            $table: $db.gpsPoints,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$RangeMeasurementsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $RangeMeasurementsTable> {
+  $$RangeMeasurementsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get peerId =>
+      $composableBuilder(column: $table.peerId, builder: (column) => column);
+
+  GeneratedColumn<String> get tech =>
+      $composableBuilder(column: $table.tech, builder: (column) => column);
+
+  GeneratedColumn<int> get rssi =>
+      $composableBuilder(column: $table.rssi, builder: (column) => column);
+
+  GeneratedColumn<int> get distance =>
+      $composableBuilder(column: $table.distance, builder: (column) => column);
+
+  GeneratedColumn<int> get quality =>
+      $composableBuilder(column: $table.quality, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get timestamp =>
+      $composableBuilder(column: $table.timestamp, builder: (column) => column);
+
+  $$SessionsTableAnnotationComposer get sessionId {
+    final $$SessionsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.sessionId,
+      referencedTable: $db.sessions,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$SessionsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.sessions,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$GpsPointsTableAnnotationComposer get gpsPointId {
+    final $$GpsPointsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.gpsPointId,
+      referencedTable: $db.gpsPoints,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$GpsPointsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.gpsPoints,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$RangeMeasurementsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $RangeMeasurementsTable,
+          RangeMeasurement,
+          $$RangeMeasurementsTableFilterComposer,
+          $$RangeMeasurementsTableOrderingComposer,
+          $$RangeMeasurementsTableAnnotationComposer,
+          $$RangeMeasurementsTableCreateCompanionBuilder,
+          $$RangeMeasurementsTableUpdateCompanionBuilder,
+          (RangeMeasurement, $$RangeMeasurementsTableReferences),
+          RangeMeasurement,
+          PrefetchHooks Function({bool sessionId, bool gpsPointId})
+        > {
+  $$RangeMeasurementsTableTableManager(
+    _$AppDatabase db,
+    $RangeMeasurementsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$RangeMeasurementsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$RangeMeasurementsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$RangeMeasurementsTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> sessionId = const Value.absent(),
+                Value<String> gpsPointId = const Value.absent(),
+                Value<String> peerId = const Value.absent(),
+                Value<String> tech = const Value.absent(),
+                Value<int?> rssi = const Value.absent(),
+                Value<int?> distance = const Value.absent(),
+                Value<int?> quality = const Value.absent(),
+                Value<DateTime> timestamp = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => RangeMeasurementsCompanion(
+                id: id,
+                sessionId: sessionId,
+                gpsPointId: gpsPointId,
+                peerId: peerId,
+                tech: tech,
+                rssi: rssi,
+                distance: distance,
+                quality: quality,
+                timestamp: timestamp,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String sessionId,
+                required String gpsPointId,
+                required String peerId,
+                required String tech,
+                Value<int?> rssi = const Value.absent(),
+                Value<int?> distance = const Value.absent(),
+                Value<int?> quality = const Value.absent(),
+                required DateTime timestamp,
+                Value<int> rowid = const Value.absent(),
+              }) => RangeMeasurementsCompanion.insert(
+                id: id,
+                sessionId: sessionId,
+                gpsPointId: gpsPointId,
+                peerId: peerId,
+                tech: tech,
+                rssi: rssi,
+                distance: distance,
+                quality: quality,
+                timestamp: timestamp,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$RangeMeasurementsTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({sessionId = false, gpsPointId = false}) {
             return PrefetchHooks(
               db: db,
               explicitlyWatchedTables: [],
@@ -2845,11 +4101,28 @@ class $$GpsPointsTableTableManager
                           state.withJoin(
                                 currentTable: table,
                                 currentColumn: table.sessionId,
-                                referencedTable: $$GpsPointsTableReferences
-                                    ._sessionIdTable(db),
-                                referencedColumn: $$GpsPointsTableReferences
-                                    ._sessionIdTable(db)
-                                    .id,
+                                referencedTable:
+                                    $$RangeMeasurementsTableReferences
+                                        ._sessionIdTable(db),
+                                referencedColumn:
+                                    $$RangeMeasurementsTableReferences
+                                        ._sessionIdTable(db)
+                                        .id,
+                              )
+                              as T;
+                    }
+                    if (gpsPointId) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.gpsPointId,
+                                referencedTable:
+                                    $$RangeMeasurementsTableReferences
+                                        ._gpsPointIdTable(db),
+                                referencedColumn:
+                                    $$RangeMeasurementsTableReferences
+                                        ._gpsPointIdTable(db)
+                                        .id,
                               )
                               as T;
                     }
@@ -2865,19 +4138,19 @@ class $$GpsPointsTableTableManager
       );
 }
 
-typedef $$GpsPointsTableProcessedTableManager =
+typedef $$RangeMeasurementsTableProcessedTableManager =
     ProcessedTableManager<
       _$AppDatabase,
-      $GpsPointsTable,
-      GpsPoint,
-      $$GpsPointsTableFilterComposer,
-      $$GpsPointsTableOrderingComposer,
-      $$GpsPointsTableAnnotationComposer,
-      $$GpsPointsTableCreateCompanionBuilder,
-      $$GpsPointsTableUpdateCompanionBuilder,
-      (GpsPoint, $$GpsPointsTableReferences),
-      GpsPoint,
-      PrefetchHooks Function({bool sessionId})
+      $RangeMeasurementsTable,
+      RangeMeasurement,
+      $$RangeMeasurementsTableFilterComposer,
+      $$RangeMeasurementsTableOrderingComposer,
+      $$RangeMeasurementsTableAnnotationComposer,
+      $$RangeMeasurementsTableCreateCompanionBuilder,
+      $$RangeMeasurementsTableUpdateCompanionBuilder,
+      (RangeMeasurement, $$RangeMeasurementsTableReferences),
+      RangeMeasurement,
+      PrefetchHooks Function({bool sessionId, bool gpsPointId})
     >;
 
 class $AppDatabaseManager {
@@ -2889,4 +4162,6 @@ class $AppDatabaseManager {
       $$SessionsTableTableManager(_db, _db.sessions);
   $$GpsPointsTableTableManager get gpsPoints =>
       $$GpsPointsTableTableManager(_db, _db.gpsPoints);
+  $$RangeMeasurementsTableTableManager get rangeMeasurements =>
+      $$RangeMeasurementsTableTableManager(_db, _db.rangeMeasurements);
 }

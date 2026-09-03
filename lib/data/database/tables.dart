@@ -1,5 +1,24 @@
 import 'package:drift/drift.dart';
 
+//RangeMeasurements table
+class RangeMeasurements extends Table {
+  TextColumn get id => text()();
+
+  TextColumn get sessionId => text().references(Sessions, #id)();
+  TextColumn get gpsPointId => text().references(GpsPoints, #id)();
+  TextColumn get peerId => text()();
+  TextColumn get tech => text()(); // 'ble' | 'uwb' | später 'channel_sounding'
+
+  IntColumn get rssi => integer().nullable()(); // nur bei BLE gefüllt
+  IntColumn get distance =>
+      integer().nullable()(); // nur bei UWB gefüllt (Zentimeter)
+  IntColumn get quality => integer().nullable()(); // UWB-Qualitätsindikator
+  DateTimeColumn get timestamp => dateTime()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
 //Boats table
 class Boats extends Table {
   TextColumn get id => text()();
@@ -28,8 +47,7 @@ class Sessions extends Table {
   RealColumn get distance => real().named('distance').nullable()();
   // Where the wind came FROM, set by the user post-session via CompassPanel.
   // Nullable: "no wind entered" is a valid state, stats show "—" then.
-  RealColumn get windDirection =>
-      real().named('wind_direction').nullable()();
+  RealColumn get windDirection => real().named('wind_direction').nullable()();
 
   // Tell drift which column is the primary key
   @override

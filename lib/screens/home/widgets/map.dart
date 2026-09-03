@@ -30,6 +30,10 @@ class MapWidget extends StatefulWidget {
 }
 
 class _MapWidgetState extends State<MapWidget> {
+  bool _isValidLatLng(double lat, double lon) {
+    return lat.isFinite && lon.isFinite;
+  }
+
   @override
   void didUpdateWidget(MapWidget old) {
     super.didUpdateWidget(old);
@@ -40,15 +44,19 @@ class _MapWidgetState extends State<MapWidget> {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         final latLngs = widget.gpsPoints
             .map((p) => LatLng(p.lat, p.lon))
+            .where((latlng) => latlng.latitude.isFinite && latlng.longitude.isFinite)
             .toList();
-        widget.mapController.fitCamera(
-          CameraFit.bounds(
-            bounds: LatLngBounds.fromPoints(latLngs),
-            padding: const EdgeInsets.all(48),
-          ),
-        );
+        if (latLngs.length > 1) {
+          widget.mapController.fitCamera(
+            CameraFit.bounds(
+              bounds: LatLngBounds.fromPoints(latLngs),
+              padding: const EdgeInsets.all(48),
+            ),
+          );
+        }
       });
-    } else if (widget.curPosition != null && old.curPosition == null) {
+    } else if (widget.curPosition != null && old.curPosition == null &&
+        widget.curPosition!.latitude.isFinite && widget.curPosition!.longitude.isFinite) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         widget.mapController.move(widget.curPosition!, 14);
       });
@@ -84,31 +92,33 @@ class _MapWidgetState extends State<MapWidget> {
           PolylineLayer(
             polylines: [
               for (int i = 0; i < widget.gpsPoints.length - 1; i++)
-                Polyline(
-                  points: [
-                    LatLng(widget.gpsPoints[i].lat, widget.gpsPoints[i].lon),
-                    LatLng(
-                      widget.gpsPoints[i + 1].lat,
-                      widget.gpsPoints[i + 1].lon,
-                    ),
-                  ],
-                  strokeWidth: 4.0,
-                  color: switch (widget.pathMode) {
-                    PathMode.speed => speedToColor(
-                      widget.gpsPoints[i].sog,
-                      0.0,
-                      //max Speed from session
-                      widget.maxKnots,
-                    ),
-                    PathMode.dynamicSpeed => speedToColor(
-                      widget.gpsPoints[i].sog,
-                      minSpeed,
-                      //max Speed from session
-                      maxSpeed,
-                    ),
-                    PathMode.heel => heelToColor(widget.gpsPoints[i].heel, 45),
-                  },
-                ),
+                if (_isValidLatLng(widget.gpsPoints[i].lat, widget.gpsPoints[i].lon) &&
+                    _isValidLatLng(widget.gpsPoints[i + 1].lat, widget.gpsPoints[i + 1].lon))
+                  Polyline(
+                    points: [
+                      LatLng(widget.gpsPoints[i].lat, widget.gpsPoints[i].lon),
+                      LatLng(
+                        widget.gpsPoints[i + 1].lat,
+                        widget.gpsPoints[i + 1].lon,
+                      ),
+                    ],
+                    strokeWidth: 4.0,
+                    color: switch (widget.pathMode) {
+                      PathMode.speed => speedToColor(
+                        widget.gpsPoints[i].sog,
+                        0.0,
+                        //max Speed from session
+                        widget.maxKnots,
+                      ),
+                      PathMode.dynamicSpeed => speedToColor(
+                        widget.gpsPoints[i].sog,
+                        minSpeed,
+                        //max Speed from session
+                        maxSpeed,
+                      ),
+                      PathMode.heel => heelToColor(widget.gpsPoints[i].heel, 45),
+                    },
+                  ),
             ],
           ),
       ],

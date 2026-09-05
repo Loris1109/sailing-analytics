@@ -3,12 +3,16 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:volume_listener/volume_listener.dart';
+import 'package:volume_controller/volume_controller.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 import 'package:sailing_analytics/controllers/recording_controller.dart';
 import 'speed_screen.dart';
 import 'heading_screen.dart';
 import 'racing_screen.dart';
+
+const platform = MethodChannel('com.example.sailing_analytics/volume_buttons');
+
+enum VolumeKey { up, down }
 
 class RacingContainerScreen extends ConsumerStatefulWidget {
   const RacingContainerScreen({super.key});
@@ -36,9 +40,18 @@ class _RacingContainerScreenState extends ConsumerState<RacingContainerScreen> {
     super.initState();
     SystemChrome.setPreferredOrientations([DeviceOrientation.landscapeLeft]);
     WakelockPlus.enable();
-    VolumeListener.addListener(_onVolumeKey);
+    _setupVolumeButtonListener();
     _hintTimer = Timer(const Duration(seconds: 4), () {
       if (mounted) setState(() => _showHint = false);
+    });
+  }
+
+  void _setupVolumeButtonListener() {
+    platform.setMethodCallHandler((call) async {
+      if (call.method == 'volumeKey') {
+        final key = call.arguments as String;
+        _onVolumeKey(key == 'up' ? VolumeKey.up : VolumeKey.down);
+      }
     });
   }
 
@@ -85,7 +98,7 @@ class _RacingContainerScreenState extends ConsumerState<RacingContainerScreen> {
   void dispose() {
     _volumeTimer?.cancel();
     _hintTimer?.cancel();
-    VolumeListener.removeListener();
+    platform.setMethodCallHandler(null);
     WakelockPlus.disable();
     SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
     _pageController.dispose();

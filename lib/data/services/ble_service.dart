@@ -58,22 +58,24 @@ class BleService {
 
   // ─── Advertising ───────────────────────────────────────────
   Future<void> startAdvertising(String sailNumber) async {
+    final peripheral = FlutterBlePeripheral();
     dev.log('🚀 BLE Advertising STARTING: $sailNumber');
     try {
       final list = utf8.encode(sailNumber);
       final payload = Uint8List.fromList(list);
       dev.log('  Payload: ${list.length} bytes = $sailNumber');
 
-      await FlutterBlePeripheral().start(
-        advertiseData: AdvertiseData(
+      await peripheral.start(
+        advertiseData: AdvertiseDataCore(
           manufacturerId: 0xFFFF,
           manufacturerData: payload,
         ),
-        advertiseSettings: AdvertiseSettings(
-          advertiseSet: false,
-          timeout: 0,
-          advertiseMode: AdvertiseMode.advertiseModeLowLatency,
-          txPowerLevel: AdvertiseTxPower.advertiseTxPowerHigh,
+        androidSettings: AndroidAdvertiseSettings(
+          advertiseSettings: AdvertiseSettings(
+            advertiseMode: AdvertiseMode.advertiseModeLowLatency,
+            txPowerLevel: AdvertiseTxPower.advertiseTxPowerHigh,
+            timeout: 0,
+         ),
         ),
       );
       isAdvertising = true;

@@ -40,18 +40,18 @@ dependencies:
   uuid: ^4.5.3
   drift_db_viewer: ^2.1.0
   sensors_plus: ^7.0.0
-  flutter_rotation_sensor: ^0.2.0
+  flutter_rotation_sensor: ^0.4.0
   wakelock_plus: ^1.6.1
   share_plus: ^13.1.0
   flutter_blue_plus: ^2.3.12
-  flutter_ble_peripheral: ^2.1.1
+  flutter_ble_peripheral: ^3.1.0
   supabase_flutter: ^2.14.2
   permission_handler: ^12.0.3
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.9
-  volume_listener: ^0.1.0
+  volume_controller: ^3.6.1
   flutter_map: ^8.3.0
   latlong2: ^0.9.1
   top_snackbar_flutter: ^3.3.0

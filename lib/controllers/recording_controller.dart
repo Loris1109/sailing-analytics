@@ -81,7 +81,7 @@ class RecordingController extends Notifier<RecordingState> {
 
   // Advertisements, die älter als das hier sind, gelten als veraltet und
   // werden nicht mehr mit einem neuen GPS-Punkt verknüpft
-  static const _maxAdvertisementAge = Duration(seconds: 5);
+  static const _maxAdvertisementAge = Duration(seconds: 1);
 
   @override
   RecordingState build() => const RecordingState();

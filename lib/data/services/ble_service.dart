@@ -23,6 +23,8 @@ class BleAdvertisement {
 class BleService {
   // Callbacks für Scan-Results
   Function(List<ScanResult>)? onScanResults;
+  final peripheral = FlutterBlePeripheral();
+  final manufacturerID = 0xFFFF;
 
   // State
   StreamSubscription? _scanSub;
@@ -58,7 +60,6 @@ class BleService {
 
   // ─── Advertising ───────────────────────────────────────────
   Future<void> startAdvertising(String sailNumber) async {
-    final peripheral = FlutterBlePeripheral();
     dev.log('🚀 BLE Advertising STARTING: $sailNumber');
     try {
       final list = utf8.encode(sailNumber);
@@ -67,7 +68,7 @@ class BleService {
 
       await peripheral.start(
         advertiseData: AdvertiseDataCore(
-          manufacturerId: 0xFFFF,
+          manufacturerId: manufacturerID,
           manufacturerData: payload,
         ),
         androidSettings: AndroidAdvertiseSettings(
@@ -89,7 +90,7 @@ class BleService {
   Future<void> stopAdvertising() async {
     dev.log('⏹️ BLE Advertising STOPPING');
     try {
-      await FlutterBlePeripheral().stop();
+      await peripheral.stop();
       isAdvertising = false;
       dev.log('✅ BLE Advertising STOPPED');
     } catch (e) {
@@ -114,6 +115,8 @@ class BleService {
     // Jetzt startScan()
     dev.log('  Starting FlutterBluePlus.startScan()...');
     await FlutterBluePlus.startScan(
+      withMsd: [MsdFilter(manufacturerID)],
+      continuousUpdates: true,
       oneByOne: true,
       androidScanMode: AndroidScanMode.lowLatency,
       androidUsesFineLocation: true,
@@ -146,12 +149,11 @@ class BleService {
     if (results.isEmpty) return;
 
     dev.log('  📡 Raw scan results: ${results.length} devices');
-
     // Filter & zähle
     final filtered = <ScanResult>[];
     for (final r in results) {
-      if (r.advertisementData.manufacturerData.containsKey(0xFFFF)) {
-        final bytes = r.advertisementData.manufacturerData[0xFFFF]!;
+      if (r.advertisementData.manufacturerData.containsKey(manufacturerID)) {
+        final bytes = r.advertisementData.manufacturerData[manufacturerID]!;
         final peerId = String.fromCharCodes(bytes);
         dev.log('📡 BLE Advertisement RECEIVED: $peerId (RSSI: ${r.rssi}dBm)');
         filtered.add(r);

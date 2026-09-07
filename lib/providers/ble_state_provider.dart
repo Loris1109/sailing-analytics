@@ -39,6 +39,7 @@ class BleState {
 
 class BleStateNotifier extends StateNotifier<BleState> {
   final BleService _service;
+  final Map<String, List<int>> _rssiSamples = {};
 
   BleStateNotifier(this._service) : super(const BleState()) {
     // Scan Results Handler
@@ -50,10 +51,11 @@ class BleStateNotifier extends StateNotifier<BleState> {
     final updated = <String, BleAdvertisement>{...state.lastAdvertisements};
 
     for (final r in results) {
-      final payload = r.advertisementData.manufacturerData[0xFFFF];
+      final payload = r.advertisementData.manufacturerData[BleService.manufacturerID];
       if (payload == null) continue;
 
       final peerId = String.fromCharCodes(payload);
+      _rssiSamples.putIfAbsent(peerId, () => <int>[]).add(r.rssi);
       updated[peerId] = BleAdvertisement(
         peerId: peerId,
         rssi: r.rssi,
@@ -65,6 +67,19 @@ class BleStateNotifier extends StateNotifier<BleState> {
       lastAdvertisements: updated,
       eventsPerSecond: _service.eventsPerSecond,
     );
+  }
+
+  /// Median-RSSI je Boot über alle Pakete seit dem letzten Aufruf.
+  /// Leert den Puffer — der Aufrufer bekommt jedes Paket genau einmal.
+  Map<String, int> drainMedianRssi() {
+    final medians = <String, int>{};
+    for (final e in _rssiSamples.entries) {
+      if (e.value.isEmpty) continue;
+      final sorted = [...e.value]..sort();
+      medians[e.key] = sorted[sorted.length ~/ 2];
+    }
+    _rssiSamples.clear();
+    return medians;
   }
 
   Future<void> startAdvertising(String sailNumber) async {
@@ -102,6 +117,7 @@ class BleStateNotifier extends StateNotifier<BleState> {
   Future<void> stopScanning() async {
     try {
       await _service.stopScanning();
+      _rssiSamples.clear();
       state = state.copyWith(
         isScanning: false,
         lastAdvertisements: {},

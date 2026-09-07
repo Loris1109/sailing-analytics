@@ -24,7 +24,7 @@ class BleService {
   // Callbacks für Scan-Results
   Function(List<ScanResult>)? onScanResults;
   final peripheral = FlutterBlePeripheral();
-  final manufacturerID = 0xFFFF;
+  static const manufacturerID = 0xFFFF;
 
   // State
   StreamSubscription? _scanSub;

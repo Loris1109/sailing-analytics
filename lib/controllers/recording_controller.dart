@@ -178,6 +178,11 @@ class RecordingController extends Notifier<RecordingState> {
     );
     _lastPositionTime = now;
 
+    // RSSI-Puffer bei JEDEM Fix leeren, auch bei einem gleich verworfenen —
+    // sonst sammelt der Puffer über die Verwurfs-Strecke hinweg weiter und
+    // der nächste Median mittelt über mehrere Sekunden Bootsbewegung
+    final medians = ref.read(bleStateProvider.notifier).drainMedianRssi();
+
     // ── GPS-Korrektionen ────────────────────────────────────────────
     // Alle Filter, die Roh-Fixe verwerfen oder korrigieren, leben hier.
     // Verworfene Punkte werden geloggt, damit die Schwellen mit echten
@@ -243,10 +248,13 @@ class RecordingController extends Notifier<RecordingState> {
     for (final ad in lastAdvertisements.values) {
       final age = now.difference(ad.timestamp);
       if (age > _maxAdvertisementAge) {
-        dev.log('⏭️ Skipping stale ad from ${ad.peerId} (age: ${age.inMilliseconds}ms > 5000ms)');
+        dev.log('⏭️ Skipping stale ad from ${ad.peerId} (age: ${age.inMilliseconds}ms > ${_maxAdvertisementAge.inMilliseconds}ms)');
         continue;
       }
-      dev.log('💾 Saving RSSI: ${ad.peerId} = ${ad.rssi}dBm for GPS point ${gpsPointId.substring(0, 8)}...');
+      // Median über alle Pakete seit dem letzten Fix; Fallback auf den
+      // Rohwert, falls dieses Boot seit dem letzten Leeren nichts gesendet hat
+      final rssi = medians[ad.peerId] ?? ad.rssi;
+      dev.log('💾 Saving RSSI: ${ad.peerId} = ${rssi}dBm for GPS point ${gpsPointId.substring(0, 8)}...');
       await rmRepo.insertRangeMeasurement(
         RangeMeasurementEntity(
           id: const Uuid().v4(),
@@ -254,7 +262,7 @@ class RecordingController extends Notifier<RecordingState> {
           gpsPointId: gpsPointId,
           peerId: ad.peerId,
           tech: 'ble',
-          rssi: ad.rssi,
+          rssi: rssi,
           timestamp: now,
         ),
       );

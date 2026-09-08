@@ -58,6 +58,7 @@ class UploadService {
 
     await supabaseClient.from('session_uploads').upsert({
       'id': uploadId,
+      'session_id': session.id,
       'training_id': trainingId,
       'name': session.name,
       'start_time': session.startTime.toUtc().toIso8601String(),

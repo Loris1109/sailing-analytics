@@ -6,6 +6,7 @@ import 'package:sailing_analytics/providers/ui_providers.dart';
 import 'package:sailing_analytics/screens/home/shadow_icon_button.dart';
 import 'package:sailing_analytics/screens/home/widgets/compassPanel/BoatMenu/boat_menu.dart';
 import 'package:sailing_analytics/screens/home/widgets/compassPanel/compass.dart';
+import 'package:sailing_analytics/screens/home/widgets/compassPanel/feedback_dialog.dart';
 import 'package:sailing_analytics/screens/home/widgets/panel_bg.dart';
 
 class CompassPanel extends ConsumerStatefulWidget {
@@ -64,6 +65,15 @@ class _CompassPanelState extends ConsumerState<CompassPanel> {
                 },
                 size: 52,
                 onTap: () => ref.read(pathModeProvider.notifier).next(),
+              ),
+              //Feedback
+              ShadowIconButton(
+                icon: Icons.feedback_rounded,
+                size: 52,
+                onTap: () => showDialog(
+                  context: context,
+                  builder: (_) => const FeedbackDialog(),
+                ),
               ),
             ],
           ],

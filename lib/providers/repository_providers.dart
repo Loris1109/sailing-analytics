@@ -3,6 +3,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:sailing_analytics/data/repositories/range_measurements_repository.dart';
 import 'package:sailing_analytics/data/services/gps_service.dart';
+import 'package:sailing_analytics/data/services/feedback_service.dart';
 import 'package:sailing_analytics/data/services/gpx_export_service.dart';
 import 'package:sailing_analytics/data/services/upload_service.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -38,6 +39,10 @@ final gpxExportServiceProvider = Provider<GpxExportService>((ref) {
 
 final uploadServiceProvider = Provider<UploadService>((ref) {
   return UploadService(Supabase.instance.client);
+});
+
+final feedbackServiceProvider = Provider<FeedbackService>((ref) {
+  return FeedbackService(Supabase.instance.client);
 });
 
 final rangeMeasurementRepositoryProvider = Provider<RangeMeasurementRepository>(

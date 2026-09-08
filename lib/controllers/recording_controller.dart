@@ -50,11 +50,15 @@ class RecordingState {
     double? lastMagHeading,
     double? lastAccuracy,
     bool? permissionDenied,
+    // copyWith kann ein nullbares Feld sonst nie zurück auf null setzen
+    bool clearCompletedSessionId = false,
   }) {
     return RecordingState(
       isRecording: isRecording ?? this.isRecording,
       activeSessionId: activeSessionId ?? this.activeSessionId,
-      completedSessionId: completedSessionId ?? this.completedSessionId,
+      completedSessionId: clearCompletedSessionId
+          ? null
+          : (completedSessionId ?? this.completedSessionId),
       pointsSaved: pointsSaved ?? this.pointsSaved,
       lastSog: lastSog ?? this.lastSog,
       lastCog: lastCog ?? this.lastCog,
@@ -85,6 +89,16 @@ class RecordingController extends Notifier<RecordingState> {
 
   @override
   RecordingState build() => const RecordingState();
+
+  /// Quittiert die zuletzt aufgezeichnete Session.
+  ///
+  /// Der Auto-Select im HomeScreen soll genau einmal greifen. Ohne das
+  /// Zurücksetzen selektiert ihn jede spätere Änderung an der Session-Tabelle
+  /// erneut — Umbenennen, Wind setzen, eine andere Session löschen — und man
+  /// käme nie wieder in den Zustand "nichts ausgewählt".
+  void consumeCompletedSession() {
+    state = state.copyWith(clearCompletedSessionId: true);
+  }
 
   Future<void> startRecording({
     required String name,

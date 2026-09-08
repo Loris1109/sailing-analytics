@@ -19,17 +19,30 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 6;
+  int get schemaVersion => 7;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
     onCreate: (m) => m.createAll(),
     onUpgrade: (m, from, to) async {
-      await customStatement('DROP TABLE IF EXISTS gps_points');
-      await customStatement('DROP TABLE IF EXISTS sessions');
-      await customStatement('DROP TABLE IF EXISTS boats');
-      await customStatement('DROP TABLE IF EXISTS range_measurements');
-      await m.createAll();
+      // Alles vor 7 war Entwicklungsstand — einmalig plattmachen. Danach
+      // gibt es echte Daten auf fremden Geräten, ab hier wird migriert und
+      // nicht mehr gelöscht: neue Schritte kommen unter dieses if.
+      if (from < 7) {
+        await customStatement('DROP TABLE IF EXISTS range_measurements');
+        await customStatement('DROP TABLE IF EXISTS gps_points');
+        await customStatement('DROP TABLE IF EXISTS sessions');
+        await customStatement('DROP TABLE IF EXISTS boats');
+        await m.createAll();
+        return;
+      }
+    },
+    // Läuft NACH onCreate/onUpgrade, die Migration selbst also noch ohne
+    // Prüfung — sonst scheiterte ein DROP auf eine Tabelle, auf die noch
+    // Kindzeilen zeigen. Das Pragma gilt pro Verbindung und muss deshalb
+    // bei jedem Start neu gesetzt werden, es steht nicht in der Datei.
+    beforeOpen: (details) async {
+      await customStatement('PRAGMA foreign_keys = ON');
     },
   );
 
@@ -94,6 +107,12 @@ class AppDatabase extends _$AppDatabase {
             ..where((p) => p.sessionId.equals(sessionId))
             ..orderBy([(p) => OrderingTerm.asc(p.timestamp)]))
           .get();
+
+  // Sessions, die nie beendet wurden — App-Kill, leerer Akku, Absturz.
+  // Werden beim Start repariert, sonst blieben sie für immer unvollständig
+  // und wären zusätzlich vom Upload ausgeschlossen (der filtert auf complete).
+  Future<List<Session>> getIncompleteSessions() =>
+      (select(sessions)..where((s) => s.isComplete.equals(false))).get();
 
   // Get unsynced sessions — for the Supabase sync queue
   Future<List<Session>> getUnsyncedSessions() =>

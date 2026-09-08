@@ -110,9 +110,10 @@ class CollapsedBody extends ConsumerWidget {
       .getRangeMeasurementsForSession(session.id);
 
     // Boot kann gelöscht worden sein — Export läuft dann ohne Bootsinfos
-    final boat = await ref
-        .read(boatRepositoryProvider)
-        .getBoatById(session.boatId);
+    final boatId = session.boatId;
+    final boat = boatId == null
+        ? null
+        : await ref.read(boatRepositoryProvider).getBoatById(boatId);
 
     final service = ref.read(gpxExportServiceProvider);
     final gpx = service.buildGpx(session, boat, points, rangeMeasurements);

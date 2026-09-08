@@ -4,8 +4,13 @@ import 'package:drift/drift.dart';
 class RangeMeasurements extends Table {
   TextColumn get id => text()();
 
-  TextColumn get sessionId => text().references(Sessions, #id)();
-  TextColumn get gpsPointId => text().references(GpsPoints, #id)();
+  // Cascade: eine gelöschte Session nimmt ihre Messungen mit. Ohne das
+  // blieben Zehntausende Zeilen als Waisen liegen, die keine Abfrage je
+  // wieder anfasst
+  TextColumn get sessionId =>
+      text().references(Sessions, #id, onDelete: KeyAction.cascade)();
+  TextColumn get gpsPointId =>
+      text().references(GpsPoints, #id, onDelete: KeyAction.cascade)();
   TextColumn get peerId => text()();
   TextColumn get tech => text()(); // 'ble' | 'uwb' | später 'channel_sounding'
 
@@ -37,7 +42,13 @@ class Sessions extends Table {
   // Primary key
   TextColumn get id => text()();
   TextColumn get name => text()();
-  TextColumn get boatId => text().named('boat_id').references(Boats, #id)();
+  // setNull statt cascade: ein gelöschtes Boot darf seine Sessions nicht
+  // mitreißen — die Aufzeichnung bleibt wertvoll, nur die Bootsangaben
+  // fehlen dann. Deshalb nullable
+  TextColumn get boatId => text()
+      .named('boat_id')
+      .nullable()
+      .references(Boats, #id, onDelete: KeyAction.setNull)();
   DateTimeColumn get startTime => dateTime().named('start_time')();
   DateTimeColumn get endTime => dateTime().named('end_time').nullable()();
   BoolColumn get isComplete =>
@@ -57,8 +68,9 @@ class Sessions extends Table {
 // GPS points table — will have thousands of rows per session
 class GpsPoints extends Table {
   TextColumn get id => text()();
-  TextColumn get sessionId =>
-      text().named('session_id').references(Sessions, #id)(); // foreign key
+  TextColumn get sessionId => text()
+      .named('session_id')
+      .references(Sessions, #id, onDelete: KeyAction.cascade)();
   DateTimeColumn get timestamp => dateTime()();
   RealColumn get lat => real()();
   RealColumn get lon => real()();

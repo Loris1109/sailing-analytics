@@ -3,7 +3,7 @@ import '../database/app_database.dart';
 class SessionEntity {
   final String id;
   final String name;
-  final String boatId;
+  final String? boatId;
   final DateTime startTime;
   final DateTime? endTime;
   final double? distance;
@@ -13,7 +13,7 @@ class SessionEntity {
   const SessionEntity({
     required this.id,
     required this.name,
-    required this.boatId,
+    this.boatId,
     required this.startTime,
     this.endTime,
     this.distance,

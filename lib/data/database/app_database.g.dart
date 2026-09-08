@@ -441,11 +441,11 @@ class $SessionsTable extends Sessions with TableInfo<$SessionsTable, Session> {
   late final GeneratedColumn<String> boatId = GeneratedColumn<String>(
     'boat_id',
     aliasedName,
-    false,
+    true,
     type: DriftSqlType.string,
-    requiredDuringInsert: true,
+    requiredDuringInsert: false,
     defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'REFERENCES boats (id)',
+      'REFERENCES boats (id) ON DELETE SET NULL',
     ),
   );
   static const VerificationMeta _startTimeMeta = const VerificationMeta(
@@ -564,8 +564,6 @@ class $SessionsTable extends Sessions with TableInfo<$SessionsTable, Session> {
         _boatIdMeta,
         boatId.isAcceptableOrUnknown(data['boat_id']!, _boatIdMeta),
       );
-    } else if (isInserting) {
-      context.missing(_boatIdMeta);
     }
     if (data.containsKey('start_time')) {
       context.handle(
@@ -628,7 +626,7 @@ class $SessionsTable extends Sessions with TableInfo<$SessionsTable, Session> {
       boatId: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}boat_id'],
-      )!,
+      ),
       startTime: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}start_time'],
@@ -665,7 +663,7 @@ class $SessionsTable extends Sessions with TableInfo<$SessionsTable, Session> {
 class Session extends DataClass implements Insertable<Session> {
   final String id;
   final String name;
-  final String boatId;
+  final String? boatId;
   final DateTime startTime;
   final DateTime? endTime;
   final bool isComplete;
@@ -675,7 +673,7 @@ class Session extends DataClass implements Insertable<Session> {
   const Session({
     required this.id,
     required this.name,
-    required this.boatId,
+    this.boatId,
     required this.startTime,
     this.endTime,
     required this.isComplete,
@@ -688,7 +686,9 @@ class Session extends DataClass implements Insertable<Session> {
     final map = <String, Expression>{};
     map['id'] = Variable<String>(id);
     map['name'] = Variable<String>(name);
-    map['boat_id'] = Variable<String>(boatId);
+    if (!nullToAbsent || boatId != null) {
+      map['boat_id'] = Variable<String>(boatId);
+    }
     map['start_time'] = Variable<DateTime>(startTime);
     if (!nullToAbsent || endTime != null) {
       map['end_time'] = Variable<DateTime>(endTime);
@@ -708,7 +708,9 @@ class Session extends DataClass implements Insertable<Session> {
     return SessionsCompanion(
       id: Value(id),
       name: Value(name),
-      boatId: Value(boatId),
+      boatId: boatId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(boatId),
       startTime: Value(startTime),
       endTime: endTime == null && nullToAbsent
           ? const Value.absent()
@@ -732,7 +734,7 @@ class Session extends DataClass implements Insertable<Session> {
     return Session(
       id: serializer.fromJson<String>(json['id']),
       name: serializer.fromJson<String>(json['name']),
-      boatId: serializer.fromJson<String>(json['boatId']),
+      boatId: serializer.fromJson<String?>(json['boatId']),
       startTime: serializer.fromJson<DateTime>(json['startTime']),
       endTime: serializer.fromJson<DateTime?>(json['endTime']),
       isComplete: serializer.fromJson<bool>(json['isComplete']),
@@ -747,7 +749,7 @@ class Session extends DataClass implements Insertable<Session> {
     return <String, dynamic>{
       'id': serializer.toJson<String>(id),
       'name': serializer.toJson<String>(name),
-      'boatId': serializer.toJson<String>(boatId),
+      'boatId': serializer.toJson<String?>(boatId),
       'startTime': serializer.toJson<DateTime>(startTime),
       'endTime': serializer.toJson<DateTime?>(endTime),
       'isComplete': serializer.toJson<bool>(isComplete),
@@ -760,7 +762,7 @@ class Session extends DataClass implements Insertable<Session> {
   Session copyWith({
     String? id,
     String? name,
-    String? boatId,
+    Value<String?> boatId = const Value.absent(),
     DateTime? startTime,
     Value<DateTime?> endTime = const Value.absent(),
     bool? isComplete,
@@ -770,7 +772,7 @@ class Session extends DataClass implements Insertable<Session> {
   }) => Session(
     id: id ?? this.id,
     name: name ?? this.name,
-    boatId: boatId ?? this.boatId,
+    boatId: boatId.present ? boatId.value : this.boatId,
     startTime: startTime ?? this.startTime,
     endTime: endTime.present ? endTime.value : this.endTime,
     isComplete: isComplete ?? this.isComplete,
@@ -844,7 +846,7 @@ class Session extends DataClass implements Insertable<Session> {
 class SessionsCompanion extends UpdateCompanion<Session> {
   final Value<String> id;
   final Value<String> name;
-  final Value<String> boatId;
+  final Value<String?> boatId;
   final Value<DateTime> startTime;
   final Value<DateTime?> endTime;
   final Value<bool> isComplete;
@@ -867,7 +869,7 @@ class SessionsCompanion extends UpdateCompanion<Session> {
   SessionsCompanion.insert({
     required String id,
     required String name,
-    required String boatId,
+    this.boatId = const Value.absent(),
     required DateTime startTime,
     this.endTime = const Value.absent(),
     this.isComplete = const Value.absent(),
@@ -877,7 +879,6 @@ class SessionsCompanion extends UpdateCompanion<Session> {
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        name = Value(name),
-       boatId = Value(boatId),
        startTime = Value(startTime);
   static Insertable<Session> custom({
     Expression<String>? id,
@@ -908,7 +909,7 @@ class SessionsCompanion extends UpdateCompanion<Session> {
   SessionsCompanion copyWith({
     Value<String>? id,
     Value<String>? name,
-    Value<String>? boatId,
+    Value<String?>? boatId,
     Value<DateTime>? startTime,
     Value<DateTime?>? endTime,
     Value<bool>? isComplete,
@@ -1011,7 +1012,7 @@ class $GpsPointsTable extends GpsPoints
     type: DriftSqlType.string,
     requiredDuringInsert: true,
     defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'REFERENCES sessions (id)',
+      'REFERENCES sessions (id) ON DELETE CASCADE',
     ),
   );
   static const VerificationMeta _timestampMeta = const VerificationMeta(
@@ -1656,7 +1657,7 @@ class $RangeMeasurementsTable extends RangeMeasurements
     type: DriftSqlType.string,
     requiredDuringInsert: true,
     defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'REFERENCES sessions (id)',
+      'REFERENCES sessions (id) ON DELETE CASCADE',
     ),
   );
   static const VerificationMeta _gpsPointIdMeta = const VerificationMeta(
@@ -1670,7 +1671,7 @@ class $RangeMeasurementsTable extends RangeMeasurements
     type: DriftSqlType.string,
     requiredDuringInsert: true,
     defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'REFERENCES gps_points (id)',
+      'REFERENCES gps_points (id) ON DELETE CASCADE',
     ),
   );
   static const VerificationMeta _peerIdMeta = const VerificationMeta('peerId');
@@ -2215,6 +2216,37 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     gpsPoints,
     rangeMeasurements,
   ];
+  @override
+  StreamQueryUpdateRules get streamUpdateRules => const StreamQueryUpdateRules([
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'boats',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('sessions', kind: UpdateKind.update)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'sessions',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('gps_points', kind: UpdateKind.delete)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'sessions',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('range_measurements', kind: UpdateKind.delete)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'gps_points',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('range_measurements', kind: UpdateKind.delete)],
+    ),
+  ]);
 }
 
 typedef $$BoatsTableCreateCompanionBuilder =
@@ -2485,8 +2517,10 @@ class $$BoatsTableTableManager
               ),
           withReferenceMapper: (p0) => p0
               .map(
-                (e) =>
-                    (e.readTable(table), $$BoatsTableReferences(db, table, e)),
+                (e) => (
+                  e.readTable<$BoatsTable, Boat>(table),
+                  $$BoatsTableReferences(db, table, e),
+                ),
               )
               .toList(),
           prefetchHooksCallback: ({sessionsRefs = false}) {
@@ -2533,7 +2567,7 @@ typedef $$SessionsTableCreateCompanionBuilder =
     SessionsCompanion Function({
       required String id,
       required String name,
-      required String boatId,
+      Value<String?> boatId,
       required DateTime startTime,
       Value<DateTime?> endTime,
       Value<bool> isComplete,
@@ -2546,7 +2580,7 @@ typedef $$SessionsTableUpdateCompanionBuilder =
     SessionsCompanion Function({
       Value<String> id,
       Value<String> name,
-      Value<String> boatId,
+      Value<String?> boatId,
       Value<DateTime> startTime,
       Value<DateTime?> endTime,
       Value<bool> isComplete,
@@ -2563,9 +2597,9 @@ final class $$SessionsTableReferences
   static $BoatsTable _boatIdTable(_$AppDatabase db) =>
       db.boats.createAlias('sessions__boat_id__boats__id');
 
-  $$BoatsTableProcessedTableManager get boatId {
-    final $_column = $_itemColumn<String>('boat_id')!;
-
+  $$BoatsTableProcessedTableManager? get boatId {
+    final $_column = $_itemColumn<String>('boat_id');
+    if ($_column == null) return null;
     final manager = $$BoatsTableTableManager(
       $_db,
       $_db.boats,
@@ -2959,7 +2993,7 @@ class $$SessionsTableTableManager
               ({
                 Value<String> id = const Value.absent(),
                 Value<String> name = const Value.absent(),
-                Value<String> boatId = const Value.absent(),
+                Value<String?> boatId = const Value.absent(),
                 Value<DateTime> startTime = const Value.absent(),
                 Value<DateTime?> endTime = const Value.absent(),
                 Value<bool> isComplete = const Value.absent(),
@@ -2983,7 +3017,7 @@ class $$SessionsTableTableManager
               ({
                 required String id,
                 required String name,
-                required String boatId,
+                Value<String?> boatId = const Value.absent(),
                 required DateTime startTime,
                 Value<DateTime?> endTime = const Value.absent(),
                 Value<bool> isComplete = const Value.absent(),
@@ -3006,7 +3040,7 @@ class $$SessionsTableTableManager
           withReferenceMapper: (p0) => p0
               .map(
                 (e) => (
-                  e.readTable(table),
+                  e.readTable<$SessionsTable, Session>(table),
                   $$SessionsTableReferences(db, table, e),
                 ),
               )
@@ -3566,7 +3600,7 @@ class $$GpsPointsTableTableManager
           withReferenceMapper: (p0) => p0
               .map(
                 (e) => (
-                  e.readTable(table),
+                  e.readTable<$GpsPointsTable, GpsPoint>(table),
                   $$GpsPointsTableReferences(db, table, e),
                 ),
               )
@@ -4071,7 +4105,7 @@ class $$RangeMeasurementsTableTableManager
           withReferenceMapper: (p0) => p0
               .map(
                 (e) => (
-                  e.readTable(table),
+                  e.readTable<$RangeMeasurementsTable, RangeMeasurement>(table),
                   $$RangeMeasurementsTableReferences(db, table, e),
                 ),
               )

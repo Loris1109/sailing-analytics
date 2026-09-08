@@ -102,9 +102,10 @@ class _UploadDialogState extends ConsumerState<UploadDialog> {
       debugPrint('📊 Loaded ${rangeMeasurements.length} RangeMeasurements');
 
       // Boot kann gelöscht worden sein — Upload läuft dann ohne Bootsinfos
-      final boat = await ref
-          .read(boatRepositoryProvider)
-          .getBoatById(widget.session.boatId);
+      final boatId = widget.session.boatId;
+      final boat = boatId == null
+          ? null
+          : await ref.read(boatRepositoryProvider).getBoatById(boatId);
 
       debugPrint('🚀 Uploading to Supabase...');
       await ref

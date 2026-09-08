@@ -25,7 +25,10 @@ class SessionRepository {
       SessionsCompanion.insert(
         id: id,
         name: name,
-        boatId: boatId,
+        // Spalte ist nullable (setNull beim Löschen des Boots), eine neue
+        // Session hat aber immer eines — ohne aktives Boot kommt man gar
+        // nicht bis hierher
+        boatId: Value(boatId),
         startTime: DateTime.now(),
       ),
     );
@@ -43,6 +46,13 @@ class SessionRepository {
     // Alle Punkte holen
     final points = await getPointsForSession(id);
 
+    // Ohne einen einzigen Punkt gibt es nichts zu speichern und kein
+    // ehrliches Ende — so eine Session ist nur Rauschen in der Liste
+    if (points.isEmpty) {
+      await _db.deleteSession(id);
+      return;
+    }
+
     // Distanz berechnen
     const calc = Distance();
     double totalMeters = 0;
@@ -52,7 +62,25 @@ class SessionRepository {
         LatLng(points[i + 1].lat, points[i + 1].lon),
       );
     }
-    await _db.completeSession(id, DateTime.now(), totalMeters);
+
+    // Ende ist der letzte Fix, nicht der Moment des Beendens. Nur so liefert
+    // eine nachträgliche Reparatur dasselbe Ergebnis wie ein sauberer Stopp —
+    // sonst stünde dort der Zeitpunkt des nächsten App-Starts.
+    await _db.completeSession(id, points.last.timestamp, totalMeters);
+  }
+
+  /// Beendet Sessions, die nie sauber abgeschlossen wurden — leerer Akku,
+  /// Hitzeabschaltung, Absturz, aus dem App-Switcher gewischt.
+  ///
+  /// Darf nur laufen, wenn garantiert keine Aufnahme aktiv ist, sonst würde
+  /// die laufende Session mitten im Betrieb beendet. Beim App-Start ist das
+  /// per Definition der Fall.
+  Future<int> recoverIncompleteSessions() async {
+    final rows = await _db.getIncompleteSessions();
+    for (final row in rows) {
+      await completeSession(row.id);
+    }
+    return rows.length;
   }
 
   Future<void> deleteSession(String id) async {

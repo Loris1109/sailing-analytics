@@ -30,7 +30,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     // Sessions reparieren, die nie beendet wurden — leerer Akku,
     // Hitzeabschaltung, Absturz. Beim Start läuft garantiert keine Aufnahme,
     // hier ist der Eingriff also sicher.
-    unawaited(ref.read(sessionRepositoryProvider).recoverIncompleteSessions());
+    unawaited(() async {
+      final repo = ref.read(sessionRepositoryProvider);
+      await repo.recoverIncompleteSessions();
+      // Danach, nicht davor: die eben reparierten Sessions bekommen ihre
+      // Kennzahlen schon aus completeSession und fallen hier nicht mehr an.
+      await repo.recomputeOutdatedStats();
+    }());
   }
 
   @override

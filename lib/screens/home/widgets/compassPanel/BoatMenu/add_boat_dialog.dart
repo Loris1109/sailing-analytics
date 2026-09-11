@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:sailing_analytics/data/entities/boat.dart';
+import 'package:sailing_analytics/data/entities/boat_class.dart';
 import 'package:sailing_analytics/providers/repository_providers.dart';
-
-const Map<String, double> kBoatClasses = {'Europe': 20.0};
 
 class AddBoatDialog extends ConsumerStatefulWidget {
   const AddBoatDialog({super.key});
@@ -68,12 +67,15 @@ class _AddBoatDialogState extends ConsumerState<AddBoatDialog> {
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
 
+    final profile = kBoatClasses[_selectedBoatClass!]!;
+
     final boat = BoatEntity(
       id: '',
       sailNumber: _sailNumberController.text.trim(),
       name: _nameController.text.trim(),
       boatClass: _selectedBoatClass!,
-      maxSpeed: kBoatClasses[_selectedBoatClass!]!,
+      maxSpeed: profile.maxSpeed,
+      tackAngle: profile.tackAngle,
       isActive: false,
     );
 

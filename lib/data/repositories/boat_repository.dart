@@ -32,6 +32,7 @@ class BoatRepository {
       sailNumber: boat.sailNumber,
       boatClass: boat.boatClass,
       maxSpeed: boat.maxSpeed,
+      tackAngle: Value(boat.tackAngle),
       isActive: Value(boat.isActive),
     ),
   );

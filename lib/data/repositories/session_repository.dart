@@ -3,8 +3,8 @@
 // Controllers never touch AppDatabase directly
 
 import 'package:drift/drift.dart' show Value;
-import 'package:latlong2/latlong.dart';
 import 'package:sailing_analytics/data/entities/session_with_boat.dart';
+import 'package:sailing_analytics/data/services/session_stats.dart';
 import 'package:uuid/uuid.dart';
 import '../database/app_database.dart';
 import '../entities/gps_point.dart';
@@ -53,20 +53,59 @@ class SessionRepository {
       return;
     }
 
-    // Distanz berechnen
-    const calc = Distance();
-    double totalMeters = 0;
-    for (int i = 0; i < points.length - 1; i++) {
-      totalMeters += calc(
-        LatLng(points[i].lat, points[i].lon),
-        LatLng(points[i + 1].lat, points[i + 1].lon),
-      );
-    }
+    // Distanz, Spitzenspeed, Ø fahrend und Wenden in einem Durchlauf. Die
+    // Punkte sind hier ohnehin schon geladen — die Kennzahlen kosten damit
+    // weder zusätzliche I/O noch einen zweiten Durchlauf.
+    final stats = computeSessionStats(
+      points,
+      tackAngleDeg: await _tackAngleFor(id),
+    );
 
     // Ende ist der letzte Fix, nicht der Moment des Beendens. Nur so liefert
     // eine nachträgliche Reparatur dasselbe Ergebnis wie ein sauberer Stopp —
     // sonst stünde dort der Zeitpunkt des nächsten App-Starts.
-    await _db.completeSession(id, points.last.timestamp, totalMeters);
+    await _db.completeSession(id, points.last.timestamp, stats);
+  }
+
+  /// Wendewinkel des Boots, mit dem die Session gefahren wurde. Fällt auf
+  /// den Standardwert zurück, wenn das Boot gelöscht wurde — boatId ist dann
+  /// null, die Aufzeichnung bleibt trotzdem gültig.
+  Future<double> _tackAngleFor(String sessionId) async {
+    final boatId = (await _db.getSessionById(sessionId))?.boatId;
+    if (boatId == null) return kDefaultTackAngle;
+    return (await _db.getBoatById(boatId))?.tackAngle ?? kDefaultTackAngle;
+  }
+
+  /// Rechnet Sessions nach, deren Kennzahlen aus einer älteren Version des
+  /// Algorithmus stammen — oder die noch gar keine haben.
+  ///
+  /// Läuft beim App-Start neben [recoverIncompleteSessions]. Ohne diesen Weg
+  /// wäre jede Änderung an der Formel ein Datenverlust für alles bereits
+  /// Aufgezeichnete: die Werte in der DB sind eingefroren und wissen nichts
+  /// von einer neuen Berechnung.
+  ///
+  /// Bewusst gedeckelt: jede Session lädt ihre Punkte einzeln, bei vielen
+  /// Altsessions soll der Start davon nicht hängen. Jede ist für sich
+  /// konsistent geschrieben, der nächste Start macht mit dem Rest weiter.
+  Future<int> recomputeOutdatedStats({int limit = 20}) async {
+    final rows = await _db.getSessionsWithOutdatedStats();
+    var done = 0;
+    for (final row in rows.take(limit)) {
+      final points = await getPointsForSession(row.id);
+      if (points.isEmpty) continue;
+      final boat = row.boatId != null
+          ? await _db.getBoatById(row.boatId!)
+          : null;
+      await _db.updateSessionStats(
+        row.id,
+        computeSessionStats(
+          points,
+          tackAngleDeg: boat?.tackAngle ?? kDefaultTackAngle,
+        ),
+      );
+      done++;
+    }
+    return done;
   }
 
   /// Beendet Sessions, die nie sauber abgeschlossen wurden — leerer Akku,

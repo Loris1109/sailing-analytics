@@ -6,6 +6,13 @@ class BoatEntity {
   final String name;
   final String boatClass;
   final double maxSpeed;
+
+  /// Winkel zwischen den beiden Am-Wind-Kursen in Grad, Europe: 90°.
+  /// Klassenabhängig, aus kBoatClasses vorbelegt. Speist die
+  /// Wendenerkennung — nicht direkt als Schwelle, siehe
+  /// `maneuverThresholdDeg` in session_stats.dart.
+  final double tackAngle;
+
   final bool isActive;
 
   const BoatEntity({
@@ -14,6 +21,7 @@ class BoatEntity {
     required this.name,
     required this.boatClass,
     required this.maxSpeed,
+    required this.tackAngle,
     required this.isActive,
   });
 
@@ -23,6 +31,7 @@ class BoatEntity {
     sailNumber: row.sailNumber,
     boatClass: row.boatClass,
     maxSpeed: row.maxSpeed,
+    tackAngle: row.tackAngle,
     isActive: row.isActive,
   );
 
@@ -31,6 +40,7 @@ class BoatEntity {
     String? sailNumber,
     String? boatClass,
     double? maxSpeed,
+    double? tackAngle,
     bool? isActive,
   }) {
     return BoatEntity(
@@ -39,6 +49,7 @@ class BoatEntity {
       sailNumber: sailNumber ?? this.sailNumber,
       boatClass: boatClass ?? this.boatClass,
       maxSpeed: maxSpeed ?? this.maxSpeed,
+      tackAngle: tackAngle ?? this.tackAngle,
       isActive: isActive ?? this.isActive,
     );
   }

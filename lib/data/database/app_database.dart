@@ -8,6 +8,7 @@ import 'package:path/path.dart' as p;
 import 'package:sailing_analytics/data/entities/boat.dart';
 import 'package:sailing_analytics/data/entities/session.dart';
 import 'package:sailing_analytics/data/entities/session_with_boat.dart';
+import 'package:sailing_analytics/data/services/session_stats.dart';
 import 'tables.dart';
 
 // This tells drift which tables exist and what version the schema is
@@ -19,7 +20,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 7;
+  int get schemaVersion => 8;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -35,6 +36,28 @@ class AppDatabase extends _$AppDatabase {
         await customStatement('DROP TABLE IF EXISTS boats');
         await m.createAll();
         return;
+      }
+
+      // 8: Session-Kennzahlen als Spalten, Wendewinkel am Boot, Indizes.
+      if (from < 8) {
+        await m.addColumn(sessions, sessions.peakSpeed);
+        await m.addColumn(sessions, sessions.avgMovingSpeed);
+        await m.addColumn(sessions, sessions.movingSeconds);
+        await m.addColumn(sessions, sessions.tacks);
+        await m.addColumn(sessions, sessions.statsVersion);
+        await m.addColumn(boats, boats.tackAngle);
+
+        // Der Spaltendefault deckt den Bestand ab. Das UPDATE ist bei einer
+        // einzigen Klasse redundant — es ist das Muster für die zweite:
+        // ohne diese Zeile bekäme ein später ergänzter 420er hier
+        // stillschweigend die 90° der Europe verpasst.
+        await customStatement(
+          "UPDATE boats SET tack_angle = 90 WHERE boat_class = 'Europe'",
+        );
+
+        await m.createIndex(gpsPointsSessionTime);
+        await m.createIndex(rangeMeasurementsSession);
+        await m.createIndex(rangeMeasurementsGpsPoint);
       }
     },
     // Läuft NACH onCreate/onUpgrade, die Migration selbst also noch ohne
@@ -63,15 +86,51 @@ class AppDatabase extends _$AppDatabase {
     sessions,
   )..orderBy([(s) => OrderingTerm.desc(s.startTime)])).watch();
 
+  // Nullable on purpose — the session may have been deleted meanwhile
+  Future<Session?> getSessionById(String id) =>
+      (select(sessions)..where((s) => s.id.equals(id))).getSingleOrNull();
+
   // Mark session as finished
-  Future<void> completeSession(String id, DateTime endTime, double distance) =>
+  Future<void> completeSession(
+    String id,
+    DateTime endTime,
+    SessionStats stats,
+  ) => (update(sessions)..where((s) => s.id.equals(id))).write(
+    SessionsCompanion(
+      endTime: Value(endTime),
+      isComplete: const Value(true),
+      distance: Value(stats.distanceMeters),
+      peakSpeed: Value(stats.peakSpeed),
+      avgMovingSpeed: Value(stats.avgMovingSpeed),
+      movingSeconds: Value(stats.movingTime.inSeconds),
+      tacks: Value(stats.tacks),
+      statsVersion: const Value(sessionStatsVersion),
+    ),
+  );
+
+  // Nur die Kennzahlen — fürs Nachrechnen alter Sessions, das endTime und
+  // isComplete nicht anfassen darf.
+  Future<void> updateSessionStats(String id, SessionStats stats) =>
       (update(sessions)..where((s) => s.id.equals(id))).write(
         SessionsCompanion(
-          endTime: Value(endTime),
-          isComplete: const Value(true),
-          distance: Value(distance),
+          distance: Value(stats.distanceMeters),
+          peakSpeed: Value(stats.peakSpeed),
+          avgMovingSpeed: Value(stats.avgMovingSpeed),
+          movingSeconds: Value(stats.movingTime.inSeconds),
+          tacks: Value(stats.tacks),
+          statsVersion: const Value(sessionStatsVersion),
         ),
       );
+
+  // Beendete Sessions, deren Kennzahlen aus einer älteren Version des
+  // Algorithmus stammen — oder aus einer Version, die es noch gar nicht gab.
+  Future<List<Session>> getSessionsWithOutdatedStats() =>
+      (select(sessions)
+            ..where((s) => s.isComplete.equals(true))
+            ..where(
+              (s) => s.statsVersion.isSmallerThanValue(sessionStatsVersion),
+            ))
+          .get();
 
   // Mark as synced to Supabase
   Future<void> markSynced(String id) =>

@@ -43,39 +43,44 @@ class CollapsedBody extends ConsumerWidget {
               // GPX-Export — nur aktiv wenn eine Session ausgewählt ist
               ShadowIconButton(
                 icon: Icons.share_rounded,
-                onTap: selectedSession == null
-                    ? null
-                    : () => _exportGpx(context, ref, selectedSession),
+                enabled: selectedSession != null,
+                blockedMessage: 'Wähle zuerst eine Session aus.',
+                // Beim Tippen frisch lesen statt die Kopie von oben zu
+                // benutzen: das spart ein `!`, dessen Gültigkeit sonst nur
+                // daran hinge, dass `enabled` daneben richtig gesetzt ist.
+                onTap: () {
+                  final session = ref.read(selectedSessionProvider);
+                  if (session != null) _exportGpx(context, ref, session);
+                },
               ),
 
-              // In ein Training einreichen — nur aktiv wenn Session ausgewählt
+              // In ein Training einreichen — Teil der Coach Platform und noch
+              // nicht fertig, deshalb hinter dem Entwicklermodus. Der Button
+              // bleibt sichtbar und erklärt sich, statt wortlos nichts zu tun.
               ShadowIconButton(
                 icon: Icons.upload_rounded,
                 color: Colors.black,
-                onTap: selectedSession == null
-                    ? null
-                    : () => showDialog(
-                        context: context,
-                        barrierDismissible: false,
-                        builder: (_) => UploadDialog(session: selectedSession),
-                      ),
-                /* onTap: () => showDialog(
-                  context: context,
-                  builder: (ctx) => AlertDialog(
-                    title: const Text('Demnächst verfügbar'),
-                    content: const Text(
-                      'Das Einreichen von Sessions ist Teil der Coach Platform, '
-                      'welche genauere Analysen der gesamten Trainingsgruppe ermöglichen soll. '
-                      'Diese Funktion wird in der kommenden Version freigeschaltet.',
-                    ),
-                    actions: [
-                      FilledButton(
-                        onPressed: () => Navigator.pop(ctx),
-                        child: const Text('OK'),
-                      ),
-                    ],
-                  ),
-                ), */
+                devOnly: true,
+                devBlockedMessage: 'Noch nicht verfügbar — tippen für Details',
+                devBlockedDetails:
+                    'Das Einreichen von Sessions gehört zur Coach Platform. '
+                    'Sie soll Trainerinnen und Trainern erlauben, die '
+                    'Aufzeichnungen einer ganzen Trainingsgruppe gemeinsam '
+                    'auszuwerten und zu vergleichen, statt jede Session '
+                    'einzeln anzusehen.\n\n'
+                    'Die Funktion wird in einer der nächsten Versionen '
+                    'freigeschaltet.',
+                enabled: selectedSession != null,
+                blockedMessage: 'Wähle zuerst eine Session aus.',
+                onTap: () {
+                  final session = ref.read(selectedSessionProvider);
+                  if (session == null) return;
+                  showDialog(
+                    context: context,
+                    barrierDismissible: false,
+                    builder: (_) => UploadDialog(session: session),
+                  );
+                },
               ),
             ],
           ),

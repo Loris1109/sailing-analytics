@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:tacktics/icons/boat_icons.dart';
 import 'package:tacktics/providers/boat_providers.dart';
 import 'package:tacktics/providers/repository_providers.dart';
+import 'package:tacktics/screens/home/shadow_icon_button.dart';
+import 'package:tacktics/screens/home/widgets/compassPanel/BoatMenu/add_boat_dialog.dart';
 import 'package:tacktics/screens/home/widgets/compassPanel/BoatMenu/boat_list_item.dart';
 
 class BoatMenuBody extends ConsumerWidget {
@@ -23,11 +26,25 @@ class BoatMenuBody extends ConsumerWidget {
             ),
           ],
         ),
-        child: const Center(
-          child: Text(
-            'Keine Boote vorhanden',
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+          ShadowIconButton(
+                icon: BoatIcons.addboat,
+                size: 80,
+                onTap: () => showDialog(
+                  context: context,
+                  builder: (_) => const AddBoatDialog(),
+                ),
+              ),
+              const Text(
+            'Neues Boot hinzufügen',
             style: TextStyle(color: Colors.grey),
+          )
+            ],
           ),
+          
         ),
       );
     }

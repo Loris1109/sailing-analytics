@@ -64,6 +64,7 @@ class GpxExportService {
       b.writeln('        <extensions>');
       b.writeln('          <st:sog>${p.sog.toStringAsFixed(1)}</st:sog>');
       b.writeln('          <st:cog>${p.cog.toStringAsFixed(1)}</st:cog>');
+      b.writeln('          <st:heading>${p.magHeading.toStringAsFixed(1)}</st:heading>');
       b.writeln('          <st:heel>${p.heel.toStringAsFixed(1)}</st:heel>');
 
       final measurementsForPoint = rangeMeasurements

@@ -52,6 +52,45 @@ List<GpsPointEntity> _track(
 SessionStats _stats(List<GpsPointEntity> pts) =>
     computeSessionStats(pts, tackAngleDeg: 90);
 
+/// Setzt das COG-Feld auf 0, lässt die Positionen unberührt — so sah jede
+/// Aufzeichnung aus, solange `forceLocationManager` fehlte.
+List<GpsPointEntity> _blindCog(List<GpsPointEntity> pts) => [
+  for (final p in pts)
+    GpsPointEntity(
+      id: p.id,
+      sessionId: p.sessionId,
+      timestamp: p.timestamp,
+      lat: p.lat,
+      lon: p.lon,
+      sog: p.sog,
+      cog: 0,
+      heel: p.heel,
+      pitch: p.pitch,
+      magHeading: p.magHeading,
+      accuracy: p.accuracy,
+    ),
+];
+
+/// Punkte, die sich nicht von der Stelle bewegen, aber einen Kurs melden.
+/// Aus den Positionen wäre hier nichts abzuleiten — wer trotzdem Wenden
+/// findet, hat das COG-Feld benutzt.
+List<GpsPointEntity> _stationary(List<double> cogs) => [
+  for (var i = 0; i < cogs.length; i++)
+    GpsPointEntity(
+      id: '$i',
+      sessionId: 'test',
+      timestamp: _t0.add(Duration(milliseconds: i * 250)),
+      lat: 54.0,
+      lon: 10.0,
+      sog: 5,
+      cog: cogs[i],
+      heel: 0,
+      pitch: 0,
+      magHeading: cogs[i],
+      accuracy: 3,
+    ),
+];
+
 void main() {
   test('Wendewinkel 90° ergibt eine Schwelle von 63°', () {
     expect(maneuverThresholdDeg(90), closeTo(63, 0.01));
@@ -165,6 +204,47 @@ void main() {
       // scharf sein, dass sie auch echte Wenden schlucken.
       final s = _stats(_track([(30, 4.5, 45), (4, 2.5, 0), (30, 4.5, 315)]));
       expect(s.tacks, 1);
+    });
+  });
+
+  // ── Kurs aus Positionen, wenn das COG-Feld leer blieb ──────────────
+  // Auf Android füllt geolocator das Feld nur, wenn die Plattform einen
+  // Bearing meldet. Ohne forceLocationManager tat sie das nie — wochenlang
+  // stand in jeder Aufzeichnung cog = 0, und ohne Ableitung wäre jede
+  // dieser Sessions dauerhaft ohne Wenden.
+  group('COG-Feld leer', () {
+    test('Wenden werden trotzdem erkannt', () {
+      final beat = <(double, double, double)>[];
+      var cog = 45.0;
+      for (var i = 0; i < 6; i++) {
+        beat.add((30, 4.5, cog));
+        if (i == 5) break;
+        final target = cog == 45.0 ? -45.0 : 45.0;
+        for (var k = 1; k <= 8; k++) {
+          beat.add((0.5, 2.5, (cog + (target - cog) * k / 8 + 360) % 360));
+        }
+        cog = (target + 360) % 360;
+      }
+      final track = _track(beat);
+      expect(_stats(track).tacks, 5, reason: 'Kontrolle mit COG');
+      expect(_stats(_blindCog(track)).tacks, 5, reason: 'ohne COG, abgeleitet');
+    });
+
+    test('ein echter COG hat Vorrang vor der Ableitung', () {
+      // Positionen stehen still, das COG-Feld dreht von 45° auf 315°. Aus den
+      // Positionen ist nichts zu holen — die Wende kann nur aus dem Feld kommen.
+      final cogs = [
+        for (var i = 0; i < 160; i++) 45.0,
+        for (var i = 0; i < 160; i++) 315.0,
+      ];
+      expect(_stats(_stationary(cogs)).tacks, 1);
+    });
+
+    test('eine kurze Nordfahrt wird nicht für kaputt erklärt', () {
+      // Weniger Punkte als die Mindestprobe: "alle exakt 0" darf hier noch
+      // nicht als leeres Feld gelten. Ein echter Nordkurs bleibt Nordkurs,
+      // und Nordkurs heißt keine Wende — egal über welchen Weg.
+      expect(_stats(_track([(4, 5, 0)])).tacks, 0);
     });
   });
 

@@ -22,7 +22,9 @@ import 'package:tacktics/data/entities/gps_point.dart';
 ///    verlangt eine Bestätigung des neuen Kurses (_turnConfirmSec). Ohne
 ///    beides zählte jedes Losfahren nach einer Flaute und jeder einzelne
 ///    COG-Ausreißer als Wende.
-const sessionStatsVersion = 2;
+/// 3: Kurs wird aus den Positionen abgeleitet, wenn das COG-Feld der Session
+///    leer geblieben ist (siehe [_storedCogIsDead]).
+const sessionStatsVersion = 3;
 
 /// Wendewinkel für Sessions, deren Boot gelöscht wurde — `boatId` ist
 /// nullable, die Aufzeichnung überlebt das Boot.
@@ -86,6 +88,79 @@ double headingDelta(double a, double b) => ((a - b + 540) % 360 - 180).abs();
 /// andere.
 const _cogSmoothSec = 2.0;
 
+/// Mindestversatz, aus dem ein Kurs abgeleitet wird. Darunter bestimmt das
+/// GPS-Rauschen die Richtung: bei 5 m Genauigkeit ist die Peilung über 1 m
+/// Versatz praktisch zufällig, über 3 m dagegen brauchbar.
+const _cogDeriveMinMeters = 3.0;
+
+/// So viele Punkte in Fahrt müssen es mindestens sein, bevor [_storedCogIsDead]
+/// ein Urteil fällt. Bei einer Handvoll Punkte ist "alle exakt 0" noch Zufall.
+const _cogDeadMinSamples = 20;
+
+/// True, wenn das COG-Feld dieser Session nie gefüllt wurde.
+///
+/// Geprüft wird pro SESSION, nicht pro Punkt — denn 0° ist ein gültiger Kurs,
+/// nämlich Nord. Ein einzelner Punkt mit 0 sagt gar nichts. Aber dass jeder
+/// Punkt in Fahrt auf die Nachkommastelle genau 0.000 trägt, kommt bei einer
+/// echten Aufzeichnung nicht vor: schon Wellensteuern streut um ein paar Grad.
+///
+/// Hintergrund: Auf Android füllt geolocator das Feld nur, wenn die Plattform
+/// einen Bearing meldet, sonst bleibt es 0.0 — siehe `forceLocationManager`
+/// in gps_service.dart. Wochenlang stand deshalb in jedem Punkt 0.
+///
+/// Der Preis eines Fehlurteils ist klein: läge wirklich eine Session vor, die
+/// durchgehend exakt nach Norden fährt, ergäbe die Ableitung ebenfalls Nord.
+bool _storedCogIsDead(List<GpsPointEntity> pts) {
+  var moving = 0;
+  for (final p in pts) {
+    if (p.sog < _cogValidKnots) continue;
+    if (p.cog != 0) return false;
+    moving++;
+  }
+  return moving >= _cogDeadMinSamples;
+}
+
+/// Kurs über Grund je Punkt, aus den Positionen gerechnet.
+///
+/// Für jeden Punkt wird die Peilung des Streckenabschnitts genommen, auf dem
+/// er liegt: vom letzten Stützpunkt bis dorthin, wo das Boot [_cogDeriveMinMeters]
+/// weiter ist. Alle Punkte dazwischen erben die Peilung dieses Abschnitts —
+/// auch rückwirkend, sobald er fertig ist. Das geht, weil hier eine bereits
+/// abgeschlossene Session gerechnet wird und die Zukunft mit auf dem Tisch
+/// liegt; live wäre dieser Kurs erst Sekunden später bekannt.
+List<double> _deriveCog(List<GpsPointEntity> pts) {
+  const geo = Distance();
+  final out = List<double>.filled(pts.length, 0);
+  if (pts.length < 2) return out;
+
+  var anchor = 0;
+  double current = 0;
+
+  for (var i = 1; i < pts.length; i++) {
+    final from = LatLng(pts[anchor].lat, pts[anchor].lon);
+    final to = LatLng(pts[i].lat, pts[i].lon);
+
+    if (geo(from, to) >= _cogDeriveMinMeters) {
+      current = (geo.bearing(from, to) + 360) % 360;
+      // Den fertigen Abschnitt rückwirkend an seine Punkte verteilen. Jeder
+      // Index wird dabei genau einmal beschrieben, anchor läuft nur vorwärts —
+      // die verschachtelte Schleife bleibt in Summe O(n).
+      for (var k = anchor + 1; k <= i; k++) {
+        out[k] = current;
+      }
+      anchor = i;
+    } else {
+      // Noch kein voller Abschnitt: vorläufig den letzten Kurs halten. Wird
+      // überschrieben, sobald der Abschnitt zustande kommt.
+      out[i] = current;
+    }
+  }
+
+  // Der erste Punkt hat keinen Abschnitt vor sich.
+  out[0] = out[1];
+  return out;
+}
+
 /// Zirkulär gemittelter Kurs je Punkt.
 ///
 /// Zirkulär heißt: über Einheitsvektoren, nicht über die Gradzahlen. Das
@@ -94,7 +169,10 @@ const _cogSmoothSec = 2.0;
 /// Punkte ohne brauchbaren COG (zu langsam, siehe [_cogValidKnots]) gehen
 /// nicht ein; ist das Fenster danach leer, bleibt der Rohwert stehen. Er wird
 /// dann ohnehin nicht ausgewertet.
-List<double> _smoothedCog(List<GpsPointEntity> pts) {
+///
+/// [raw] kommt entweder aus dem COG-Feld oder aus [_deriveCog] — die Glättung
+/// behandelt beide gleich, damit die Wendenerkennung nur einen Pfad kennt.
+List<double> _smoothedCog(List<GpsPointEntity> pts, List<double> raw) {
   final out = List<double>.filled(pts.length, 0);
   const half = _cogSmoothSec / 2;
 
@@ -106,7 +184,7 @@ List<double> _smoothedCog(List<GpsPointEntity> pts) {
 
   void addAt(int j) {
     if (pts[j].sog < _cogValidKnots) return;
-    final rad = pts[j].cog * pi / 180;
+    final rad = raw[j] * pi / 180;
     sumSin += sin(rad);
     sumCos += cos(rad);
     n++;
@@ -114,7 +192,7 @@ List<double> _smoothedCog(List<GpsPointEntity> pts) {
 
   void removeAt(int j) {
     if (pts[j].sog < _cogValidKnots) return;
-    final rad = pts[j].cog * pi / 180;
+    final rad = raw[j] * pi / 180;
     sumSin -= sin(rad);
     sumCos -= cos(rad);
     n--;
@@ -131,7 +209,7 @@ List<double> _smoothedCog(List<GpsPointEntity> pts) {
       removeAt(lo++);
     }
     out[i] = n == 0
-        ? pts[i].cog
+        ? raw[i]
         : (atan2(sumSin, sumCos) * 180 / pi + 360) % 360;
   }
   return out;
@@ -190,10 +268,19 @@ SessionStats computeSessionStats(
   const geo = Distance();
   final turnDeg = maneuverThresholdDeg(tackAngleDeg);
 
+  // Kursquelle wählen: das aufgezeichnete COG-Feld, solange es etwas enthält,
+  // sonst aus den Positionen abgeleitet. Ein echter COG ist vorzuziehen — er
+  // kommt aus der Doppler-Messung des GNSS-Chips, gilt für den Moment des Fixes
+  // und schleppt keine Verzögerung mit. Die Ableitung ist der Ersatz für den
+  // Fall, dass die Plattform gar nichts geliefert hat.
+  final rawCog = _storedCogIsDead(pts)
+      ? _deriveCog(pts)
+      : [for (final p in pts) p.cog];
+
   // Geglättete Kurse für die Wendenerkennung. Eigener Vorlauf, weil die
   // Glättung zentriert ist und damit auch Punkte HINTER dem aktuellen
   // braucht — in der Hauptschleife wäre sie nicht zu haben. Bleibt O(n).
-  final cog = _smoothedCog(pts);
+  final cog = _smoothedCog(pts, rawCog);
 
   double distance = 0;
   double movingSum = 0, movingTime = 0;

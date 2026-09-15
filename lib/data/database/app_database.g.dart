@@ -59,6 +59,18 @@ class $BoatsTable extends Boats with TableInfo<$BoatsTable, Boat> {
     type: DriftSqlType.double,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _tackAngleMeta = const VerificationMeta(
+    'tackAngle',
+  );
+  @override
+  late final GeneratedColumn<double> tackAngle = GeneratedColumn<double>(
+    'tack_angle',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(90.0),
+  );
   static const VerificationMeta _isActiveMeta = const VerificationMeta(
     'isActive',
   );
@@ -81,6 +93,7 @@ class $BoatsTable extends Boats with TableInfo<$BoatsTable, Boat> {
     name,
     boatClass,
     maxSpeed,
+    tackAngle,
     isActive,
   ];
   @override
@@ -132,6 +145,12 @@ class $BoatsTable extends Boats with TableInfo<$BoatsTable, Boat> {
     } else if (isInserting) {
       context.missing(_maxSpeedMeta);
     }
+    if (data.containsKey('tack_angle')) {
+      context.handle(
+        _tackAngleMeta,
+        tackAngle.isAcceptableOrUnknown(data['tack_angle']!, _tackAngleMeta),
+      );
+    }
     if (data.containsKey('is_active')) {
       context.handle(
         _isActiveMeta,
@@ -167,6 +186,10 @@ class $BoatsTable extends Boats with TableInfo<$BoatsTable, Boat> {
         DriftSqlType.double,
         data['${effectivePrefix}max_speed'],
       )!,
+      tackAngle: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}tack_angle'],
+      )!,
       isActive: attachedDatabase.typeMapping.read(
         DriftSqlType.bool,
         data['${effectivePrefix}is_active'],
@@ -186,6 +209,7 @@ class Boat extends DataClass implements Insertable<Boat> {
   final String name;
   final String boatClass;
   final double maxSpeed;
+  final double tackAngle;
   final bool isActive;
   const Boat({
     required this.id,
@@ -193,6 +217,7 @@ class Boat extends DataClass implements Insertable<Boat> {
     required this.name,
     required this.boatClass,
     required this.maxSpeed,
+    required this.tackAngle,
     required this.isActive,
   });
   @override
@@ -203,6 +228,7 @@ class Boat extends DataClass implements Insertable<Boat> {
     map['name'] = Variable<String>(name);
     map['boat_class'] = Variable<String>(boatClass);
     map['max_speed'] = Variable<double>(maxSpeed);
+    map['tack_angle'] = Variable<double>(tackAngle);
     map['is_active'] = Variable<bool>(isActive);
     return map;
   }
@@ -214,6 +240,7 @@ class Boat extends DataClass implements Insertable<Boat> {
       name: Value(name),
       boatClass: Value(boatClass),
       maxSpeed: Value(maxSpeed),
+      tackAngle: Value(tackAngle),
       isActive: Value(isActive),
     );
   }
@@ -229,6 +256,7 @@ class Boat extends DataClass implements Insertable<Boat> {
       name: serializer.fromJson<String>(json['name']),
       boatClass: serializer.fromJson<String>(json['boatClass']),
       maxSpeed: serializer.fromJson<double>(json['maxSpeed']),
+      tackAngle: serializer.fromJson<double>(json['tackAngle']),
       isActive: serializer.fromJson<bool>(json['isActive']),
     );
   }
@@ -241,6 +269,7 @@ class Boat extends DataClass implements Insertable<Boat> {
       'name': serializer.toJson<String>(name),
       'boatClass': serializer.toJson<String>(boatClass),
       'maxSpeed': serializer.toJson<double>(maxSpeed),
+      'tackAngle': serializer.toJson<double>(tackAngle),
       'isActive': serializer.toJson<bool>(isActive),
     };
   }
@@ -251,6 +280,7 @@ class Boat extends DataClass implements Insertable<Boat> {
     String? name,
     String? boatClass,
     double? maxSpeed,
+    double? tackAngle,
     bool? isActive,
   }) => Boat(
     id: id ?? this.id,
@@ -258,6 +288,7 @@ class Boat extends DataClass implements Insertable<Boat> {
     name: name ?? this.name,
     boatClass: boatClass ?? this.boatClass,
     maxSpeed: maxSpeed ?? this.maxSpeed,
+    tackAngle: tackAngle ?? this.tackAngle,
     isActive: isActive ?? this.isActive,
   );
   Boat copyWithCompanion(BoatsCompanion data) {
@@ -269,6 +300,7 @@ class Boat extends DataClass implements Insertable<Boat> {
       name: data.name.present ? data.name.value : this.name,
       boatClass: data.boatClass.present ? data.boatClass.value : this.boatClass,
       maxSpeed: data.maxSpeed.present ? data.maxSpeed.value : this.maxSpeed,
+      tackAngle: data.tackAngle.present ? data.tackAngle.value : this.tackAngle,
       isActive: data.isActive.present ? data.isActive.value : this.isActive,
     );
   }
@@ -281,14 +313,22 @@ class Boat extends DataClass implements Insertable<Boat> {
           ..write('name: $name, ')
           ..write('boatClass: $boatClass, ')
           ..write('maxSpeed: $maxSpeed, ')
+          ..write('tackAngle: $tackAngle, ')
           ..write('isActive: $isActive')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode =>
-      Object.hash(id, sailNumber, name, boatClass, maxSpeed, isActive);
+  int get hashCode => Object.hash(
+    id,
+    sailNumber,
+    name,
+    boatClass,
+    maxSpeed,
+    tackAngle,
+    isActive,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -298,6 +338,7 @@ class Boat extends DataClass implements Insertable<Boat> {
           other.name == this.name &&
           other.boatClass == this.boatClass &&
           other.maxSpeed == this.maxSpeed &&
+          other.tackAngle == this.tackAngle &&
           other.isActive == this.isActive);
 }
 
@@ -307,6 +348,7 @@ class BoatsCompanion extends UpdateCompanion<Boat> {
   final Value<String> name;
   final Value<String> boatClass;
   final Value<double> maxSpeed;
+  final Value<double> tackAngle;
   final Value<bool> isActive;
   final Value<int> rowid;
   const BoatsCompanion({
@@ -315,6 +357,7 @@ class BoatsCompanion extends UpdateCompanion<Boat> {
     this.name = const Value.absent(),
     this.boatClass = const Value.absent(),
     this.maxSpeed = const Value.absent(),
+    this.tackAngle = const Value.absent(),
     this.isActive = const Value.absent(),
     this.rowid = const Value.absent(),
   });
@@ -324,6 +367,7 @@ class BoatsCompanion extends UpdateCompanion<Boat> {
     required String name,
     required String boatClass,
     required double maxSpeed,
+    this.tackAngle = const Value.absent(),
     this.isActive = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
@@ -337,6 +381,7 @@ class BoatsCompanion extends UpdateCompanion<Boat> {
     Expression<String>? name,
     Expression<String>? boatClass,
     Expression<double>? maxSpeed,
+    Expression<double>? tackAngle,
     Expression<bool>? isActive,
     Expression<int>? rowid,
   }) {
@@ -346,6 +391,7 @@ class BoatsCompanion extends UpdateCompanion<Boat> {
       if (name != null) 'name': name,
       if (boatClass != null) 'boat_class': boatClass,
       if (maxSpeed != null) 'max_speed': maxSpeed,
+      if (tackAngle != null) 'tack_angle': tackAngle,
       if (isActive != null) 'is_active': isActive,
       if (rowid != null) 'rowid': rowid,
     });
@@ -357,6 +403,7 @@ class BoatsCompanion extends UpdateCompanion<Boat> {
     Value<String>? name,
     Value<String>? boatClass,
     Value<double>? maxSpeed,
+    Value<double>? tackAngle,
     Value<bool>? isActive,
     Value<int>? rowid,
   }) {
@@ -366,6 +413,7 @@ class BoatsCompanion extends UpdateCompanion<Boat> {
       name: name ?? this.name,
       boatClass: boatClass ?? this.boatClass,
       maxSpeed: maxSpeed ?? this.maxSpeed,
+      tackAngle: tackAngle ?? this.tackAngle,
       isActive: isActive ?? this.isActive,
       rowid: rowid ?? this.rowid,
     );
@@ -389,6 +437,9 @@ class BoatsCompanion extends UpdateCompanion<Boat> {
     if (maxSpeed.present) {
       map['max_speed'] = Variable<double>(maxSpeed.value);
     }
+    if (tackAngle.present) {
+      map['tack_angle'] = Variable<double>(tackAngle.value);
+    }
     if (isActive.present) {
       map['is_active'] = Variable<bool>(isActive.value);
     }
@@ -406,6 +457,7 @@ class BoatsCompanion extends UpdateCompanion<Boat> {
           ..write('name: $name, ')
           ..write('boatClass: $boatClass, ')
           ..write('maxSpeed: $maxSpeed, ')
+          ..write('tackAngle: $tackAngle, ')
           ..write('isActive: $isActive, ')
           ..write('rowid: $rowid')
           ..write(')'))
@@ -522,6 +574,60 @@ class $SessionsTable extends Sessions with TableInfo<$SessionsTable, Session> {
     type: DriftSqlType.double,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _peakSpeedMeta = const VerificationMeta(
+    'peakSpeed',
+  );
+  @override
+  late final GeneratedColumn<double> peakSpeed = GeneratedColumn<double>(
+    'peak_speed',
+    aliasedName,
+    true,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _avgMovingSpeedMeta = const VerificationMeta(
+    'avgMovingSpeed',
+  );
+  @override
+  late final GeneratedColumn<double> avgMovingSpeed = GeneratedColumn<double>(
+    'avg_moving_speed',
+    aliasedName,
+    true,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _movingSecondsMeta = const VerificationMeta(
+    'movingSeconds',
+  );
+  @override
+  late final GeneratedColumn<int> movingSeconds = GeneratedColumn<int>(
+    'moving_seconds',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _tacksMeta = const VerificationMeta('tacks');
+  @override
+  late final GeneratedColumn<int> tacks = GeneratedColumn<int>(
+    'tacks',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _statsVersionMeta = const VerificationMeta(
+    'statsVersion',
+  );
+  @override
+  late final GeneratedColumn<int> statsVersion = GeneratedColumn<int>(
+    'stats_version',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -533,6 +639,11 @@ class $SessionsTable extends Sessions with TableInfo<$SessionsTable, Session> {
     isSynced,
     distance,
     windDirection,
+    peakSpeed,
+    avgMovingSpeed,
+    movingSeconds,
+    tacks,
+    statsVersion,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -606,6 +717,45 @@ class $SessionsTable extends Sessions with TableInfo<$SessionsTable, Session> {
         ),
       );
     }
+    if (data.containsKey('peak_speed')) {
+      context.handle(
+        _peakSpeedMeta,
+        peakSpeed.isAcceptableOrUnknown(data['peak_speed']!, _peakSpeedMeta),
+      );
+    }
+    if (data.containsKey('avg_moving_speed')) {
+      context.handle(
+        _avgMovingSpeedMeta,
+        avgMovingSpeed.isAcceptableOrUnknown(
+          data['avg_moving_speed']!,
+          _avgMovingSpeedMeta,
+        ),
+      );
+    }
+    if (data.containsKey('moving_seconds')) {
+      context.handle(
+        _movingSecondsMeta,
+        movingSeconds.isAcceptableOrUnknown(
+          data['moving_seconds']!,
+          _movingSecondsMeta,
+        ),
+      );
+    }
+    if (data.containsKey('tacks')) {
+      context.handle(
+        _tacksMeta,
+        tacks.isAcceptableOrUnknown(data['tacks']!, _tacksMeta),
+      );
+    }
+    if (data.containsKey('stats_version')) {
+      context.handle(
+        _statsVersionMeta,
+        statsVersion.isAcceptableOrUnknown(
+          data['stats_version']!,
+          _statsVersionMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -651,6 +801,26 @@ class $SessionsTable extends Sessions with TableInfo<$SessionsTable, Session> {
         DriftSqlType.double,
         data['${effectivePrefix}wind_direction'],
       ),
+      peakSpeed: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}peak_speed'],
+      ),
+      avgMovingSpeed: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}avg_moving_speed'],
+      ),
+      movingSeconds: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}moving_seconds'],
+      ),
+      tacks: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}tacks'],
+      ),
+      statsVersion: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}stats_version'],
+      )!,
     );
   }
 
@@ -670,6 +840,11 @@ class Session extends DataClass implements Insertable<Session> {
   final bool isSynced;
   final double? distance;
   final double? windDirection;
+  final double? peakSpeed;
+  final double? avgMovingSpeed;
+  final int? movingSeconds;
+  final int? tacks;
+  final int statsVersion;
   const Session({
     required this.id,
     required this.name,
@@ -680,6 +855,11 @@ class Session extends DataClass implements Insertable<Session> {
     required this.isSynced,
     this.distance,
     this.windDirection,
+    this.peakSpeed,
+    this.avgMovingSpeed,
+    this.movingSeconds,
+    this.tacks,
+    required this.statsVersion,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -701,6 +881,19 @@ class Session extends DataClass implements Insertable<Session> {
     if (!nullToAbsent || windDirection != null) {
       map['wind_direction'] = Variable<double>(windDirection);
     }
+    if (!nullToAbsent || peakSpeed != null) {
+      map['peak_speed'] = Variable<double>(peakSpeed);
+    }
+    if (!nullToAbsent || avgMovingSpeed != null) {
+      map['avg_moving_speed'] = Variable<double>(avgMovingSpeed);
+    }
+    if (!nullToAbsent || movingSeconds != null) {
+      map['moving_seconds'] = Variable<int>(movingSeconds);
+    }
+    if (!nullToAbsent || tacks != null) {
+      map['tacks'] = Variable<int>(tacks);
+    }
+    map['stats_version'] = Variable<int>(statsVersion);
     return map;
   }
 
@@ -723,6 +916,19 @@ class Session extends DataClass implements Insertable<Session> {
       windDirection: windDirection == null && nullToAbsent
           ? const Value.absent()
           : Value(windDirection),
+      peakSpeed: peakSpeed == null && nullToAbsent
+          ? const Value.absent()
+          : Value(peakSpeed),
+      avgMovingSpeed: avgMovingSpeed == null && nullToAbsent
+          ? const Value.absent()
+          : Value(avgMovingSpeed),
+      movingSeconds: movingSeconds == null && nullToAbsent
+          ? const Value.absent()
+          : Value(movingSeconds),
+      tacks: tacks == null && nullToAbsent
+          ? const Value.absent()
+          : Value(tacks),
+      statsVersion: Value(statsVersion),
     );
   }
 
@@ -741,6 +947,11 @@ class Session extends DataClass implements Insertable<Session> {
       isSynced: serializer.fromJson<bool>(json['isSynced']),
       distance: serializer.fromJson<double?>(json['distance']),
       windDirection: serializer.fromJson<double?>(json['windDirection']),
+      peakSpeed: serializer.fromJson<double?>(json['peakSpeed']),
+      avgMovingSpeed: serializer.fromJson<double?>(json['avgMovingSpeed']),
+      movingSeconds: serializer.fromJson<int?>(json['movingSeconds']),
+      tacks: serializer.fromJson<int?>(json['tacks']),
+      statsVersion: serializer.fromJson<int>(json['statsVersion']),
     );
   }
   @override
@@ -756,6 +967,11 @@ class Session extends DataClass implements Insertable<Session> {
       'isSynced': serializer.toJson<bool>(isSynced),
       'distance': serializer.toJson<double?>(distance),
       'windDirection': serializer.toJson<double?>(windDirection),
+      'peakSpeed': serializer.toJson<double?>(peakSpeed),
+      'avgMovingSpeed': serializer.toJson<double?>(avgMovingSpeed),
+      'movingSeconds': serializer.toJson<int?>(movingSeconds),
+      'tacks': serializer.toJson<int?>(tacks),
+      'statsVersion': serializer.toJson<int>(statsVersion),
     };
   }
 
@@ -769,6 +985,11 @@ class Session extends DataClass implements Insertable<Session> {
     bool? isSynced,
     Value<double?> distance = const Value.absent(),
     Value<double?> windDirection = const Value.absent(),
+    Value<double?> peakSpeed = const Value.absent(),
+    Value<double?> avgMovingSpeed = const Value.absent(),
+    Value<int?> movingSeconds = const Value.absent(),
+    Value<int?> tacks = const Value.absent(),
+    int? statsVersion,
   }) => Session(
     id: id ?? this.id,
     name: name ?? this.name,
@@ -781,6 +1002,15 @@ class Session extends DataClass implements Insertable<Session> {
     windDirection: windDirection.present
         ? windDirection.value
         : this.windDirection,
+    peakSpeed: peakSpeed.present ? peakSpeed.value : this.peakSpeed,
+    avgMovingSpeed: avgMovingSpeed.present
+        ? avgMovingSpeed.value
+        : this.avgMovingSpeed,
+    movingSeconds: movingSeconds.present
+        ? movingSeconds.value
+        : this.movingSeconds,
+    tacks: tacks.present ? tacks.value : this.tacks,
+    statsVersion: statsVersion ?? this.statsVersion,
   );
   Session copyWithCompanion(SessionsCompanion data) {
     return Session(
@@ -797,6 +1027,17 @@ class Session extends DataClass implements Insertable<Session> {
       windDirection: data.windDirection.present
           ? data.windDirection.value
           : this.windDirection,
+      peakSpeed: data.peakSpeed.present ? data.peakSpeed.value : this.peakSpeed,
+      avgMovingSpeed: data.avgMovingSpeed.present
+          ? data.avgMovingSpeed.value
+          : this.avgMovingSpeed,
+      movingSeconds: data.movingSeconds.present
+          ? data.movingSeconds.value
+          : this.movingSeconds,
+      tacks: data.tacks.present ? data.tacks.value : this.tacks,
+      statsVersion: data.statsVersion.present
+          ? data.statsVersion.value
+          : this.statsVersion,
     );
   }
 
@@ -811,7 +1052,12 @@ class Session extends DataClass implements Insertable<Session> {
           ..write('isComplete: $isComplete, ')
           ..write('isSynced: $isSynced, ')
           ..write('distance: $distance, ')
-          ..write('windDirection: $windDirection')
+          ..write('windDirection: $windDirection, ')
+          ..write('peakSpeed: $peakSpeed, ')
+          ..write('avgMovingSpeed: $avgMovingSpeed, ')
+          ..write('movingSeconds: $movingSeconds, ')
+          ..write('tacks: $tacks, ')
+          ..write('statsVersion: $statsVersion')
           ..write(')'))
         .toString();
   }
@@ -827,6 +1073,11 @@ class Session extends DataClass implements Insertable<Session> {
     isSynced,
     distance,
     windDirection,
+    peakSpeed,
+    avgMovingSpeed,
+    movingSeconds,
+    tacks,
+    statsVersion,
   );
   @override
   bool operator ==(Object other) =>
@@ -840,7 +1091,12 @@ class Session extends DataClass implements Insertable<Session> {
           other.isComplete == this.isComplete &&
           other.isSynced == this.isSynced &&
           other.distance == this.distance &&
-          other.windDirection == this.windDirection);
+          other.windDirection == this.windDirection &&
+          other.peakSpeed == this.peakSpeed &&
+          other.avgMovingSpeed == this.avgMovingSpeed &&
+          other.movingSeconds == this.movingSeconds &&
+          other.tacks == this.tacks &&
+          other.statsVersion == this.statsVersion);
 }
 
 class SessionsCompanion extends UpdateCompanion<Session> {
@@ -853,6 +1109,11 @@ class SessionsCompanion extends UpdateCompanion<Session> {
   final Value<bool> isSynced;
   final Value<double?> distance;
   final Value<double?> windDirection;
+  final Value<double?> peakSpeed;
+  final Value<double?> avgMovingSpeed;
+  final Value<int?> movingSeconds;
+  final Value<int?> tacks;
+  final Value<int> statsVersion;
   final Value<int> rowid;
   const SessionsCompanion({
     this.id = const Value.absent(),
@@ -864,6 +1125,11 @@ class SessionsCompanion extends UpdateCompanion<Session> {
     this.isSynced = const Value.absent(),
     this.distance = const Value.absent(),
     this.windDirection = const Value.absent(),
+    this.peakSpeed = const Value.absent(),
+    this.avgMovingSpeed = const Value.absent(),
+    this.movingSeconds = const Value.absent(),
+    this.tacks = const Value.absent(),
+    this.statsVersion = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   SessionsCompanion.insert({
@@ -876,6 +1142,11 @@ class SessionsCompanion extends UpdateCompanion<Session> {
     this.isSynced = const Value.absent(),
     this.distance = const Value.absent(),
     this.windDirection = const Value.absent(),
+    this.peakSpeed = const Value.absent(),
+    this.avgMovingSpeed = const Value.absent(),
+    this.movingSeconds = const Value.absent(),
+    this.tacks = const Value.absent(),
+    this.statsVersion = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        name = Value(name),
@@ -890,6 +1161,11 @@ class SessionsCompanion extends UpdateCompanion<Session> {
     Expression<bool>? isSynced,
     Expression<double>? distance,
     Expression<double>? windDirection,
+    Expression<double>? peakSpeed,
+    Expression<double>? avgMovingSpeed,
+    Expression<int>? movingSeconds,
+    Expression<int>? tacks,
+    Expression<int>? statsVersion,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -902,6 +1178,11 @@ class SessionsCompanion extends UpdateCompanion<Session> {
       if (isSynced != null) 'is_synced': isSynced,
       if (distance != null) 'distance': distance,
       if (windDirection != null) 'wind_direction': windDirection,
+      if (peakSpeed != null) 'peak_speed': peakSpeed,
+      if (avgMovingSpeed != null) 'avg_moving_speed': avgMovingSpeed,
+      if (movingSeconds != null) 'moving_seconds': movingSeconds,
+      if (tacks != null) 'tacks': tacks,
+      if (statsVersion != null) 'stats_version': statsVersion,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -916,6 +1197,11 @@ class SessionsCompanion extends UpdateCompanion<Session> {
     Value<bool>? isSynced,
     Value<double?>? distance,
     Value<double?>? windDirection,
+    Value<double?>? peakSpeed,
+    Value<double?>? avgMovingSpeed,
+    Value<int?>? movingSeconds,
+    Value<int?>? tacks,
+    Value<int>? statsVersion,
     Value<int>? rowid,
   }) {
     return SessionsCompanion(
@@ -928,6 +1214,11 @@ class SessionsCompanion extends UpdateCompanion<Session> {
       isSynced: isSynced ?? this.isSynced,
       distance: distance ?? this.distance,
       windDirection: windDirection ?? this.windDirection,
+      peakSpeed: peakSpeed ?? this.peakSpeed,
+      avgMovingSpeed: avgMovingSpeed ?? this.avgMovingSpeed,
+      movingSeconds: movingSeconds ?? this.movingSeconds,
+      tacks: tacks ?? this.tacks,
+      statsVersion: statsVersion ?? this.statsVersion,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -962,6 +1253,21 @@ class SessionsCompanion extends UpdateCompanion<Session> {
     if (windDirection.present) {
       map['wind_direction'] = Variable<double>(windDirection.value);
     }
+    if (peakSpeed.present) {
+      map['peak_speed'] = Variable<double>(peakSpeed.value);
+    }
+    if (avgMovingSpeed.present) {
+      map['avg_moving_speed'] = Variable<double>(avgMovingSpeed.value);
+    }
+    if (movingSeconds.present) {
+      map['moving_seconds'] = Variable<int>(movingSeconds.value);
+    }
+    if (tacks.present) {
+      map['tacks'] = Variable<int>(tacks.value);
+    }
+    if (statsVersion.present) {
+      map['stats_version'] = Variable<int>(statsVersion.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -980,6 +1286,11 @@ class SessionsCompanion extends UpdateCompanion<Session> {
           ..write('isSynced: $isSynced, ')
           ..write('distance: $distance, ')
           ..write('windDirection: $windDirection, ')
+          ..write('peakSpeed: $peakSpeed, ')
+          ..write('avgMovingSpeed: $avgMovingSpeed, ')
+          ..write('movingSeconds: $movingSeconds, ')
+          ..write('tacks: $tacks, ')
+          ..write('statsVersion: $statsVersion, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -2206,6 +2517,18 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $GpsPointsTable gpsPoints = $GpsPointsTable(this);
   late final $RangeMeasurementsTable rangeMeasurements =
       $RangeMeasurementsTable(this);
+  late final Index gpsPointsSessionTime = Index(
+    'gps_points_session_time',
+    'CREATE INDEX gps_points_session_time ON gps_points (session_id, timestamp)',
+  );
+  late final Index rangeMeasurementsSession = Index(
+    'range_measurements_session',
+    'CREATE INDEX range_measurements_session ON range_measurements (session_id)',
+  );
+  late final Index rangeMeasurementsGpsPoint = Index(
+    'range_measurements_gps_point',
+    'CREATE INDEX range_measurements_gps_point ON range_measurements (gps_point_id)',
+  );
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -2215,6 +2538,9 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     sessions,
     gpsPoints,
     rangeMeasurements,
+    gpsPointsSessionTime,
+    rangeMeasurementsSession,
+    rangeMeasurementsGpsPoint,
   ];
   @override
   StreamQueryUpdateRules get streamUpdateRules => const StreamQueryUpdateRules([
@@ -2256,6 +2582,7 @@ typedef $$BoatsTableCreateCompanionBuilder =
       required String name,
       required String boatClass,
       required double maxSpeed,
+      Value<double> tackAngle,
       Value<bool> isActive,
       Value<int> rowid,
     });
@@ -2266,6 +2593,7 @@ typedef $$BoatsTableUpdateCompanionBuilder =
       Value<String> name,
       Value<String> boatClass,
       Value<double> maxSpeed,
+      Value<double> tackAngle,
       Value<bool> isActive,
       Value<int> rowid,
     });
@@ -2324,6 +2652,11 @@ class $$BoatsTableFilterComposer extends Composer<_$AppDatabase, $BoatsTable> {
 
   ColumnFilters<double> get maxSpeed => $composableBuilder(
     column: $table.maxSpeed,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get tackAngle => $composableBuilder(
+    column: $table.tackAngle,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -2392,6 +2725,11 @@ class $$BoatsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<double> get tackAngle => $composableBuilder(
+    column: $table.tackAngle,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<bool> get isActive => $composableBuilder(
     column: $table.isActive,
     builder: (column) => ColumnOrderings(column),
@@ -2423,6 +2761,9 @@ class $$BoatsTableAnnotationComposer
 
   GeneratedColumn<double> get maxSpeed =>
       $composableBuilder(column: $table.maxSpeed, builder: (column) => column);
+
+  GeneratedColumn<double> get tackAngle =>
+      $composableBuilder(column: $table.tackAngle, builder: (column) => column);
 
   GeneratedColumn<bool> get isActive =>
       $composableBuilder(column: $table.isActive, builder: (column) => column);
@@ -2486,6 +2827,7 @@ class $$BoatsTableTableManager
                 Value<String> name = const Value.absent(),
                 Value<String> boatClass = const Value.absent(),
                 Value<double> maxSpeed = const Value.absent(),
+                Value<double> tackAngle = const Value.absent(),
                 Value<bool> isActive = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => BoatsCompanion(
@@ -2494,6 +2836,7 @@ class $$BoatsTableTableManager
                 name: name,
                 boatClass: boatClass,
                 maxSpeed: maxSpeed,
+                tackAngle: tackAngle,
                 isActive: isActive,
                 rowid: rowid,
               ),
@@ -2504,6 +2847,7 @@ class $$BoatsTableTableManager
                 required String name,
                 required String boatClass,
                 required double maxSpeed,
+                Value<double> tackAngle = const Value.absent(),
                 Value<bool> isActive = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => BoatsCompanion.insert(
@@ -2512,6 +2856,7 @@ class $$BoatsTableTableManager
                 name: name,
                 boatClass: boatClass,
                 maxSpeed: maxSpeed,
+                tackAngle: tackAngle,
                 isActive: isActive,
                 rowid: rowid,
               ),
@@ -2574,6 +2919,11 @@ typedef $$SessionsTableCreateCompanionBuilder =
       Value<bool> isSynced,
       Value<double?> distance,
       Value<double?> windDirection,
+      Value<double?> peakSpeed,
+      Value<double?> avgMovingSpeed,
+      Value<int?> movingSeconds,
+      Value<int?> tacks,
+      Value<int> statsVersion,
       Value<int> rowid,
     });
 typedef $$SessionsTableUpdateCompanionBuilder =
@@ -2587,6 +2937,11 @@ typedef $$SessionsTableUpdateCompanionBuilder =
       Value<bool> isSynced,
       Value<double?> distance,
       Value<double?> windDirection,
+      Value<double?> peakSpeed,
+      Value<double?> avgMovingSpeed,
+      Value<int?> movingSeconds,
+      Value<int?> tacks,
+      Value<int> statsVersion,
       Value<int> rowid,
     });
 
@@ -2697,6 +3052,31 @@ class $$SessionsTableFilterComposer
 
   ColumnFilters<double> get windDirection => $composableBuilder(
     column: $table.windDirection,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get peakSpeed => $composableBuilder(
+    column: $table.peakSpeed,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get avgMovingSpeed => $composableBuilder(
+    column: $table.avgMovingSpeed,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get movingSeconds => $composableBuilder(
+    column: $table.movingSeconds,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get tacks => $composableBuilder(
+    column: $table.tacks,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get statsVersion => $composableBuilder(
+    column: $table.statsVersion,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -2823,6 +3203,31 @@ class $$SessionsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<double> get peakSpeed => $composableBuilder(
+    column: $table.peakSpeed,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get avgMovingSpeed => $composableBuilder(
+    column: $table.avgMovingSpeed,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get movingSeconds => $composableBuilder(
+    column: $table.movingSeconds,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get tacks => $composableBuilder(
+    column: $table.tacks,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get statsVersion => $composableBuilder(
+    column: $table.statsVersion,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   $$BoatsTableOrderingComposer get boatId {
     final $$BoatsTableOrderingComposer composer = $composerBuilder(
       composer: this,
@@ -2881,6 +3286,27 @@ class $$SessionsTableAnnotationComposer
 
   GeneratedColumn<double> get windDirection => $composableBuilder(
     column: $table.windDirection,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<double> get peakSpeed =>
+      $composableBuilder(column: $table.peakSpeed, builder: (column) => column);
+
+  GeneratedColumn<double> get avgMovingSpeed => $composableBuilder(
+    column: $table.avgMovingSpeed,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get movingSeconds => $composableBuilder(
+    column: $table.movingSeconds,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get tacks =>
+      $composableBuilder(column: $table.tacks, builder: (column) => column);
+
+  GeneratedColumn<int> get statsVersion => $composableBuilder(
+    column: $table.statsVersion,
     builder: (column) => column,
   );
 
@@ -3000,6 +3426,11 @@ class $$SessionsTableTableManager
                 Value<bool> isSynced = const Value.absent(),
                 Value<double?> distance = const Value.absent(),
                 Value<double?> windDirection = const Value.absent(),
+                Value<double?> peakSpeed = const Value.absent(),
+                Value<double?> avgMovingSpeed = const Value.absent(),
+                Value<int?> movingSeconds = const Value.absent(),
+                Value<int?> tacks = const Value.absent(),
+                Value<int> statsVersion = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => SessionsCompanion(
                 id: id,
@@ -3011,6 +3442,11 @@ class $$SessionsTableTableManager
                 isSynced: isSynced,
                 distance: distance,
                 windDirection: windDirection,
+                peakSpeed: peakSpeed,
+                avgMovingSpeed: avgMovingSpeed,
+                movingSeconds: movingSeconds,
+                tacks: tacks,
+                statsVersion: statsVersion,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -3024,6 +3460,11 @@ class $$SessionsTableTableManager
                 Value<bool> isSynced = const Value.absent(),
                 Value<double?> distance = const Value.absent(),
                 Value<double?> windDirection = const Value.absent(),
+                Value<double?> peakSpeed = const Value.absent(),
+                Value<double?> avgMovingSpeed = const Value.absent(),
+                Value<int?> movingSeconds = const Value.absent(),
+                Value<int?> tacks = const Value.absent(),
+                Value<int> statsVersion = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => SessionsCompanion.insert(
                 id: id,
@@ -3035,6 +3476,11 @@ class $$SessionsTableTableManager
                 isSynced: isSynced,
                 distance: distance,
                 windDirection: windDirection,
+                peakSpeed: peakSpeed,
+                avgMovingSpeed: avgMovingSpeed,
+                movingSeconds: movingSeconds,
+                tacks: tacks,
+                statsVersion: statsVersion,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0

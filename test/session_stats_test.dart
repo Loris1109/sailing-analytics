@@ -118,6 +118,54 @@ void main() {
     test('eine GPS-Lücke erzeugt keine Phantomwende', () {
       expect(_stats(_track([(120, 5, 0)], gapAfterSec: 40)).tacks, 0);
     });
+
+    // ── Regression: Referenzpunkt ohne brauchbaren COG ────────────────
+    // Im Stand leitet das Gerät keinen Kurs über Grund ab, der Wert dreht
+    // frei. Wurde er als Referenz genommen, zählte jedes Losfahren danach
+    // als Wende — auf einem Trainingsnachmittag mit Starts, Flauten und
+    // Pausen summierte sich das auf zweistellige Phantomzahlen.
+
+    test('Losfahren nach dem Treiben ist keine Wende', () {
+      expect(_stats(_track([(60, 0.2, 10), (60, 5, 200)])).tacks, 0);
+    });
+
+    test('eine Flaute mitten im Schlag ist keine Wende', () {
+      // Gleicher Kurs davor und danach — es kann gar keine Wende gewesen sein.
+      final s = _stats(_track([(60, 5, 0), (30, 0.3, 170), (60, 5, 0)]));
+      expect(s.tacks, 0);
+    });
+
+    test('Kursrauschen im Stand erzeugt keine Wenden', () {
+      final legs = <(double, double, double)>[(30, 5, 0)];
+      for (var k = 0; k < 10; k++) {
+        legs.add((3, 0.3, (k * 137) % 360));
+      }
+      legs.add((30, 5, 0));
+      expect(_stats(_track(legs)).tacks, 0);
+    });
+
+    // ── Regression: einzelner COG-Ausreißer ───────────────────────────
+    // Ein Fix ohne Bearing kommt als 0° herein, Multipath am Mast wirft
+    // beliebige Werte. Ein einzelner Sample darf keine Wende auslösen —
+    // weder als neuer Kurs noch später als Referenz, wenn das Fenster
+    // über ihn hinweggewandert ist.
+
+    test('ein einzelner COG-Ausreisser ist keine Wende', () {
+      final s = _stats(_track([(30, 5, 180), (0.25, 5, 359), (30, 5, 180)]));
+      expect(s.tacks, 0);
+    });
+
+    test('ein Fix ohne Bearing (0° = Nord) ist keine Wende', () {
+      final s = _stats(_track([(30, 5, 180), (0.25, 5, 0), (30, 5, 180)]));
+      expect(s.tacks, 0);
+    });
+
+    test('eine einzelne echte Wende wird trotz Bestätigung gezählt', () {
+      // Gegenprobe zu den drei Tests darüber: die Filter dürfen nicht so
+      // scharf sein, dass sie auch echte Wenden schlucken.
+      final s = _stats(_track([(30, 4.5, 45), (4, 2.5, 0), (30, 4.5, 315)]));
+      expect(s.tacks, 1);
+    });
   });
 
   test('leere und einelementige Liste sind unkritisch', () {

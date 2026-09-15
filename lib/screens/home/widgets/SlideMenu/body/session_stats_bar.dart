@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:sailing_analytics/data/entities/session.dart';
+import 'package:sailing_analytics/providers/session_providers.dart';
 import 'package:sailing_analytics/providers/ui_providers.dart';
 
 /// Kennzahlen der ausgewählten Session.
 ///
 /// Liest bewusst nur die Session, nicht ihre Punkte: die Werte stehen als
 /// Spalten daneben und wurden beim Beenden einmal gerechnet (siehe
-/// session_stats.dart). Die Leiste ist damit O(1) und rebuildet nur beim
-/// Sessionwechsel.
+/// session_stats.dart). Die Leiste rührt die Punktliste nicht an.
 ///
 /// Muss `const` konstruierbar bleiben. CollapsedBody baut sie als
 /// `const SessionStatsBar()` — bei identischer Widget-Instanz überspringt
@@ -18,7 +19,7 @@ class SessionStatsBar extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final session = ref.watch(selectedSessionProvider);
+    final session = _live(ref, ref.watch(selectedSessionProvider));
 
     // Jedes _StatItem ist Expanded — vier gleich breite Spalten, damit
     // "Ø Fahrt" neben "Dist" nicht umbricht.
@@ -35,6 +36,28 @@ class SessionStatsBar extends ConsumerWidget {
         _StatItem(label: 'Wenden', value: session?.tacks?.toString()),
       ],
     );
+  }
+
+  /// Dieselbe Session, aber mit dem Stand aus der DB statt dem vom Antippen.
+  ///
+  /// `selectedSessionProvider` hält eine Kopie, die beim Auswählen entstanden
+  /// ist. Die Kennzahlen entstehen teilweise erst DANACH: `recomputeOutdated
+  /// Stats` rechnet Altsessions beim Start nach, und nach einer Änderung am
+  /// Algorithmus auch alle anderen. Ohne diesen Nachschlag zeigt die Leiste
+  /// für eine in dem Moment ausgewählte Session "—", bis man sie erneut
+  /// antippt.
+  ///
+  /// Fällt auf die Kopie zurück, solange der Stream noch nichts geliefert hat
+  /// oder die Zeile nicht (mehr) enthält — dann ist die Kopie das Beste, was
+  /// da ist.
+  static SessionEntity? _live(WidgetRef ref, SessionEntity? selected) {
+    if (selected == null) return null;
+    final rows = ref.watch(sessionsStreamProvider).value;
+    if (rows == null) return selected;
+    for (final row in rows) {
+      if (row.id == selected.id) return row;
+    }
+    return selected;
   }
 
   static String? _knots(double? kn) =>

@@ -1,5 +1,6 @@
 // lib/data/services/session_stats.dart
-// Alle Kennzahlen einer abgeschlossenen Session in EINEM Durchlauf.
+// Alle Kennzahlen einer abgeschlossenen Session, linear über die Punktliste:
+// ein Vorlauf für die COG-Glättung, dann ein Durchlauf für alles andere.
 // Rein: kein Flutter, keine DB, keine Provider — direkt unit-testbar.
 //
 // Gerechnet wird einmal beim Beenden der Session (SessionRepository.
@@ -17,7 +18,11 @@ import 'package:sailing_analytics/data/entities/gps_point.dart';
 ///
 /// Auch hochzählen, wenn sich eine der Konstanten ändert: die Werte in der
 /// DB sind eingefroren und wissen nichts davon.
-const sessionStatsVersion = 1;
+/// 2: Wendenerkennung prüft den Referenzpunkt auf brauchbaren COG und
+///    verlangt eine Bestätigung des neuen Kurses (_turnConfirmSec). Ohne
+///    beides zählte jedes Losfahren nach einer Flaute und jeder einzelne
+///    COG-Ausreißer als Wende.
+const sessionStatsVersion = 2;
 
 /// Wendewinkel für Sessions, deren Boot gelöscht wurde — `boatId` ist
 /// nullable, die Aufzeichnung überlebt das Boot.
@@ -45,8 +50,16 @@ const _cogValidKnots = 1.0;
 const _turnMaxSec = 8.0;
 
 /// Sperre nach einer erkannten Wende, damit das Ausschwingen auf dem neuen
-/// Bug nicht als zweite Wende zählt.
+/// Bug nicht als zweite Wende zählt. Gerechnet ab dem BEGINN der Wende,
+/// nicht ab ihrer Bestätigung — sonst käme _turnConfirmSec obendrauf.
 const _turnLockout = Duration(seconds: 10);
+
+/// So lange muss der neue Kurs halten, bevor eine Kursänderung als Wende
+/// zählt. Ohne diese Bestätigung genügt ein EINZELNER Sample: Multipath am
+/// Mast, ein Fix ohne Bearing, ein Sprung beim Beschleunigen — alles sieht
+/// für einen Punkt lang aus wie eine Wende. Eine echte Wende hält den neuen
+/// Bug danach viele Sekunden, ein Ausreißer fällt sofort zurück.
+const _turnConfirmSec = 2.0;
 
 /// Schwelle für die Wendenerkennung, abgeleitet aus dem Wendewinkel des
 /// Boots (Winkel ZWISCHEN den beiden Am-Wind-Kursen, Europe: 90°).
@@ -62,6 +75,67 @@ double maneuverThresholdDeg(double tackAngleDeg) =>
 
 /// Kleinste Differenz zweier Kompasskurse in Grad, immer 0..180.
 double headingDelta(double a, double b) => ((a - b + 540) % 360 - 180).abs();
+
+/// Fensterlänge für die COG-Glättung (zentriert, also ±die Hälfte).
+///
+/// Ein einzelner Sample taugt nicht als Kursangabe: GPS-COG springt bei
+/// Multipath (Mast, Baum, Steg) und beim Beschleunigen um zweistellige
+/// Beträge, und ein Fix ohne Bearing kommt als 0° herein. Die Wendenerkennung
+/// vergleicht zwei Kurse — geglättet werden muss deshalb BEIDEN Enden, sonst
+/// wandert derselbe Ausreißer nur von der einen Seite des Vergleichs auf die
+/// andere.
+const _cogSmoothSec = 2.0;
+
+/// Zirkulär gemittelter Kurs je Punkt.
+///
+/// Zirkulär heißt: über Einheitsvektoren, nicht über die Gradzahlen. Das
+/// arithmetische Mittel aus 350° und 10° wäre 180° — genau der Gegenkurs.
+///
+/// Punkte ohne brauchbaren COG (zu langsam, siehe [_cogValidKnots]) gehen
+/// nicht ein; ist das Fenster danach leer, bleibt der Rohwert stehen. Er wird
+/// dann ohnehin nicht ausgewertet.
+List<double> _smoothedCog(List<GpsPointEntity> pts) {
+  final out = List<double>.filled(pts.length, 0);
+  const half = _cogSmoothSec / 2;
+
+  // Zwei Zeiger über die nach Zeit sortierte Liste — jeder Punkt wird genau
+  // einmal addiert und einmal abgezogen, das Ganze bleibt O(n).
+  var lo = 0, hi = 0;
+  double sumSin = 0, sumCos = 0;
+  var n = 0;
+
+  void addAt(int j) {
+    if (pts[j].sog < _cogValidKnots) return;
+    final rad = pts[j].cog * pi / 180;
+    sumSin += sin(rad);
+    sumCos += cos(rad);
+    n++;
+  }
+
+  void removeAt(int j) {
+    if (pts[j].sog < _cogValidKnots) return;
+    final rad = pts[j].cog * pi / 180;
+    sumSin -= sin(rad);
+    sumCos -= cos(rad);
+    n--;
+  }
+
+  for (var i = 0; i < pts.length; i++) {
+    final t = pts[i].timestamp;
+    while (hi < pts.length &&
+        pts[hi].timestamp.difference(t).inMilliseconds / 1000 <= half) {
+      addAt(hi++);
+    }
+    while (lo < hi &&
+        t.difference(pts[lo].timestamp).inMilliseconds / 1000 > half) {
+      removeAt(lo++);
+    }
+    out[i] = n == 0
+        ? pts[i].cog
+        : (atan2(sumSin, sumCos) * 180 / pi + 360) % 360;
+  }
+  return out;
+}
 
 class SessionStats {
   /// Meter. Summe der Punktabstände — zählt auch über GPS-Lücken hinweg,
@@ -116,6 +190,11 @@ SessionStats computeSessionStats(
   const geo = Distance();
   final turnDeg = maneuverThresholdDeg(tackAngleDeg);
 
+  // Geglättete Kurse für die Wendenerkennung. Eigener Vorlauf, weil die
+  // Glättung zentriert ist und damit auch Punkte HINTER dem aktuellen
+  // braucht — in der Hauptschleife wäre sie nicht zu haben. Bleibt O(n).
+  final cog = _smoothedCog(pts);
+
   double distance = 0;
   double movingSum = 0, movingTime = 0;
 
@@ -129,6 +208,11 @@ SessionStats computeSessionStats(
   var tacks = 0;
   DateTime? lockedUntil;
 
+  // Laufender Wendekandidat: der Kurs, von dem aus die Änderung begann, und
+  // wann sie begann. Wird bestätigt oder verworfen, siehe _turnConfirmSec.
+  double? pendingFromCog;
+  DateTime? pendingSince;
+
   for (var i = 0; i < pts.length - 1; i++) {
     final a = pts[i], b = pts[i + 1];
     final dt = b.timestamp.difference(a.timestamp).inMilliseconds / 1000;
@@ -141,6 +225,10 @@ SessionStats computeSessionStats(
       winStart = i + 1;
       winSum = 0;
       refIdx = i + 1;
+      // Ein Kandidat über die Lücke hinweg wäre nicht mehr belegbar: was
+      // dazwischen passiert ist, steht nirgends.
+      pendingFromCog = null;
+      pendingSince = null;
       continue;
     }
 
@@ -176,9 +264,16 @@ SessionStats computeSessionStats(
     // Referenz mitziehen, damit sie höchstens _turnMaxSec alt ist. Ein
     // echtes gleitendes Fenster — bei einer Referenz, die nur alle 8 s
     // zurückspringt, fiele jede Wende an der Sprungstelle durch.
+    //
+    // Zweite Bedingung: Punkte ohne brauchbaren COG überspringen. Das Gerät
+    // leitet den Kurs aus der Bewegung ab, im Stand dreht er frei. Ohne
+    // diese Prüfung zeigt die Referenz nach jeder Flaute, jedem Warten vor
+    // dem Start und jeder Kenterung auf Rauschen — und das Losfahren danach
+    // zählt als Wende, egal in welche Richtung es geht.
     while (refIdx < i &&
-        b.timestamp.difference(pts[refIdx].timestamp).inMilliseconds / 1000 >
-            _turnMaxSec) {
+        (b.timestamp.difference(pts[refIdx].timestamp).inMilliseconds / 1000 >
+                _turnMaxSec ||
+            pts[refIdx].sog < _cogValidKnots)) {
       refIdx++;
     }
 
@@ -186,10 +281,29 @@ SessionStats computeSessionStats(
       if (lockedUntil != null && b.timestamp.isBefore(lockedUntil)) {
         // Noch in der Sperre — Referenz auf den neuen Bug nachziehen.
         refIdx = i + 1;
-      } else if (headingDelta(b.cog, pts[refIdx].cog) > turnDeg) {
-        tacks++;
-        lockedUntil = b.timestamp.add(_turnLockout);
-        refIdx = i + 1;
+        pendingFromCog = null;
+        pendingSince = null;
+      } else if (pendingSince != null) {
+        // Kandidat läuft. Gegen den eingefrorenen Ausgangskurs prüfen, nicht
+        // gegen die Referenz: die rückt während der Wende in den Bogen hinein
+        // und ließe den Kandidaten kurz vor der Bestätigung verschwinden.
+        if (headingDelta(cog[i + 1], pendingFromCog!) <= turnDeg) {
+          pendingFromCog = null; // zurückgefallen — Ausreißer, keine Wende
+          pendingSince = null;
+        } else if (b.timestamp.difference(pendingSince).inMilliseconds / 1000 >=
+            _turnConfirmSec) {
+          tacks++;
+          // Sperre ab Beginn der Wende, nicht ab ihrer Bestätigung.
+          lockedUntil = pendingSince.add(_turnLockout);
+          refIdx = i + 1;
+          pendingFromCog = null;
+          pendingSince = null;
+        }
+      } else if (pts[refIdx].sog >= _cogValidKnots &&
+          headingDelta(cog[i + 1], cog[refIdx]) > turnDeg) {
+        // Noch nicht zählen — erst wenn der neue Kurs hält, siehe oben.
+        pendingFromCog = cog[refIdx];
+        pendingSince = b.timestamp;
       }
     }
   }

@@ -10,6 +10,14 @@ class SessionEntity {
   final double? windDirection;
   final bool isComplete;
 
+  // ── Kennzahlen, beim Beenden einmal gerechnet ────────────────────
+  // Siehe session_stats.dart. Null bei Sessions, die noch nie durch die
+  // Berechnung gelaufen sind — die UI zeigt dann "—".
+  final double? peakSpeed; // kn, über 2 s gemittelt
+  final double? avgMovingSpeed; // kn, zeitgewichtet, ohne Stillstand
+  final Duration? movingTime;
+  final int? tacks;
+
   const SessionEntity({
     required this.id,
     required this.name,
@@ -19,6 +27,10 @@ class SessionEntity {
     this.distance,
     this.windDirection,
     this.isComplete = false,
+    this.peakSpeed,
+    this.avgMovingSpeed,
+    this.movingTime,
+    this.tacks,
   });
 
   factory SessionEntity.fromDb(Session row) => SessionEntity(
@@ -30,6 +42,12 @@ class SessionEntity {
     distance: row.distance,
     windDirection: row.windDirection,
     isComplete: row.isComplete,
+    peakSpeed: row.peakSpeed,
+    avgMovingSpeed: row.avgMovingSpeed,
+    movingTime: row.movingSeconds != null
+        ? Duration(seconds: row.movingSeconds!)
+        : null,
+    tacks: row.tacks,
   );
 
   SessionEntity copyWith({
@@ -40,6 +58,10 @@ class SessionEntity {
     double? distance,
     double? windDirection,
     bool? isComplete,
+    double? peakSpeed,
+    double? avgMovingSpeed,
+    Duration? movingTime,
+    int? tacks,
   }) {
     return SessionEntity(
       id: id,
@@ -50,6 +72,10 @@ class SessionEntity {
       distance: distance ?? this.distance,
       windDirection: windDirection ?? this.windDirection,
       isComplete: isComplete ?? this.isComplete,
+      peakSpeed: peakSpeed ?? this.peakSpeed,
+      avgMovingSpeed: avgMovingSpeed ?? this.avgMovingSpeed,
+      movingTime: movingTime ?? this.movingTime,
+      tacks: tacks ?? this.tacks,
     );
   }
 }

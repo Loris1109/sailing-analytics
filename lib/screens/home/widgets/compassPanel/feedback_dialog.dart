@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:sailing_analytics/data/services/feedback_service.dart';
-import 'package:sailing_analytics/providers/repository_providers.dart';
-import 'package:sailing_analytics/providers/ui_providers.dart';
+import 'package:tacktics/data/services/feedback_service.dart';
+import 'package:tacktics/providers/repository_providers.dart';
+import 'package:tacktics/providers/ui_providers.dart';
 
 // Ablauf: schreiben → senden → fertig. Schlägt das Senden fehl, geht es
 // zurück auf "schreiben" — der Text bleibt stehen, weil es keine lokale

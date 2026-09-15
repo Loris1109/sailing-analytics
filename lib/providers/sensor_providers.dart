@@ -2,8 +2,8 @@ import 'dart:math';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_rotation_sensor/flutter_rotation_sensor.dart';
-import 'package:sailing_analytics/data/services/sensor_math.dart';
-import 'package:sailing_analytics/data/services/sensor_service.dart';
+import 'package:tacktics/data/services/sensor_math.dart';
+import 'package:tacktics/data/services/sensor_service.dart';
 import 'package:sensors_plus/sensors_plus.dart';
 
 class CalibrationOffset {

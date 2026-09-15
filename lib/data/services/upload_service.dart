@@ -1,10 +1,10 @@
 import 'dart:developer' as dev;
 import 'dart:math';
 
-import 'package:sailing_analytics/data/entities/boat.dart';
-import 'package:sailing_analytics/data/entities/gps_point.dart';
-import 'package:sailing_analytics/data/entities/range_measurements.dart';
-import 'package:sailing_analytics/data/entities/session.dart';
+import 'package:tacktics/data/entities/boat.dart';
+import 'package:tacktics/data/entities/gps_point.dart';
+import 'package:tacktics/data/entities/range_measurements.dart';
+import 'package:tacktics/data/entities/session.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
 

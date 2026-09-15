@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:sailing_analytics/controllers/recording_controller.dart';
-import 'package:sailing_analytics/providers/sensor_providers.dart';
+import 'package:tacktics/controllers/recording_controller.dart';
+import 'package:tacktics/providers/sensor_providers.dart';
 import 'widgets/gps_status.dart';
 import 'widgets/heading_display.dart';
 

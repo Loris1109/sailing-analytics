@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:sailing_analytics/icons/boat_icons.dart';
-import 'package:sailing_analytics/screens/home/shadow_icon_button.dart';
-import 'package:sailing_analytics/screens/home/widgets/compassPanel/BoatMenu/add_boat_dialog.dart';
-import 'package:sailing_analytics/screens/home/widgets/panel_bg.dart';
+import 'package:tacktics/icons/boat_icons.dart';
+import 'package:tacktics/screens/home/shadow_icon_button.dart';
+import 'package:tacktics/screens/home/widgets/compassPanel/BoatMenu/add_boat_dialog.dart';
+import 'package:tacktics/screens/home/widgets/panel_bg.dart';
 
 class BoatMenuHeader extends StatelessWidget {
   final VoidCallback onClose;

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:sailing_analytics/screens/home/widgets/SlideMenu/header/collapsed_header.dart';
-import 'package:sailing_analytics/screens/home/widgets/SlideMenu/header/expanded_header.dart';
-import 'package:sailing_analytics/screens/home/widgets/panel_bg.dart';
+import 'package:tacktics/screens/home/widgets/SlideMenu/header/collapsed_header.dart';
+import 'package:tacktics/screens/home/widgets/SlideMenu/header/expanded_header.dart';
+import 'package:tacktics/screens/home/widgets/panel_bg.dart';
 
 class SlideMenuHeader extends StatelessWidget {
   final bool isExpanded;

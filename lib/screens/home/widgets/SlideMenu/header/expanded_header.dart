@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:sailing_analytics/providers/session_providers.dart';
+import 'package:tacktics/providers/session_providers.dart';
 
 class ExpandedHeader extends ConsumerWidget {
   const ExpandedHeader({super.key});

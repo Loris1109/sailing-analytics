@@ -7,7 +7,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>Sailing Analytics</string>
+	<string>Tacktics</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -15,7 +15,7 @@
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
-	<string>sailing_analytics</string>
+	<string>Tacktics</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
@@ -68,10 +68,10 @@
 	</array>
 	<!-- permission for GPS -->
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>SailTrack needs GPS to record your sailing session</string>
+	<string>Tacktics needs GPS to record your sailing session</string>
 
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
-	<string>SailTrack needs GPS to record in the background</string>
+	<string>Tacktics needs GPS to record in the background</string>
 
 	<key>UIBackgroundModes</key>
 	<array>
@@ -79,6 +79,6 @@
 	</array>
 	<!--permission for MotionSensors-->
 	<key>NSMotionUsageDescription</key>
-	<string>SailTrack requires needs the MotionSensors to calculate the heel and pitch</string>
+	<string>Tacktics needs the motion sensors to measure heel and pitch</string>
 </dict>
 </plist>

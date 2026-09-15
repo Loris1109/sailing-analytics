@@ -4,10 +4,10 @@ import 'dart:developer' as dev;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart' show Position;
 import 'package:latlong2/latlong.dart';
-import 'package:sailing_analytics/data/repositories/range_measurements_repository.dart';
-import 'package:sailing_analytics/data/services/ble_service.dart';
-import 'package:sailing_analytics/providers/ble_state_provider.dart';
-import 'package:sailing_analytics/providers/sensor_providers.dart';
+import 'package:tacktics/data/repositories/range_measurements_repository.dart';
+import 'package:tacktics/data/services/ble_service.dart';
+import 'package:tacktics/providers/ble_state_provider.dart';
+import 'package:tacktics/providers/sensor_providers.dart';
 import 'package:uuid/uuid.dart';
 import '../data/entities/gps_point.dart';
 import '../data/entities/range_measurements.dart';
@@ -176,6 +176,27 @@ class RecordingController extends Notifier<RecordingState> {
   LatLng? _lastAcceptedPos;
   DateTime? _lastAcceptedTime;
 
+  // Letzter Kurs, den die Plattform WIRKLICH gemeldet hat — siehe _cogOf.
+  double? _lastValidCog;
+
+  /// Kurs über Grund, oder der letzte echte, wenn dieser Fix keinen hat.
+  ///
+  /// `pos.heading` ist KEIN Kompasskurs, sondern der aus der Bewegung
+  /// abgeleitete Kurs über Grund. Meldet die Plattform keinen — Gerät steht,
+  /// Fix ohne Bearing, Position vom Netzwerk statt vom GPS — liefert
+  /// geolocator 0.0 als Platzhalter, und 0.0 ist von einem echten Nordkurs
+  /// nicht zu unterscheiden. `hasHeading` ist das einzige, was die beiden
+  /// trennt.
+  ///
+  /// Ungeprüft übernommen schlug jeder solche Fix in der Auswertung als
+  /// Kurssprung auf Nord durch und damit als Wende, die nie stattgefunden hat.
+  /// Den letzten echten Kurs zu halten ist die ehrlichere Annahme: ein Boot
+  /// behält seinen Kurs, wenn das GPS kurz nichts dazu sagt.
+  double _cogOf(Position pos) {
+    if (pos.hasHeading) _lastValidCog = pos.heading % 360;
+    return _lastValidCog ?? 0;
+  }
+
   Future<void> _onPosition(
     Position pos,
     String sessionId,
@@ -237,6 +258,10 @@ class RecordingController extends Notifier<RecordingState> {
     // falls Stufe 1+2 auf dem Wasser nicht reichen.
     // ───────────────────────────────────────────────────────────────
 
+    // Einmal auswerten: _cogOf schreibt _lastValidCog fort, zwei Aufrufe pro
+    // Fix wären zwar folgenlos, aber irreführend.
+    final cog = _cogOf(pos);
+
     final gpsPointId = await sessionRepo.savePoint(
       GpsPointEntity(
         id: const Uuid().v4(),
@@ -245,7 +270,7 @@ class RecordingController extends Notifier<RecordingState> {
         lat: pos.latitude,
         lon: pos.longitude,
         sog: pos.speed * 1.94384, // m/s → knots
-        cog: pos.heading % 360,
+        cog: cog,
         heel: _heel,
         pitch: _pitch,
         magHeading: _magHeading,
@@ -285,7 +310,7 @@ class RecordingController extends Notifier<RecordingState> {
     state = state.copyWith(
       pointsSaved: state.pointsSaved + 1,
       lastSog: pos.speed * 1.94384,
-      lastCog: pos.heading % 360,
+      lastCog: cog,
       lastMagHeading: _magHeading,
       lastAccuracy: pos.accuracy,
     );
@@ -313,6 +338,7 @@ class RecordingController extends Notifier<RecordingState> {
     _lastAcceptedPos = null;
     _lastAcceptedTime = null;
     _lastPositionTime = null;
+    _lastValidCog = null;
 
     final finishedId = state.activeSessionId;
     if (finishedId != null) {

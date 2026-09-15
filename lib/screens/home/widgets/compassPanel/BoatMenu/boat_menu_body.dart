@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:sailing_analytics/providers/boat_providers.dart';
-import 'package:sailing_analytics/providers/repository_providers.dart';
-import 'package:sailing_analytics/screens/home/widgets/compassPanel/BoatMenu/boat_list_item.dart';
+import 'package:tacktics/providers/boat_providers.dart';
+import 'package:tacktics/providers/repository_providers.dart';
+import 'package:tacktics/screens/home/widgets/compassPanel/BoatMenu/boat_list_item.dart';
 
 class BoatMenuBody extends ConsumerWidget {
   const BoatMenuBody({super.key});

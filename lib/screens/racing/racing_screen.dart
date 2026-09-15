@@ -1,12 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:sailing_analytics/controllers/recording_controller.dart';
+import 'package:tacktics/controllers/recording_controller.dart';
 import 'widgets/gps_status.dart';
 import 'widgets/heading_display.dart';
 import 'widgets/speed_display.dart';
-
-// 🔧 DEBUG: Setze auf false, um BLE-Debug-View zu deaktivieren
-const bool _debugBleEnabled = true;
 
 class RacingScreen extends ConsumerWidget {
   const RacingScreen({super.key});

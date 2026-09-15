@@ -1,5 +1,5 @@
-import 'package:sailing_analytics/data/entities/boat.dart';
-import 'package:sailing_analytics/data/entities/session.dart';
+import 'package:tacktics/data/entities/boat.dart';
+import 'package:tacktics/data/entities/session.dart';
 
 class SessionWithBoat {
   final SessionEntity session;

@@ -2,8 +2,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:sensors_plus/sensors_plus.dart';
-import 'package:sailing_analytics/data/services/sensor_service.dart';
-import 'package:sailing_analytics/providers/sensor_providers.dart';
+import 'package:tacktics/data/services/sensor_service.dart';
+import 'package:tacktics/providers/sensor_providers.dart';
 
 class CalibrationDialog extends ConsumerStatefulWidget {
   const CalibrationDialog({super.key});

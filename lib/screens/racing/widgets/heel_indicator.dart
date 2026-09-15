@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:sailing_analytics/providers/sensor_providers.dart';
+import 'package:tacktics/providers/sensor_providers.dart';
 
 //kann gelöscht werden zum release
 class HeelIndicator extends ConsumerWidget {

@@ -42,6 +42,23 @@ class GpsService {
             accuracy: LocationAccuracy.best,
             distanceFilter: 0,
             intervalDuration: const Duration(milliseconds: 250),
+            // NICHT entfernen — das ist keine Debug-Einstellung.
+            //
+            // false (der Standard) bedeutet FusedLocationProvider aus den
+            // Google Play Services. Der liefert Position und Geschwindigkeit,
+            // aber KEINEN Bearing: `Location.hasBearing()` ist dort dauerhaft
+            // false, und geolocator gibt den Kurs dann als 0.0 zurück. Damit
+            // steht in jedem aufgezeichneten Punkt cog = 0, und die
+            // Wendenerkennung hat nichts, woran sie arbeiten kann.
+            //
+            // true nimmt stattdessen den LocationManager, also das rohe GNSS —
+            // das, was ein Segler ohnehin will: ungefilterte Fixe statt einer
+            // für Landverkehr optimierten Schätzung aus Sensorfusion und WLAN.
+            //
+            // Die Zeile war zwischen dem 17.06. und dem 23.07.2026 schon
+            // einmal da. Seit sie in einem Aufräum-Commit herausfiel, ist der
+            // COG aller Aufzeichnungen 0.
+            forceLocationManager: true,
           )
         : AppleSettings(
             accuracy: LocationAccuracy.bestForNavigation,

@@ -1,4 +1,4 @@
-package com.example.sailing_analytics
+package app.tacktics
 
 import android.view.KeyEvent
 import io.flutter.embedding.android.FlutterActivity
@@ -6,7 +6,7 @@ import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
 
 class MainActivity : FlutterActivity() {
-    private val channelName = "com.example.sailing_analytics/volume_buttons"
+    private val channelName = "app.tacktics/volume_buttons"
     private var channel: MethodChannel? = null
 
     // Die Tasten werden nur geschluckt, solange die Racing-View läuft —

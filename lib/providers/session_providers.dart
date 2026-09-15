@@ -2,12 +2,12 @@ import 'dart:math' as math;
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:sailing_analytics/data/entities/boat.dart';
-import 'package:sailing_analytics/data/entities/gps_point.dart';
-import 'package:sailing_analytics/data/entities/session.dart';
-import 'package:sailing_analytics/data/entities/session_with_boat.dart';
-import 'package:sailing_analytics/data/services/gps_service.dart';
-import 'package:sailing_analytics/providers/repository_providers.dart';
+import 'package:tacktics/data/entities/boat.dart';
+import 'package:tacktics/data/entities/gps_point.dart';
+import 'package:tacktics/data/entities/session.dart';
+import 'package:tacktics/data/entities/session_with_boat.dart';
+import 'package:tacktics/data/services/gps_service.dart';
+import 'package:tacktics/providers/repository_providers.dart';
 
 // ─── lib/providers/session_providers.dart ───
 // StreamProviders for what the screen displays

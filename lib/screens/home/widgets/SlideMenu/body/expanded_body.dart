@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:sailing_analytics/providers/repository_providers.dart';
-import 'package:sailing_analytics/providers/session_providers.dart';
-import 'package:sailing_analytics/providers/ui_providers.dart';
-import 'package:sailing_analytics/screens/home/widgets/SlideMenu/body/session_list_item.dart';
+import 'package:tacktics/providers/repository_providers.dart';
+import 'package:tacktics/providers/session_providers.dart';
+import 'package:tacktics/providers/ui_providers.dart';
+import 'package:tacktics/screens/home/widgets/SlideMenu/body/session_list_item.dart';
 
 class ExpandedBody extends ConsumerWidget {
   const ExpandedBody({super.key});

@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:sailing_analytics/icons/boat_icons.dart';
-import 'package:sailing_analytics/icons/trail_icon.dart';
-import 'package:sailing_analytics/providers/ui_providers.dart';
-import 'package:sailing_analytics/screens/home/shadow_icon_button.dart';
-import 'package:sailing_analytics/screens/home/widgets/compassPanel/BoatMenu/boat_menu.dart';
-import 'package:sailing_analytics/screens/home/widgets/compassPanel/compass.dart';
-import 'package:sailing_analytics/screens/home/widgets/compassPanel/feedback_dialog.dart';
-import 'package:sailing_analytics/screens/home/widgets/panel_bg.dart';
+import 'package:tacktics/icons/boat_icons.dart';
+import 'package:tacktics/icons/trail_icon.dart';
+import 'package:tacktics/providers/ui_providers.dart';
+import 'package:tacktics/screens/home/shadow_icon_button.dart';
+import 'package:tacktics/screens/home/widgets/compassPanel/BoatMenu/boat_menu.dart';
+import 'package:tacktics/screens/home/widgets/compassPanel/compass.dart';
+import 'package:tacktics/screens/home/widgets/compassPanel/feedback_dialog.dart';
+import 'package:tacktics/screens/home/widgets/panel_bg.dart';
 
 class CompassPanel extends ConsumerStatefulWidget {
   const CompassPanel({super.key});

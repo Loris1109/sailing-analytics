@@ -4,8 +4,8 @@
 import 'dart:math';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:sailing_analytics/data/entities/gps_point.dart';
-import 'package:sailing_analytics/data/services/session_stats.dart';
+import 'package:tacktics/data/entities/gps_point.dart';
+import 'package:tacktics/data/services/session_stats.dart';
 
 final _t0 = DateTime(2026, 9, 9, 12);
 

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:sailing_analytics/data/entities/session.dart';
-import 'package:sailing_analytics/providers/repository_providers.dart';
-import 'package:sailing_analytics/providers/ui_providers.dart';
+import 'package:tacktics/data/entities/session.dart';
+import 'package:tacktics/providers/repository_providers.dart';
+import 'package:tacktics/providers/ui_providers.dart';
 
 class CollapsedHeader extends ConsumerWidget {
   const CollapsedHeader({super.key});

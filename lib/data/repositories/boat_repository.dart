@@ -1,6 +1,6 @@
 import 'package:drift/drift.dart';
-import 'package:sailing_analytics/data/database/app_database.dart';
-import 'package:sailing_analytics/data/entities/boat.dart';
+import 'package:tacktics/data/database/app_database.dart';
+import 'package:tacktics/data/entities/boat.dart';
 import 'package:uuid/uuid.dart';
 
 class BoatRepository {

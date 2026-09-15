@@ -3,9 +3,9 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
-import 'package:sailing_analytics/data/entities/gps_point.dart';
-import 'package:sailing_analytics/providers/ui_providers.dart';
-import 'package:sailing_analytics/util/color_utils.dart';
+import 'package:tacktics/data/entities/gps_point.dart';
+import 'package:tacktics/providers/ui_providers.dart';
+import 'package:tacktics/util/color_utils.dart';
 
 class MapWidget extends StatefulWidget {
   final List<GpsPointEntity> gpsPoints;
@@ -86,7 +86,7 @@ class _MapWidgetState extends State<MapWidget> {
       children: [
         TileLayer(
           urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-          userAgentPackageName: 'com.Lorenz.sailtrack',
+          userAgentPackageName: 'app.tacktics',
         ),
         if (widget.gpsPoints.length > 1)
           PolylineLayer(

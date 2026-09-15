@@ -4,15 +4,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:latlong2/latlong.dart';
-import 'package:sailing_analytics/controllers/recording_controller.dart';
-import 'package:sailing_analytics/data/entities/gps_point.dart';
-import 'package:sailing_analytics/providers/repository_providers.dart';
-import 'package:sailing_analytics/providers/ui_providers.dart';
-import 'package:sailing_analytics/screens/home/widgets/SlideMenu/slide_menu.dart';
-import 'package:sailing_analytics/screens/home/widgets/compassPanel/compass_panel.dart';
-import 'package:sailing_analytics/screens/home/widgets/map.dart';
-import 'package:sailing_analytics/providers/session_providers.dart';
-import 'package:sailing_analytics/screens/home/widgets/status_bar.dart';
+import 'package:tacktics/controllers/recording_controller.dart';
+import 'package:tacktics/data/entities/gps_point.dart';
+import 'package:tacktics/providers/repository_providers.dart';
+import 'package:tacktics/providers/ui_providers.dart';
+import 'package:tacktics/screens/home/widgets/SlideMenu/slide_menu.dart';
+import 'package:tacktics/screens/home/widgets/compassPanel/compass_panel.dart';
+import 'package:tacktics/screens/home/widgets/map.dart';
+import 'package:tacktics/providers/session_providers.dart';
+import 'package:tacktics/screens/home/widgets/status_bar.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});

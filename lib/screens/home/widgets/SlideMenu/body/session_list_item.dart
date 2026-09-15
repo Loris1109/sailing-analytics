@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:sailing_analytics/data/entities/session_with_boat.dart';
+import 'package:tacktics/data/entities/session_with_boat.dart';
 
 class SessionListItem extends StatelessWidget {
   final SessionWithBoat sessionWithBoat;

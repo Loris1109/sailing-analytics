@@ -1,7 +1,7 @@
 import 'dart:developer' as dev;
 import 'package:drift/drift.dart';
-import 'package:sailing_analytics/data/database/app_database.dart';
-import 'package:sailing_analytics/data/entities/range_measurements.dart';
+import 'package:tacktics/data/database/app_database.dart';
+import 'package:tacktics/data/entities/range_measurements.dart';
 
 class RangeMeasurementRepository {
   final AppDatabase _db;

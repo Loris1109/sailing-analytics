@@ -1,11 +1,11 @@
 {
-    "name": "sailing_analytics",
-    "short_name": "sailing_analytics",
+    "name": "Tacktics",
+    "short_name": "Tacktics",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
     "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "description": "Live-Segelanalyse fürs Handy — Aufzeichnung, Kennzahlen und Taktikdaten während der Fahrt.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

@@ -2,8 +2,8 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:sailing_analytics/providers/repository_providers.dart';
-import 'package:sailing_analytics/providers/ui_providers.dart';
+import 'package:tacktics/providers/repository_providers.dart';
+import 'package:tacktics/providers/ui_providers.dart';
 
 class Compass extends ConsumerWidget {
   const Compass({super.key});

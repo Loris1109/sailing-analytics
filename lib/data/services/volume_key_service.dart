@@ -30,7 +30,7 @@ class VolumeKeyEvent {
 /// Serie von Ticks, das Loslassen wird aus deren Ausbleiben geschlossen.
 class VolumeKeyService {
   static const _channel = MethodChannel(
-    'com.example.sailing_analytics/volume_buttons',
+    'app.tacktics/volume_buttons',
   );
 
   /// Wie lange gehalten werden muss, damit es als Langdruck zählt.

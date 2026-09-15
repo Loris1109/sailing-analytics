@@ -1,10 +1,10 @@
-# TackTicks
+# Tacktics
 
 **A Flutter app that records, processes and visualizes sailing regatta metrics — on the water, without a network.**
 
 <img src="docs/screenshot.jpg" width="280" alt="Live recording view with speed-coloured track, compass and session stats">
 
-Sailors get plenty of numbers *after* a race and almost nothing useful *during* one. TackTicks
+Sailors get plenty of numbers *after* a race and almost nothing useful *during* one. Tacktics
 records a full session on the phone — position, speed, heading, heel — shows the essentials at a
 glance while sailing, and turns the track into something you can actually read afterwards: where
 you were fast, where you lost height, how a manoeuvre really went.

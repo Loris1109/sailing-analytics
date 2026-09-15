@@ -1,5 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:sailing_analytics/data/entities/session.dart';
+import 'package:tacktics/data/entities/session.dart';
 
 final windDirectionProvider = NotifierProvider<WindDirectionNotifier, double>(
   WindDirectionNotifier.new,

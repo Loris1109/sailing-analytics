@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:sailing_analytics/screens/home/widgets/SlideMenu/body/collapsed_body.dart';
-import 'package:sailing_analytics/screens/home/widgets/SlideMenu/body/expanded_body.dart';
+import 'package:tacktics/screens/home/widgets/SlideMenu/body/collapsed_body.dart';
+import 'package:tacktics/screens/home/widgets/SlideMenu/body/expanded_body.dart';
 
 class SlideMenuBody extends StatelessWidget {
   final bool showExpanded;

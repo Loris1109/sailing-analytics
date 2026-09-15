@@ -89,13 +89,13 @@ BEGIN
     BEGIN
         BLOCK "040904e4"
         BEGIN
-            VALUE "CompanyName", "com.example" "\0"
-            VALUE "FileDescription", "sailing_analytics" "\0"
+            VALUE "CompanyName", "Tacktics" "\0"
+            VALUE "FileDescription", "Tacktics" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
-            VALUE "InternalName", "sailing_analytics" "\0"
-            VALUE "LegalCopyright", "Copyright (C) 2026 com.example. All rights reserved." "\0"
-            VALUE "OriginalFilename", "sailing_analytics.exe" "\0"
-            VALUE "ProductName", "sailing_analytics" "\0"
+            VALUE "InternalName", "Tacktics" "\0"
+            VALUE "LegalCopyright", "Copyright (C) 2026 Tacktics. All rights reserved." "\0"
+            VALUE "OriginalFilename", "tacktics.exe" "\0"
+            VALUE "ProductName", "Tacktics" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END
     END

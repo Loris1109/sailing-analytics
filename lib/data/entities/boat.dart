@@ -1,4 +1,4 @@
-import 'package:sailing_analytics/data/database/app_database.dart';
+import 'package:tacktics/data/database/app_database.dart';
 
 class BoatEntity {
   final String id;

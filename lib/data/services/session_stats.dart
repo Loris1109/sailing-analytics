@@ -10,7 +10,7 @@
 import 'dart:math';
 
 import 'package:latlong2/latlong.dart';
-import 'package:sailing_analytics/data/entities/gps_point.dart';
+import 'package:tacktics/data/entities/gps_point.dart';
 
 /// Version des Algorithmus. Hochzählen, sobald sich an der Rechnung unten
 /// etwas ändert — Sessions mit kleinerer Version werden beim App-Start

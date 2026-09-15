@@ -5,10 +5,10 @@ import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
-import 'package:sailing_analytics/data/entities/boat.dart';
-import 'package:sailing_analytics/data/entities/session.dart';
-import 'package:sailing_analytics/data/entities/session_with_boat.dart';
-import 'package:sailing_analytics/data/services/session_stats.dart';
+import 'package:tacktics/data/entities/boat.dart';
+import 'package:tacktics/data/entities/session.dart';
+import 'package:tacktics/data/entities/session_with_boat.dart';
+import 'package:tacktics/data/services/session_stats.dart';
 import 'tables.dart';
 
 // This tells drift which tables exist and what version the schema is
@@ -252,6 +252,12 @@ LazyDatabase _openConnection() {
     // getApplicationDocumentsDirectory = app's private folder
     // Only your app can access this — safe for user data
     final dbFolder = await getApplicationDocumentsDirectory();
+    // NICHT umbenennen. Der Name stammt aus einem früheren Arbeitstitel und
+    // passt nicht mehr zur App — er ist aber der Schlüssel zu allem bereits
+    // Aufgezeichneten. Ein neuer Dateiname legt eine leere Datenbank an und
+    // lässt die alte unberührt liegen: keine Fehlermeldung, keine Sessions.
+    // Wer ihn ändern will, muss die vorhandene Datei vorher umbenennen,
+    // bevor drift die Verbindung öffnet. Sichtbar ist der Name nirgends.
     final file = File(p.join(dbFolder.path, 'sailtrack.db'));
     return NativeDatabase.createInBackground(file);
   });

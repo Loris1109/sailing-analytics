@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:sailing_analytics/data/entities/session.dart';
-import 'package:sailing_analytics/data/services/upload_service.dart';
-import 'package:sailing_analytics/providers/repository_providers.dart';
+import 'package:tacktics/data/entities/session.dart';
+import 'package:tacktics/data/services/upload_service.dart';
+import 'package:tacktics/providers/repository_providers.dart';
 
 // Ablauf: Code eingeben → auflösen → bestätigen → hochladen → fertig.
 // Jeder Zustand ist ein eigenes Stück UI, die Handler schalten weiter.

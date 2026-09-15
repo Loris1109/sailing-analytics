@@ -3,8 +3,8 @@
 // Controllers never touch AppDatabase directly
 
 import 'package:drift/drift.dart' show Value;
-import 'package:sailing_analytics/data/entities/session_with_boat.dart';
-import 'package:sailing_analytics/data/services/session_stats.dart';
+import 'package:tacktics/data/entities/session_with_boat.dart';
+import 'package:tacktics/data/services/session_stats.dart';
 import 'package:uuid/uuid.dart';
 import '../database/app_database.dart';
 import '../entities/gps_point.dart';

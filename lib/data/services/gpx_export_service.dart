@@ -2,7 +2,7 @@
 // Builds a GPX 1.1 document from a session — pure string logic, no I/O.
 // Writing the file and opening the share sheet happens at the UI layer.
 
-import 'package:sailing_analytics/data/entities/range_measurements.dart';
+import 'package:tacktics/data/entities/range_measurements.dart';
 
 import '../entities/boat.dart';
 import '../entities/gps_point.dart';
@@ -17,9 +17,9 @@ class GpxExportService {
   ) {
     final b = StringBuffer();
     b.writeln('<?xml version="1.0" encoding="UTF-8"?>');
-    b.writeln('<gpx version="1.1" creator="SailTrack"');
+    b.writeln('<gpx version="1.1" creator="Tacktics"');
     b.writeln('     xmlns="http://www.topografix.com/GPX/1/1"');
-    b.writeln('     xmlns:st="https://sailtrack.app/gpx/1">');
+    b.writeln('     xmlns:st="https://tacktics.app/gpx/1">');
 
     b.writeln('  <metadata>');
     b.writeln('    <name>${_escapeXml(session.name)}</name>');

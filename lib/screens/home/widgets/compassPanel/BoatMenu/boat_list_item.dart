@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:sailing_analytics/data/entities/boat.dart';
+import 'package:tacktics/data/entities/boat.dart';
 
 class BoatListItem extends StatelessWidget {
   final BoatEntity boat;

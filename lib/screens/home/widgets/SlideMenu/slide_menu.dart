@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:sailing_analytics/providers/ui_providers.dart';
-import 'package:sailing_analytics/screens/home/widgets/SlideMenu/slide_menu_body.dart';
-import 'package:sailing_analytics/screens/home/widgets/SlideMenu/slide_menu_header.dart';
+import 'package:tacktics/providers/ui_providers.dart';
+import 'package:tacktics/screens/home/widgets/SlideMenu/slide_menu_body.dart';
+import 'package:tacktics/screens/home/widgets/SlideMenu/slide_menu_header.dart';
 
 class SlideMenu extends ConsumerStatefulWidget {
   const SlideMenu({super.key});

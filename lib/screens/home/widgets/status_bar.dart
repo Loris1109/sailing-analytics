@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:sailing_analytics/providers/ui_providers.dart';
-import 'package:sailing_analytics/util/color_utils.dart';
+import 'package:tacktics/providers/ui_providers.dart';
+import 'package:tacktics/util/color_utils.dart';
 
 class StatusBar extends StatelessWidget {
   final PathMode pathMode;

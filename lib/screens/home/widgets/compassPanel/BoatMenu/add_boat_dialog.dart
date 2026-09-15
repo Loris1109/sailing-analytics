@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:sailing_analytics/data/entities/boat.dart';
-import 'package:sailing_analytics/data/entities/boat_class.dart';
-import 'package:sailing_analytics/providers/repository_providers.dart';
+import 'package:tacktics/data/entities/boat.dart';
+import 'package:tacktics/data/entities/boat_class.dart';
+import 'package:tacktics/providers/repository_providers.dart';
 
 class AddBoatDialog extends ConsumerStatefulWidget {
   const AddBoatDialog({super.key});

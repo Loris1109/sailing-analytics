@@ -16,5 +16,12 @@ typedef BoatClassProfile = ({
 });
 
 const Map<String, BoatClassProfile> kBoatClasses = {
-  'Europe': (maxSpeed: 9.0, tackAngle: 90.0),
+  'Europe': (maxSpeed: 12.0, tackAngle: 90.0),
+  'Laser': (maxSpeed: 15, tackAngle: 90),
+  'OK': (maxSpeed: 15, tackAngle: 90),
+  'Pirat': (maxSpeed: 12, tackAngle: 90),
+  '420er': (maxSpeed: 15, tackAngle: 90),
+  '29er': (maxSpeed: 20, tackAngle: 100),
+  '49er': (maxSpeed: 25, tackAngle: 90),
+
 };

@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:tacktics/data/entities/session.dart';
 import 'package:tacktics/providers/session_providers.dart';
-import 'package:tacktics/providers/ui_providers.dart';
 
-/// Kennzahlen der ausgewählten Session.
+/// Kennzahlen dessen, was die Karte gerade zeigt.
 ///
-/// Liest bewusst nur die Session, nicht ihre Punkte: die Werte stehen als
-/// Spalten daneben und wurden beim Beenden einmal gerechnet (siehe
-/// session_stats.dart). Die Leiste rührt die Punktliste nicht an.
+/// Ohne gesetzten Ausschnitt sind das die Werte der ganzen Session, die beim
+/// Beenden einmal gerechnet wurden und als Spalten daneben stehen — die
+/// Leiste rührt die Punktliste dann nicht an. Ist ein Ausschnitt gesetzt,
+/// rechnet [visibleStatsProvider] über die beschnittene Liste nach. Welcher
+/// Fall gilt und was das kostet, entscheidet der Provider; hier steht nur
+/// noch die Darstellung.
 ///
 /// Muss `const` konstruierbar bleiben. CollapsedBody baut sie als
 /// `const SessionStatsBar()` — bei identischer Widget-Instanz überspringt
@@ -19,45 +20,23 @@ class SessionStatsBar extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final session = _live(ref, ref.watch(selectedSessionProvider));
+    // `.value` und nicht `.when`: während der Provider nach einer Änderung am
+    // Ausschnitt neu rechnet, bleiben die zuletzt gültigen Zahlen stehen.
+    // Ein Wechsel auf "—" und zurück wäre bei jedem Zug ein Flackern.
+    final stats = ref.watch(visibleStatsProvider).value;
 
-    // Jedes _StatItem ist Expanded — vier gleich breite Spalten, damit
+    // Jedes _StatItem ist Expanded — drei gleich breite Spalten, damit
     // "Ø Fahrt" neben "Dist" nicht umbricht.
     return Row(
       children: [
         // Über 2 s gemittelt, nicht ein einzelner GPS-Sample — ein Ausreißer
         // wäre sonst der Rekord.
-        _StatItem(label: 'Max 2s', value: _knots(session?.peakSpeed)),
+        _StatItem(label: 'Max 2s', value: _knots(stats?.peakSpeed)),
         // Ohne Stillstand: Warten vor dem Start verwässert den Schnitt sonst.
-        _StatItem(label: 'Ø Fahrt', value: _knots(session?.avgMovingSpeed)),
-        _StatItem(label: 'Dist', value: _distance(session?.distance)),
-        // Wenden, nicht Manöver: Halsen erkennt die COG-Schwelle nicht,
-        // siehe maneuverThresholdDeg.
-        _StatItem(label: 'Wenden', value: session?.tacks?.toString()),
+        _StatItem(label: 'Ø Fahrt', value: _knots(stats?.avgMovingSpeed)),
+        _StatItem(label: 'Dist', value: _distance(stats?.distance)),
       ],
     );
-  }
-
-  /// Dieselbe Session, aber mit dem Stand aus der DB statt dem vom Antippen.
-  ///
-  /// `selectedSessionProvider` hält eine Kopie, die beim Auswählen entstanden
-  /// ist. Die Kennzahlen entstehen teilweise erst DANACH: `recomputeOutdated
-  /// Stats` rechnet Altsessions beim Start nach, und nach einer Änderung am
-  /// Algorithmus auch alle anderen. Ohne diesen Nachschlag zeigt die Leiste
-  /// für eine in dem Moment ausgewählte Session "—", bis man sie erneut
-  /// antippt.
-  ///
-  /// Fällt auf die Kopie zurück, solange der Stream noch nichts geliefert hat
-  /// oder die Zeile nicht (mehr) enthält — dann ist die Kopie das Beste, was
-  /// da ist.
-  static SessionEntity? _live(WidgetRef ref, SessionEntity? selected) {
-    if (selected == null) return null;
-    final rows = ref.watch(sessionsStreamProvider).value;
-    if (rows == null) return selected;
-    for (final row in rows) {
-      if (row.id == selected.id) return row;
-    }
-    return selected;
   }
 
   static String? _knots(double? kn) =>

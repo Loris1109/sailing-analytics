@@ -48,8 +48,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final selectedSession = ref.watch(selectedSessionProvider);
+    // Beschnitten auf den Trim-Ausschnitt, falls einer gesetzt ist — sonst
+    // die ganze Session.
     final gpsPoints = selectedSession != null
-        ? ref.watch(sessionPointsProvider(selectedSession.id)).value ??
+        ? ref.watch(visiblePointsProvider(selectedSession.id)).value ??
               <GpsPointEntity>[]
         : <GpsPointEntity>[];
 

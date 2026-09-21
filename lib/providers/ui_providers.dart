@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tacktics/data/entities/session.dart';
+import 'package:tacktics/data/services/trim.dart';
 
 final windDirectionProvider = NotifierProvider<WindDirectionNotifier, double>(
   WindDirectionNotifier.new,
@@ -90,6 +91,50 @@ class IsExpandedNotifier extends Notifier<bool> {
   void toggle() => state = !state;
   void close() => state = false;
   void setExpanded(bool value) => state = value;
+}
+
+enum MenuMode {normal, trim}
+final menuModeProvider = NotifierProvider<MenuModeNotifier, MenuMode>(
+  MenuModeNotifier.new,
+);
+
+class MenuModeNotifier extends Notifier<MenuMode>{
+  @override
+  MenuMode build() {
+    // Trim hängt an einer Session. Fällt die weg oder wechselt sie — Auswahl
+    // gelöscht, neue Aufnahme gestartet (HomeScreen clear()t dann) — gibt es
+    // nichts mehr zu beschneiden.
+    ref.listen(selectedSessionProvider, (prev, next) {
+      if (next?.id != prev?.id) state = MenuMode.normal;
+    });
+    return MenuMode.normal;
+  }
+
+  void enterTrim() => state = MenuMode.trim;
+  void exit() => state = MenuMode.normal;
+}
+
+/// Der aktuell aufgezogene Ausschnitt, `null` = ganze Session.
+///
+/// Überlebt bewusst das Verlassen des Trim-Modus: sonst könnte man den
+/// Ausschnitt nie auf der ganzen Karte ansehen, ohne dass das Panel im Weg
+/// steht. Zurückgesetzt wird er nur ausdrücklich — oder wenn die Session
+/// wechselt, denn die Grenzen sind Zeitpunkte AUS dieser Aufzeichnung.
+final trimRangeProvider = NotifierProvider<TrimRangeNotifier, TrimRange?>(
+  TrimRangeNotifier.new,
+);
+
+class TrimRangeNotifier extends Notifier<TrimRange?> {
+  @override
+  TrimRange? build() {
+    ref.listen(selectedSessionProvider, (prev, next) {
+      if (next?.id != prev?.id) state = null;
+    });
+    return null;
+  }
+
+  void set(TrimRange range) => state = range;
+  void clear() => state = null;
 }
 
 enum PathMode { speed, dynamicSpeed, heel }

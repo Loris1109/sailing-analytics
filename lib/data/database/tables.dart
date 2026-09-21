@@ -38,8 +38,12 @@ class Boats extends Table {
   RealColumn get maxSpeed => real()();
   // Winkel ZWISCHEN den beiden Am-Wind-Kursen, Europe: 90°. Klassenabhängig,
   // wird beim Anlegen aus kBoatClasses vorbelegt und dann auf dem Boot
-  // eingefroren — wie maxSpeed. Speist die Wendenerkennung, siehe
-  // maneuverThresholdDeg in session_stats.dart.
+  // eingefroren — wie maxSpeed.
+  //
+  // Wird derzeit von nichts gelesen: die Wendenerkennung, die ihn als
+  // Schwelle brauchte, ist wieder draußen. Bleibt trotzdem stehen und wird
+  // weiter geschrieben — das Feld kostet nichts, und Boote, die in der
+  // Zwischenzeit angelegt werden, haben ihren Winkel dann schon dabei.
   RealColumn get tackAngle =>
       real().named('tack_angle').withDefault(const Constant(90.0))();
   BoolColumn get isActive => boolean().withDefault(const Constant(false))();
@@ -82,6 +86,10 @@ class Sessions extends Table {
   RealColumn get avgMovingSpeed =>
       real().named('avg_moving_speed').nullable()();
   IntColumn get movingSeconds => integer().named('moving_seconds').nullable()();
+  // Wird nicht mehr geschrieben — die Wendenerkennung ist draußen. Die
+  // Spalte bleibt mit den Werten der bereits gerechneten Sessions stehen:
+  // sie zu löschen hieße in SQLite die Tabelle neu zu bauen, und die Zahlen
+  // wären weg, falls die Erkennung zurückkommt.
   IntColumn get tacks => integer().nullable()();
   // Version des Algorithmus, mit dem die Werte oben entstanden sind.
   // 0 = noch nie gerechnet. Liegt sie unter sessionStatsVersion, rechnet

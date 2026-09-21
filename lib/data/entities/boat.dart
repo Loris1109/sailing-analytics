@@ -8,9 +8,10 @@ class BoatEntity {
   final double maxSpeed;
 
   /// Winkel zwischen den beiden Am-Wind-Kursen in Grad, Europe: 90°.
-  /// Klassenabhängig, aus kBoatClasses vorbelegt. Speist die
-  /// Wendenerkennung — nicht direkt als Schwelle, siehe
-  /// `maneuverThresholdDeg` in session_stats.dart.
+  /// Klassenabhängig, aus kBoatClasses vorbelegt.
+  ///
+  /// Wird derzeit nur geschrieben, nicht gelesen — siehe Kommentar an der
+  /// Spalte in tables.dart.
   final double tackAngle;
 
   final bool isActive;

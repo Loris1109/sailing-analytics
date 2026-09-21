@@ -16,7 +16,6 @@ class SessionEntity {
   final double? peakSpeed; // kn, über 2 s gemittelt
   final double? avgMovingSpeed; // kn, zeitgewichtet, ohne Stillstand
   final Duration? movingTime;
-  final int? tacks;
 
   const SessionEntity({
     required this.id,
@@ -30,7 +29,6 @@ class SessionEntity {
     this.peakSpeed,
     this.avgMovingSpeed,
     this.movingTime,
-    this.tacks,
   });
 
   factory SessionEntity.fromDb(Session row) => SessionEntity(
@@ -47,7 +45,6 @@ class SessionEntity {
     movingTime: row.movingSeconds != null
         ? Duration(seconds: row.movingSeconds!)
         : null,
-    tacks: row.tacks,
   );
 
   SessionEntity copyWith({
@@ -61,7 +58,6 @@ class SessionEntity {
     double? peakSpeed,
     double? avgMovingSpeed,
     Duration? movingTime,
-    int? tacks,
   }) {
     return SessionEntity(
       id: id,
@@ -75,7 +71,6 @@ class SessionEntity {
       peakSpeed: peakSpeed ?? this.peakSpeed,
       avgMovingSpeed: avgMovingSpeed ?? this.avgMovingSpeed,
       movingTime: movingTime ?? this.movingTime,
-      tacks: tacks ?? this.tacks,
     );
   }
 }

@@ -122,13 +122,9 @@ final visibleStatsProvider = FutureProvider<DisplayStats?>((ref) async {
     );
   }
 
-  // Abhängigkeiten VOR dem Warten anmelden — nach einem await ist `ref`
-  // nicht mehr der richtige Ort dafür.
+  // Abhängigkeit VOR dem Warten anmelden — nach einem await ist `ref` nicht
+  // mehr der richtige Ort dafür.
   final pointsFuture = ref.watch(visiblePointsProvider(selected.id).future);
-  final boatId = session.boatId;
-  final boatFuture = boatId == null
-      ? null
-      : ref.watch(boatByIdProvider(boatId).future);
 
   // Riverpod wirft die laufende Rechnung beim nächsten Frame ohnehin weg —
   // hier wird sie gar nicht erst begonnen. Der Rückgabewert nach einem
@@ -141,10 +137,7 @@ final visibleStatsProvider = FutureProvider<DisplayStats?>((ref) async {
   final points = await pointsFuture;
   if (points.isEmpty) return null;
 
-  // Boot kann gelöscht sein — die Aufzeichnung überlebt es, die
-  // Wendenerkennung fällt dann auf den Standardwinkel zurück.
-  final tackAngle = (await boatFuture)?.tackAngle ?? kDefaultTackAngle;
-  final stats = computeSessionStats(points, tackAngleDeg: tackAngle);
+  final stats = computeSessionStats(points);
 
   return (
     peakSpeed: stats.peakSpeed,

@@ -53,27 +53,15 @@ class SessionRepository {
       return;
     }
 
-    // Distanz, Spitzenspeed, Ø fahrend und Wenden in einem Durchlauf. Die
-    // Punkte sind hier ohnehin schon geladen — die Kennzahlen kosten damit
-    // weder zusätzliche I/O noch einen zweiten Durchlauf.
-    final stats = computeSessionStats(
-      points,
-      tackAngleDeg: await _tackAngleFor(id),
-    );
+    // Distanz, Spitzenspeed und Ø fahrend in einem Durchlauf. Die Punkte
+    // sind hier ohnehin schon geladen — die Kennzahlen kosten damit weder
+    // zusätzliche I/O noch einen zweiten Durchlauf.
+    final stats = computeSessionStats(points);
 
     // Ende ist der letzte Fix, nicht der Moment des Beendens. Nur so liefert
     // eine nachträgliche Reparatur dasselbe Ergebnis wie ein sauberer Stopp —
     // sonst stünde dort der Zeitpunkt des nächsten App-Starts.
     await _db.completeSession(id, points.last.timestamp, stats);
-  }
-
-  /// Wendewinkel des Boots, mit dem die Session gefahren wurde. Fällt auf
-  /// den Standardwert zurück, wenn das Boot gelöscht wurde — boatId ist dann
-  /// null, die Aufzeichnung bleibt trotzdem gültig.
-  Future<double> _tackAngleFor(String sessionId) async {
-    final boatId = (await _db.getSessionById(sessionId))?.boatId;
-    if (boatId == null) return kDefaultTackAngle;
-    return (await _db.getBoatById(boatId))?.tackAngle ?? kDefaultTackAngle;
   }
 
   /// Rechnet Sessions nach, deren Kennzahlen aus einer älteren Version des
@@ -93,16 +81,7 @@ class SessionRepository {
     for (final row in rows.take(limit)) {
       final points = await getPointsForSession(row.id);
       if (points.isEmpty) continue;
-      final boat = row.boatId != null
-          ? await _db.getBoatById(row.boatId!)
-          : null;
-      await _db.updateSessionStats(
-        row.id,
-        computeSessionStats(
-          points,
-          tackAngleDeg: boat?.tackAngle ?? kDefaultTackAngle,
-        ),
-      );
+      await _db.updateSessionStats(row.id, computeSessionStats(points));
       done++;
     }
     return done;

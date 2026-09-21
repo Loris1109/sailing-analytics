@@ -103,7 +103,6 @@ class AppDatabase extends _$AppDatabase {
       peakSpeed: Value(stats.peakSpeed),
       avgMovingSpeed: Value(stats.avgMovingSpeed),
       movingSeconds: Value(stats.movingTime.inSeconds),
-      tacks: Value(stats.tacks),
       statsVersion: const Value(sessionStatsVersion),
     ),
   );
@@ -117,7 +116,6 @@ class AppDatabase extends _$AppDatabase {
           peakSpeed: Value(stats.peakSpeed),
           avgMovingSpeed: Value(stats.avgMovingSpeed),
           movingSeconds: Value(stats.movingTime.inSeconds),
-          tacks: Value(stats.tacks),
           statsVersion: const Value(sessionStatsVersion),
         ),
       );

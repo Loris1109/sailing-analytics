@@ -4,8 +4,8 @@
 // Wert, bleiben bestehende Boote bei dem, womit ihre Sessions gerechnet
 // wurden.
 //
-// Lag vorher im AddBoatDialog. Steht hier, weil es Fachdaten sind: die
-// Migration und die Wendenerkennung greifen ebenfalls darauf zu.
+// Lag vorher im AddBoatDialog. Steht hier, weil es Fachdaten sind — auch die
+// Migration greift darauf zu.
 
 typedef BoatClassProfile = ({
   /// Knoten. Obergrenze der Farbskala für den Track auf der Karte.

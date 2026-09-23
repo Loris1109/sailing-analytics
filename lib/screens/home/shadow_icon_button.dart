@@ -34,6 +34,14 @@ class ShadowIconButton extends ConsumerStatefulWidget {
   /// [blockedMessage].
   final bool enabled;
 
+  /// Ob der Button einen eingeschalteten Zustand anzeigt — die Schere etwa,
+  /// solange ein Ausschnitt gesetzt ist.
+  ///
+  /// Etwas anderes als [enabled]: der sagt, ob man drücken DARF, dieser, ob
+  /// gerade etwas AKTIV ist. Ein aktiver Button bleibt drückbar, sonst käme
+  /// man aus dem Zustand nicht mehr heraus.
+  final bool active;
+
   /// Ob der Button hinter dem Entwicklermodus liegt.
   ///
   /// Solange der nicht freigeschaltet ist, wird der Button ausgegraut, zeigt
@@ -84,6 +92,7 @@ class ShadowIconButton extends ConsumerStatefulWidget {
     this.size = 24,
     this.color,
     this.enabled = true,
+    this.active = false,
     this.devOnly = false,
     this.blockedMessage,
     this.devBlockedMessage,
@@ -222,13 +231,26 @@ class _ShadowIconButtonState extends ConsumerState<ShadowIconButton> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              widget.icon,
-              size: widget.size,
-              color: widget.color,
-              shadows: _pressed || looksDisabled
-                  ? []
-                  : const [Shadow(color: Colors.black38, blurRadius: 15.0)],
+            // Der aktive Zustand bekommt eine Scheibe hinter das Icon statt
+            // einer anderen Farbe: der Schatten ist die Sprache dieser
+            // Buttons, und eine Einfärbung ließe sich schlecht von der
+            // [color] eines einzelnen Icons unterscheiden.
+            DecoratedBox(
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: widget.active ? Colors.black12 : Colors.transparent,
+              ),
+              child: Padding(
+                padding: EdgeInsets.all(widget.active ? 6 : 0),
+                child: Icon(
+                  widget.icon,
+                  size: widget.size,
+                  color: widget.color,
+                  shadows: _pressed || looksDisabled
+                      ? []
+                      : const [Shadow(color: Colors.black38, blurRadius: 15.0)],
+                ),
+              ),
             ),
             if (widget.label != null) ...[
               Text(

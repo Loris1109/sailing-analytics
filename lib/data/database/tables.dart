@@ -38,8 +38,12 @@ class Boats extends Table {
   RealColumn get maxSpeed => real()();
   // Winkel ZWISCHEN den beiden Am-Wind-Kursen, Europe: 90°. Klassenabhängig,
   // wird beim Anlegen aus kBoatClasses vorbelegt und dann auf dem Boot
-  // eingefroren — wie maxSpeed. Speist die Wendenerkennung, siehe
-  // maneuverThresholdDeg in session_stats.dart.
+  // eingefroren — wie maxSpeed.
+  //
+  // Wird derzeit von nichts gelesen: die Wendenerkennung, die ihn als
+  // Schwelle brauchte, ist wieder draußen. Bleibt trotzdem stehen und wird
+  // weiter geschrieben — das Feld kostet nichts, und Boote, die in der
+  // Zwischenzeit angelegt werden, haben ihren Winkel dann schon dabei.
   RealColumn get tackAngle =>
       real().named('tack_angle').withDefault(const Constant(90.0))();
   BoolColumn get isActive => boolean().withDefault(const Constant(false))();
@@ -82,6 +86,10 @@ class Sessions extends Table {
   RealColumn get avgMovingSpeed =>
       real().named('avg_moving_speed').nullable()();
   IntColumn get movingSeconds => integer().named('moving_seconds').nullable()();
+  // Wird nicht mehr geschrieben — die Wendenerkennung ist draußen. Die
+  // Spalte bleibt mit den Werten der bereits gerechneten Sessions stehen:
+  // sie zu löschen hieße in SQLite die Tabelle neu zu bauen, und die Zahlen
+  // wären weg, falls die Erkennung zurückkommt.
   IntColumn get tacks => integer().nullable()();
   // Version des Algorithmus, mit dem die Werte oben entstanden sind.
   // 0 = noch nie gerechnet. Liegt sie unter sessionStatsVersion, rechnet
@@ -91,6 +99,29 @@ class Sessions extends Table {
       integer().named('stats_version').withDefault(const Constant(0))();
 
   // Tell drift which column is the primary key
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+// Gespeicherte Ausschnitte einer Session — "Rennen 1", "Rennen 2".
+//
+// Speichert NUR die Zeitspanne, keine Punkte. Ein Ausschnitt ist damit vier
+// Spalten groß statt zehntausender kopierter Zeilen, und er bleibt richtig,
+// wenn sich an der Punktliste der Session noch etwas ändert. Die Punkte
+// holt TrimRange.apply() zur Laufzeit heraus (zwei binäre Suchen).
+@TableIndex(name: 'session_clips_session', columns: {#sessionId})
+class SessionClips extends Table {
+  TextColumn get id => text()();
+
+  // Cascade wie bei den Punkten: eine gelöschte Session nimmt ihre
+  // Ausschnitte mit — ohne sie zeigten sie ins Leere.
+  TextColumn get sessionId => text()
+      .named('session_id')
+      .references(Sessions, #id, onDelete: KeyAction.cascade)();
+  TextColumn get name => text()();
+  DateTimeColumn get startTime => dateTime().named('start_time')();
+  DateTimeColumn get endTime => dateTime().named('end_time')();
+
   @override
   Set<Column> get primaryKey => {id};
 }

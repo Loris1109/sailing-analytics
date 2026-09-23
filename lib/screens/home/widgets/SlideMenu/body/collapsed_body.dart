@@ -1,20 +1,16 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:tacktics/controllers/recording_controller.dart';
-import 'package:tacktics/data/entities/session.dart';
 import 'package:tacktics/providers/repository_providers.dart';
 import 'package:tacktics/providers/ui_providers.dart';
 import 'package:tacktics/screens/home/shadow_icon_button.dart';
 import 'package:tacktics/screens/home/widgets/SlideMenu/body/callibration_dialog.dart';
+import 'package:tacktics/screens/home/widgets/SlideMenu/body/gpx_share.dart';
 import 'package:tacktics/screens/home/widgets/SlideMenu/body/session_stats_bar.dart';
 import 'package:tacktics/screens/home/widgets/SlideMenu/body/rec_button.dart';
 import 'package:tacktics/screens/home/widgets/SlideMenu/body/upload_dialog.dart';
 import 'package:tacktics/screens/home/widgets/compassPanel/BoatMenu/boat_menu.dart';
 import 'package:tacktics/screens/racing/racing_container_screen.dart';
-import 'package:share_plus/share_plus.dart';
 import 'package:top_snackbar_flutter/custom_snack_bar.dart';
 import 'package:top_snackbar_flutter/top_snack_bar.dart';
 
@@ -36,27 +32,44 @@ class CollapsedBody extends ConsumerWidget {
           // Session Stats
           const Expanded(child: SessionStatsBar()),
 
+          // Trim — tauscht den Body gegen die Trim-Ansicht aus, statt einen
+          // eigenen Screen zu öffnen: beim Aufziehen des Ausschnitts muss
+          // man die Karte sehen.
+          ShadowIconButton(
+            icon: Icons.cut_rounded,
+            enabled: selectedSession != null,
+            // Markiert, dass die Karte gerade nur einen Ausschnitt zeigt.
+            // Ohne das wäre der Trim-Modus nach dem Verlassen unsichtbar und
+            // die halbe Session wäre grundlos verschwunden.
+            active: ref.watch(trimRangeProvider) != null,
+            blockedMessage: 'Wähle zuerst eine Session aus.',
+            onTap: () {
+              // Zusammen mit dem Modus auch einklappen: der Brush lebt im
+              // zugeklappten Trim-Body. Wer aus der offenen Sessionliste
+              // kommt, landet sonst in der leeren Ausschnittsliste.
+              ref.read(isExpandedProvider.notifier).close();
+              ref.read(menuModeProvider.notifier).enterTrim();
+            },
+          ),
+
           Column(
             mainAxisSize: MainAxisSize.min,
             spacing: 8,
             children: [
-              // GPX-Export — nur aktiv wenn eine Session ausgewählt ist
+              // GPX-Export
               ShadowIconButton(
                 icon: Icons.share_rounded,
                 enabled: selectedSession != null,
                 blockedMessage: 'Wähle zuerst eine Session aus.',
-                // Beim Tippen frisch lesen statt die Kopie von oben zu
-                // benutzen: das spart ein `!`, dessen Gültigkeit sonst nur
-                // daran hinge, dass `enabled` daneben richtig gesetzt ist.
                 onTap: () {
                   final session = ref.read(selectedSessionProvider);
-                  if (session != null) _exportGpx(context, ref, session);
+                  if (session != null) {
+                    shareSessionGpx(context, ref, session: session);
+                  }
                 },
               ),
 
-              // In ein Training einreichen — Teil der Coach Platform und noch
-              // nicht fertig, deshalb hinter dem Entwicklermodus. Der Button
-              // bleibt sichtbar und erklärt sich, statt wortlos nichts zu tun.
+              //Upload
               ShadowIconButton(
                 icon: Icons.upload_rounded,
                 color: Colors.black,
@@ -86,50 +99,6 @@ class CollapsedBody extends ConsumerWidget {
           ),
         ],
       ),
-    );
-  }
-
-  Future<void> _exportGpx(
-    BuildContext context,
-    WidgetRef ref,
-    SessionEntity session,
-  ) async {
-    final points = await ref
-        .read(sessionRepositoryProvider)
-        .getPointsForSession(session.id);
-
-    if (points.isEmpty) {
-      if (context.mounted) {
-        showTopSnackBar(
-          Overlay.of(context),
-          const CustomSnackBar.info(
-            message: 'Diese Session hat keine GPS-Punkte.',
-          ),
-        );
-      }
-      return;
-    }
-
-    final rangeMeasurements = await ref
-      .read(rangeMeasurementRepositoryProvider)
-      .getRangeMeasurementsForSession(session.id);
-
-    // Boot kann gelöscht worden sein — Export läuft dann ohne Bootsinfos
-    final boatId = session.boatId;
-    final boat = boatId == null
-        ? null
-        : await ref.read(boatRepositoryProvider).getBoatById(boatId);
-
-    final service = ref.read(gpxExportServiceProvider);
-    final gpx = service.buildGpx(session, boat, points, rangeMeasurements);
-
-    final dir = await getTemporaryDirectory();
-    final file = File('${dir.path}/${service.fileNameFor(session)}');
-
-    await file.writeAsString(gpx);
-
-    await SharePlus.instance.share(
-      ShareParams(files: [XFile(file.path, mimeType: 'application/gpx+xml')]),
     );
   }
 

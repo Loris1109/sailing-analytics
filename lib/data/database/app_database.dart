@@ -15,12 +15,14 @@ import 'tables.dart';
 // The part() line imports the generated code — doesn't exist yet, that's fine
 part 'app_database.g.dart';
 
-@DriftDatabase(tables: [Sessions, GpsPoints, Boats, RangeMeasurements])
+@DriftDatabase(
+  tables: [Sessions, GpsPoints, Boats, RangeMeasurements, SessionClips],
+)
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 8;
+  int get schemaVersion => 9;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -58,6 +60,13 @@ class AppDatabase extends _$AppDatabase {
         await m.createIndex(gpsPointsSessionTime);
         await m.createIndex(rangeMeasurementsSession);
         await m.createIndex(rangeMeasurementsGpsPoint);
+      }
+
+      // 9: Gespeicherte Ausschnitte. Eine neue Tabelle, nichts Bestehendes
+      // wird angefasst — die Zeitspannen stehen für sich.
+      if (from < 9) {
+        await m.createTable(sessionClips);
+        await m.createIndex(sessionClipsSession);
       }
     },
     // Läuft NACH onCreate/onUpgrade, die Migration selbst also noch ohne
@@ -103,7 +112,6 @@ class AppDatabase extends _$AppDatabase {
       peakSpeed: Value(stats.peakSpeed),
       avgMovingSpeed: Value(stats.avgMovingSpeed),
       movingSeconds: Value(stats.movingTime.inSeconds),
-      tacks: Value(stats.tacks),
       statsVersion: const Value(sessionStatsVersion),
     ),
   );
@@ -117,7 +125,6 @@ class AppDatabase extends _$AppDatabase {
           peakSpeed: Value(stats.peakSpeed),
           avgMovingSpeed: Value(stats.avgMovingSpeed),
           movingSeconds: Value(stats.movingTime.inSeconds),
-          tacks: Value(stats.tacks),
           statsVersion: const Value(sessionStatsVersion),
         ),
       );
@@ -140,6 +147,22 @@ class AppDatabase extends _$AppDatabase {
 
   Future<void> deleteSession(String id) =>
       (delete(sessions)..where((s) => s.id.equals(id))).go();
+
+  // ── Gespeicherte Ausschnitte ───────────────────────────────────
+
+  // Nach Startzeit sortiert, nicht nach Anlagedatum: in der Liste soll der
+  // erste Lauf des Tages oben stehen, egal wann man ihn gesichert hat.
+  Stream<List<SessionClip>> watchClipsForSession(String sessionId) =>
+      (select(sessionClips)
+            ..where((c) => c.sessionId.equals(sessionId))
+            ..orderBy([(c) => OrderingTerm.asc(c.startTime)]))
+          .watch();
+
+  Future<void> insertClip(SessionClipsCompanion clip) =>
+      into(sessionClips).insert(clip);
+
+  Future<void> deleteClip(String id) =>
+      (delete(sessionClips)..where((c) => c.id.equals(id))).go();
 
   Future<void> updateSessionName(String id, String name) => (update(
     sessions,

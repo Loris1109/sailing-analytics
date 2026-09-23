@@ -9,12 +9,23 @@ import '../entities/gps_point.dart';
 import '../entities/session.dart';
 
 class GpxExportService {
+  /// [clipName] wird gesetzt, wenn nur ein Ausschnitt der Session exportiert
+  /// wird. Er steht dann als Titel in der Datei, und der Sessionname wandert
+  /// in die Beschreibung — sonst hieße die Datei wie die ganze Aufzeichnung
+  /// und niemand sähe ihr an, dass nur ein Lauf drin ist.
   String buildGpx(
     SessionEntity session,
     BoatEntity? boat,
     List<GpsPointEntity> points,
-    List<RangeMeasurementEntity> rangeMeasurements,
-  ) {
+    List<RangeMeasurementEntity> rangeMeasurements, {
+    String? clipName,
+  }) {
+    final title = clipName ?? session.name;
+    // Erster Punkt statt session.startTime: bei einem Ausschnitt beginnt die
+    // Spur später als die Aufzeichnung. Für eine ganze Session ist es
+    // derselbe Zeitpunkt.
+    final start = points.isNotEmpty ? points.first.timestamp : session.startTime;
+
     final b = StringBuffer();
     b.writeln('<?xml version="1.0" encoding="UTF-8"?>');
     b.writeln('<gpx version="1.1" creator="Tacktics"');
@@ -22,8 +33,8 @@ class GpxExportService {
     b.writeln('     xmlns:st="https://tacktics.app/gpx/1">');
 
     b.writeln('  <metadata>');
-    b.writeln('    <name>${_escapeXml(session.name)}</name>');
-    b.writeln('    <time>${_formatTime(session.startTime)}</time>');
+    b.writeln('    <name>${_escapeXml(title)}</name>');
+    b.writeln('    <time>${_formatTime(start)}</time>');
     final wind = session.windDirection;
     if (boat != null || wind != null) {
       b.writeln('    <extensions>');
@@ -48,9 +59,12 @@ class GpxExportService {
     b.writeln('  </metadata>');
 
     b.writeln('  <trk>');
-    b.writeln('    <name>${_escapeXml(session.name)}</name>');
-    if (boat != null) {
-      final desc = '${boat.boatClass} – ${boat.sailNumber} (${boat.name})';
+    b.writeln('    <name>${_escapeXml(title)}</name>');
+    final desc = [
+      if (clipName != null) 'Ausschnitt aus ${session.name}',
+      if (boat != null) '${boat.boatClass} – ${boat.sailNumber} (${boat.name})',
+    ].join(' · ');
+    if (desc.isNotEmpty) {
       b.writeln('    <desc>${_escapeXml(desc)}</desc>');
     }
     b.writeln('    <type>Sailing</type>');
@@ -100,8 +114,14 @@ class GpxExportService {
   }
 
   // Filesystem-safe name, e.g. "Training 10.6.26" → "Training_10_6_26.gpx"
-  String fileNameFor(SessionEntity session) {
-    final safeName = session.name.replaceAll(RegExp(r'[^\w\-]+'), '_');
+  //
+  // Mit [clipName] kommt der Ausschnitt hinten dran, damit zwei Läufe
+  // derselben Session nicht dieselbe Datei ergeben.
+  String fileNameFor(SessionEntity session, {String? clipName}) {
+    final parts = [session.name, ?clipName];
+    final safeName = parts
+        .join('_')
+        .replaceAll(RegExp(r'[^\w\-]+'), '_');
     return '$safeName.gpx';
   }
 

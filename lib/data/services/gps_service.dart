@@ -48,8 +48,8 @@ class GpsService {
             // Google Play Services. Der liefert Position und Geschwindigkeit,
             // aber KEINEN Bearing: `Location.hasBearing()` ist dort dauerhaft
             // false, und geolocator gibt den Kurs dann als 0.0 zurück. Damit
-            // steht in jedem aufgezeichneten Punkt cog = 0, und die
-            // Wendenerkennung hat nichts, woran sie arbeiten kann.
+            // steht in jedem aufgezeichneten Punkt cog = 0 — im GPX-Export
+            // und im Upload landet dann eine Spalte aus Nullen.
             //
             // true nimmt stattdessen den LocationManager, also das rohe GNSS —
             // das, was ein Segler ohnehin will: ungefilterte Fixe statt einer

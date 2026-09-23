@@ -103,6 +103,29 @@ class Sessions extends Table {
   Set<Column> get primaryKey => {id};
 }
 
+// Gespeicherte Ausschnitte einer Session — "Rennen 1", "Rennen 2".
+//
+// Speichert NUR die Zeitspanne, keine Punkte. Ein Ausschnitt ist damit vier
+// Spalten groß statt zehntausender kopierter Zeilen, und er bleibt richtig,
+// wenn sich an der Punktliste der Session noch etwas ändert. Die Punkte
+// holt TrimRange.apply() zur Laufzeit heraus (zwei binäre Suchen).
+@TableIndex(name: 'session_clips_session', columns: {#sessionId})
+class SessionClips extends Table {
+  TextColumn get id => text()();
+
+  // Cascade wie bei den Punkten: eine gelöschte Session nimmt ihre
+  // Ausschnitte mit — ohne sie zeigten sie ins Leere.
+  TextColumn get sessionId => text()
+      .named('session_id')
+      .references(Sessions, #id, onDelete: KeyAction.cascade)();
+  TextColumn get name => text()();
+  DateTimeColumn get startTime => dateTime().named('start_time')();
+  DateTimeColumn get endTime => dateTime().named('end_time')();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
 // GPS points table — will have thousands of rows per session
 //
 // Der zusammengesetzte Index bedient WHERE session_id UND ORDER BY timestamp

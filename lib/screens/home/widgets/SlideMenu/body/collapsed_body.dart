@@ -1,20 +1,16 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:tacktics/controllers/recording_controller.dart';
-import 'package:tacktics/data/entities/session.dart';
 import 'package:tacktics/providers/repository_providers.dart';
 import 'package:tacktics/providers/ui_providers.dart';
 import 'package:tacktics/screens/home/shadow_icon_button.dart';
 import 'package:tacktics/screens/home/widgets/SlideMenu/body/callibration_dialog.dart';
+import 'package:tacktics/screens/home/widgets/SlideMenu/body/gpx_share.dart';
 import 'package:tacktics/screens/home/widgets/SlideMenu/body/session_stats_bar.dart';
 import 'package:tacktics/screens/home/widgets/SlideMenu/body/rec_button.dart';
 import 'package:tacktics/screens/home/widgets/SlideMenu/body/upload_dialog.dart';
 import 'package:tacktics/screens/home/widgets/compassPanel/BoatMenu/boat_menu.dart';
 import 'package:tacktics/screens/racing/racing_container_screen.dart';
-import 'package:share_plus/share_plus.dart';
 import 'package:top_snackbar_flutter/custom_snack_bar.dart';
 import 'package:top_snackbar_flutter/top_snack_bar.dart';
 
@@ -67,7 +63,9 @@ class CollapsedBody extends ConsumerWidget {
                 blockedMessage: 'Wähle zuerst eine Session aus.',
                 onTap: () {
                   final session = ref.read(selectedSessionProvider);
-                  if (session != null) _exportGpx(context, ref, session);
+                  if (session != null) {
+                    shareSessionGpx(context, ref, session: session);
+                  }
                 },
               ),
 
@@ -101,50 +99,6 @@ class CollapsedBody extends ConsumerWidget {
           ),
         ],
       ),
-    );
-  }
-
-  Future<void> _exportGpx(
-    BuildContext context,
-    WidgetRef ref,
-    SessionEntity session,
-  ) async {
-    final points = await ref
-        .read(sessionRepositoryProvider)
-        .getPointsForSession(session.id);
-
-    if (points.isEmpty) {
-      if (context.mounted) {
-        showTopSnackBar(
-          Overlay.of(context),
-          const CustomSnackBar.info(
-            message: 'Diese Session hat keine GPS-Punkte.',
-          ),
-        );
-      }
-      return;
-    }
-
-    final rangeMeasurements = await ref
-      .read(rangeMeasurementRepositoryProvider)
-      .getRangeMeasurementsForSession(session.id);
-
-    // Boot kann gelöscht worden sein — Export läuft dann ohne Bootsinfos
-    final boatId = session.boatId;
-    final boat = boatId == null
-        ? null
-        : await ref.read(boatRepositoryProvider).getBoatById(boatId);
-
-    final service = ref.read(gpxExportServiceProvider);
-    final gpx = service.buildGpx(session, boat, points, rangeMeasurements);
-
-    final dir = await getTemporaryDirectory();
-    final file = File('${dir.path}/${service.fileNameFor(session)}');
-
-    await file.writeAsString(gpx);
-
-    await SharePlus.instance.share(
-      ShareParams(files: [XFile(file.path, mimeType: 'application/gpx+xml')]),
     );
   }
 

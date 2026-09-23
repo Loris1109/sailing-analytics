@@ -5,6 +5,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:tacktics/data/entities/boat.dart';
 import 'package:tacktics/data/entities/gps_point.dart';
 import 'package:tacktics/data/entities/session.dart';
+import 'package:tacktics/data/entities/session_clip.dart';
 import 'package:tacktics/data/entities/session_with_boat.dart';
 import 'package:tacktics/data/services/gps_service.dart';
 import 'package:tacktics/data/services/session_stats.dart';
@@ -145,6 +146,14 @@ final visibleStatsProvider = FutureProvider<DisplayStats?>((ref) async {
     distance: stats.distanceMeters,
   );
 });
+
+/// Die gespeicherten Ausschnitte einer Session, nach Startzeit sortiert.
+final sessionClipsProvider =
+    StreamProvider.family<List<SessionClipEntity>, String>((ref, sessionId) {
+      return ref
+          .watch(sessionRepositoryProvider)
+          .watchClipsForSession(sessionId);
+    });
 
 final currentPositionProvider = FutureProvider<Position?>((ref) async {
   final pos = await GpsService.getLastKnownPosition();

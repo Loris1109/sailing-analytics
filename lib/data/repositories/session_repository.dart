@@ -3,8 +3,10 @@
 // Controllers never touch AppDatabase directly
 
 import 'package:drift/drift.dart' show Value;
+import 'package:tacktics/data/entities/session_clip.dart';
 import 'package:tacktics/data/entities/session_with_boat.dart';
 import 'package:tacktics/data/services/session_stats.dart';
+import 'package:tacktics/data/services/trim.dart';
 import 'package:uuid/uuid.dart';
 import '../database/app_database.dart';
 import '../entities/gps_point.dart';
@@ -114,6 +116,37 @@ class SessionRepository {
   Stream<List<SessionWithBoat>> watchSessionsWithBoat() {
     return _db.watchSessionsWithBoat();
   }
+
+  // ── Gespeicherte Ausschnitte ───────────────────────────────────
+
+  Stream<List<SessionClipEntity>> watchClipsForSession(String sessionId) => _db
+      .watchClipsForSession(sessionId)
+      .map((rows) => rows.map(SessionClipEntity.fromDb).toList());
+
+  /// Legt einen Ausschnitt an und gibt seine id zurück.
+  ///
+  /// Speichert bewusst keine Punkte — nur die Grenzen. Das ist der ganze
+  /// Unterschied zu "Session duplizieren": zehn Ausschnitte einer Regatta
+  /// kosten zehn Zeilen, nicht die zehnfache Aufzeichnung.
+  Future<String> saveClip({
+    required String sessionId,
+    required String name,
+    required TrimRange range,
+  }) async {
+    final id = const Uuid().v4();
+    await _db.insertClip(
+      SessionClipsCompanion.insert(
+        id: id,
+        sessionId: sessionId,
+        name: name,
+        startTime: range.start,
+        endTime: range.end,
+      ),
+    );
+    return id;
+  }
+
+  Future<void> deleteClip(String id) => _db.deleteClip(id);
 
   // ── GPS Points ─────────────────────────────────────────────────
 

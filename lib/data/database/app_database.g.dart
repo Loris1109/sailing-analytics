@@ -2509,6 +2509,369 @@ class RangeMeasurementsCompanion extends UpdateCompanion<RangeMeasurement> {
   }
 }
 
+class $SessionClipsTable extends SessionClips
+    with TableInfo<$SessionClipsTable, SessionClip> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $SessionClipsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _sessionIdMeta = const VerificationMeta(
+    'sessionId',
+  );
+  @override
+  late final GeneratedColumn<String> sessionId = GeneratedColumn<String>(
+    'session_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES sessions (id) ON DELETE CASCADE',
+    ),
+  );
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  @override
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+    'name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _startTimeMeta = const VerificationMeta(
+    'startTime',
+  );
+  @override
+  late final GeneratedColumn<DateTime> startTime = GeneratedColumn<DateTime>(
+    'start_time',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _endTimeMeta = const VerificationMeta(
+    'endTime',
+  );
+  @override
+  late final GeneratedColumn<DateTime> endTime = GeneratedColumn<DateTime>(
+    'end_time',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    sessionId,
+    name,
+    startTime,
+    endTime,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'session_clips';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<SessionClip> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('session_id')) {
+      context.handle(
+        _sessionIdMeta,
+        sessionId.isAcceptableOrUnknown(data['session_id']!, _sessionIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_sessionIdMeta);
+    }
+    if (data.containsKey('name')) {
+      context.handle(
+        _nameMeta,
+        name.isAcceptableOrUnknown(data['name']!, _nameMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_nameMeta);
+    }
+    if (data.containsKey('start_time')) {
+      context.handle(
+        _startTimeMeta,
+        startTime.isAcceptableOrUnknown(data['start_time']!, _startTimeMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_startTimeMeta);
+    }
+    if (data.containsKey('end_time')) {
+      context.handle(
+        _endTimeMeta,
+        endTime.isAcceptableOrUnknown(data['end_time']!, _endTimeMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_endTimeMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  SessionClip map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return SessionClip(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      sessionId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}session_id'],
+      )!,
+      name: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}name'],
+      )!,
+      startTime: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}start_time'],
+      )!,
+      endTime: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}end_time'],
+      )!,
+    );
+  }
+
+  @override
+  $SessionClipsTable createAlias(String alias) {
+    return $SessionClipsTable(attachedDatabase, alias);
+  }
+}
+
+class SessionClip extends DataClass implements Insertable<SessionClip> {
+  final String id;
+  final String sessionId;
+  final String name;
+  final DateTime startTime;
+  final DateTime endTime;
+  const SessionClip({
+    required this.id,
+    required this.sessionId,
+    required this.name,
+    required this.startTime,
+    required this.endTime,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['session_id'] = Variable<String>(sessionId);
+    map['name'] = Variable<String>(name);
+    map['start_time'] = Variable<DateTime>(startTime);
+    map['end_time'] = Variable<DateTime>(endTime);
+    return map;
+  }
+
+  SessionClipsCompanion toCompanion(bool nullToAbsent) {
+    return SessionClipsCompanion(
+      id: Value(id),
+      sessionId: Value(sessionId),
+      name: Value(name),
+      startTime: Value(startTime),
+      endTime: Value(endTime),
+    );
+  }
+
+  factory SessionClip.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return SessionClip(
+      id: serializer.fromJson<String>(json['id']),
+      sessionId: serializer.fromJson<String>(json['sessionId']),
+      name: serializer.fromJson<String>(json['name']),
+      startTime: serializer.fromJson<DateTime>(json['startTime']),
+      endTime: serializer.fromJson<DateTime>(json['endTime']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'sessionId': serializer.toJson<String>(sessionId),
+      'name': serializer.toJson<String>(name),
+      'startTime': serializer.toJson<DateTime>(startTime),
+      'endTime': serializer.toJson<DateTime>(endTime),
+    };
+  }
+
+  SessionClip copyWith({
+    String? id,
+    String? sessionId,
+    String? name,
+    DateTime? startTime,
+    DateTime? endTime,
+  }) => SessionClip(
+    id: id ?? this.id,
+    sessionId: sessionId ?? this.sessionId,
+    name: name ?? this.name,
+    startTime: startTime ?? this.startTime,
+    endTime: endTime ?? this.endTime,
+  );
+  SessionClip copyWithCompanion(SessionClipsCompanion data) {
+    return SessionClip(
+      id: data.id.present ? data.id.value : this.id,
+      sessionId: data.sessionId.present ? data.sessionId.value : this.sessionId,
+      name: data.name.present ? data.name.value : this.name,
+      startTime: data.startTime.present ? data.startTime.value : this.startTime,
+      endTime: data.endTime.present ? data.endTime.value : this.endTime,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SessionClip(')
+          ..write('id: $id, ')
+          ..write('sessionId: $sessionId, ')
+          ..write('name: $name, ')
+          ..write('startTime: $startTime, ')
+          ..write('endTime: $endTime')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, sessionId, name, startTime, endTime);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is SessionClip &&
+          other.id == this.id &&
+          other.sessionId == this.sessionId &&
+          other.name == this.name &&
+          other.startTime == this.startTime &&
+          other.endTime == this.endTime);
+}
+
+class SessionClipsCompanion extends UpdateCompanion<SessionClip> {
+  final Value<String> id;
+  final Value<String> sessionId;
+  final Value<String> name;
+  final Value<DateTime> startTime;
+  final Value<DateTime> endTime;
+  final Value<int> rowid;
+  const SessionClipsCompanion({
+    this.id = const Value.absent(),
+    this.sessionId = const Value.absent(),
+    this.name = const Value.absent(),
+    this.startTime = const Value.absent(),
+    this.endTime = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  SessionClipsCompanion.insert({
+    required String id,
+    required String sessionId,
+    required String name,
+    required DateTime startTime,
+    required DateTime endTime,
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       sessionId = Value(sessionId),
+       name = Value(name),
+       startTime = Value(startTime),
+       endTime = Value(endTime);
+  static Insertable<SessionClip> custom({
+    Expression<String>? id,
+    Expression<String>? sessionId,
+    Expression<String>? name,
+    Expression<DateTime>? startTime,
+    Expression<DateTime>? endTime,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (sessionId != null) 'session_id': sessionId,
+      if (name != null) 'name': name,
+      if (startTime != null) 'start_time': startTime,
+      if (endTime != null) 'end_time': endTime,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  SessionClipsCompanion copyWith({
+    Value<String>? id,
+    Value<String>? sessionId,
+    Value<String>? name,
+    Value<DateTime>? startTime,
+    Value<DateTime>? endTime,
+    Value<int>? rowid,
+  }) {
+    return SessionClipsCompanion(
+      id: id ?? this.id,
+      sessionId: sessionId ?? this.sessionId,
+      name: name ?? this.name,
+      startTime: startTime ?? this.startTime,
+      endTime: endTime ?? this.endTime,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (sessionId.present) {
+      map['session_id'] = Variable<String>(sessionId.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (startTime.present) {
+      map['start_time'] = Variable<DateTime>(startTime.value);
+    }
+    if (endTime.present) {
+      map['end_time'] = Variable<DateTime>(endTime.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SessionClipsCompanion(')
+          ..write('id: $id, ')
+          ..write('sessionId: $sessionId, ')
+          ..write('name: $name, ')
+          ..write('startTime: $startTime, ')
+          ..write('endTime: $endTime, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -2517,6 +2880,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $GpsPointsTable gpsPoints = $GpsPointsTable(this);
   late final $RangeMeasurementsTable rangeMeasurements =
       $RangeMeasurementsTable(this);
+  late final $SessionClipsTable sessionClips = $SessionClipsTable(this);
   late final Index gpsPointsSessionTime = Index(
     'gps_points_session_time',
     'CREATE INDEX gps_points_session_time ON gps_points (session_id, timestamp)',
@@ -2529,6 +2893,10 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     'range_measurements_gps_point',
     'CREATE INDEX range_measurements_gps_point ON range_measurements (gps_point_id)',
   );
+  late final Index sessionClipsSession = Index(
+    'session_clips_session',
+    'CREATE INDEX session_clips_session ON session_clips (session_id)',
+  );
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -2538,9 +2906,11 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     sessions,
     gpsPoints,
     rangeMeasurements,
+    sessionClips,
     gpsPointsSessionTime,
     rangeMeasurementsSession,
     rangeMeasurementsGpsPoint,
+    sessionClipsSession,
   ];
   @override
   StreamQueryUpdateRules get streamUpdateRules => const StreamQueryUpdateRules([
@@ -2571,6 +2941,13 @@ abstract class _$AppDatabase extends GeneratedDatabase {
         limitUpdateKind: UpdateKind.delete,
       ),
       result: [TableUpdate('range_measurements', kind: UpdateKind.delete)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'sessions',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('session_clips', kind: UpdateKind.delete)],
     ),
   ]);
 }
@@ -3004,6 +3381,24 @@ final class $$SessionsTableReferences
       manager.$state.copyWith(prefetchedData: cache),
     );
   }
+
+  static MultiTypedResultKey<$SessionClipsTable, List<SessionClip>>
+  _sessionClipsRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
+    db.sessionClips,
+    aliasName: 'sessions__id__session_clips__session_id',
+  );
+
+  $$SessionClipsTableProcessedTableManager get sessionClipsRefs {
+    final manager = $$SessionClipsTableTableManager(
+      $_db,
+      $_db.sessionClips,
+    ).filter((f) => f.sessionId.id.sqlEquals($_itemColumn<String>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_sessionClipsRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
 }
 
 class $$SessionsTableFilterComposer
@@ -3144,6 +3539,31 @@ class $$SessionsTableFilterComposer
           }) => $$RangeMeasurementsTableFilterComposer(
             $db: $db,
             $table: $db.rangeMeasurements,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<bool> sessionClipsRefs(
+    Expression<bool> Function($$SessionClipsTableFilterComposer f) f,
+  ) {
+    final $$SessionClipsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.sessionClips,
+      getReferencedColumn: (t) => t.sessionId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$SessionClipsTableFilterComposer(
+            $db: $db,
+            $table: $db.sessionClips,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -3383,6 +3803,31 @@ class $$SessionsTableAnnotationComposer
         );
     return f(composer);
   }
+
+  Expression<T> sessionClipsRefs<T extends Object>(
+    Expression<T> Function($$SessionClipsTableAnnotationComposer a) f,
+  ) {
+    final $$SessionClipsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.sessionClips,
+      getReferencedColumn: (t) => t.sessionId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$SessionClipsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.sessionClips,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
 }
 
 class $$SessionsTableTableManager
@@ -3402,6 +3847,7 @@ class $$SessionsTableTableManager
             bool boatId,
             bool gpsPointsRefs,
             bool rangeMeasurementsRefs,
+            bool sessionClipsRefs,
           })
         > {
   $$SessionsTableTableManager(_$AppDatabase db, $SessionsTable table)
@@ -3496,12 +3942,14 @@ class $$SessionsTableTableManager
                 boatId = false,
                 gpsPointsRefs = false,
                 rangeMeasurementsRefs = false,
+                sessionClipsRefs = false,
               }) {
                 return PrefetchHooks(
                   db: db,
                   explicitlyWatchedTables: [
                     if (gpsPointsRefs) db.gpsPoints,
                     if (rangeMeasurementsRefs) db.rangeMeasurements,
+                    if (sessionClipsRefs) db.sessionClips,
                   ],
                   addJoins:
                       <
@@ -3579,6 +4027,27 @@ class $$SessionsTableTableManager
                               ),
                           typedResults: items,
                         ),
+                      if (sessionClipsRefs)
+                        await $_getPrefetchedData<
+                          Session,
+                          $SessionsTable,
+                          SessionClip
+                        >(
+                          currentTable: table,
+                          referencedTable: $$SessionsTableReferences
+                              ._sessionClipsRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$SessionsTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).sessionClipsRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.sessionId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
                     ];
                   },
                 );
@@ -3603,6 +4072,7 @@ typedef $$SessionsTableProcessedTableManager =
         bool boatId,
         bool gpsPointsRefs,
         bool rangeMeasurementsRefs,
+        bool sessionClipsRefs,
       })
     >;
 typedef $$GpsPointsTableCreateCompanionBuilder =
@@ -4632,6 +5102,323 @@ typedef $$RangeMeasurementsTableProcessedTableManager =
       RangeMeasurement,
       PrefetchHooks Function({bool sessionId, bool gpsPointId})
     >;
+typedef $$SessionClipsTableCreateCompanionBuilder =
+    SessionClipsCompanion Function({
+      required String id,
+      required String sessionId,
+      required String name,
+      required DateTime startTime,
+      required DateTime endTime,
+      Value<int> rowid,
+    });
+typedef $$SessionClipsTableUpdateCompanionBuilder =
+    SessionClipsCompanion Function({
+      Value<String> id,
+      Value<String> sessionId,
+      Value<String> name,
+      Value<DateTime> startTime,
+      Value<DateTime> endTime,
+      Value<int> rowid,
+    });
+
+final class $$SessionClipsTableReferences
+    extends BaseReferences<_$AppDatabase, $SessionClipsTable, SessionClip> {
+  $$SessionClipsTableReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static $SessionsTable _sessionIdTable(_$AppDatabase db) =>
+      db.sessions.createAlias('session_clips__session_id__sessions__id');
+
+  $$SessionsTableProcessedTableManager get sessionId {
+    final $_column = $_itemColumn<String>('session_id')!;
+
+    final manager = $$SessionsTableTableManager(
+      $_db,
+      $_db.sessions,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_sessionIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$SessionClipsTableFilterComposer
+    extends Composer<_$AppDatabase, $SessionClipsTable> {
+  $$SessionClipsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get startTime => $composableBuilder(
+    column: $table.startTime,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get endTime => $composableBuilder(
+    column: $table.endTime,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$SessionsTableFilterComposer get sessionId {
+    final $$SessionsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.sessionId,
+      referencedTable: $db.sessions,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$SessionsTableFilterComposer(
+            $db: $db,
+            $table: $db.sessions,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$SessionClipsTableOrderingComposer
+    extends Composer<_$AppDatabase, $SessionClipsTable> {
+  $$SessionClipsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get startTime => $composableBuilder(
+    column: $table.startTime,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get endTime => $composableBuilder(
+    column: $table.endTime,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$SessionsTableOrderingComposer get sessionId {
+    final $$SessionsTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.sessionId,
+      referencedTable: $db.sessions,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$SessionsTableOrderingComposer(
+            $db: $db,
+            $table: $db.sessions,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$SessionClipsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $SessionClipsTable> {
+  $$SessionClipsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get startTime =>
+      $composableBuilder(column: $table.startTime, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get endTime =>
+      $composableBuilder(column: $table.endTime, builder: (column) => column);
+
+  $$SessionsTableAnnotationComposer get sessionId {
+    final $$SessionsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.sessionId,
+      referencedTable: $db.sessions,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$SessionsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.sessions,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$SessionClipsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $SessionClipsTable,
+          SessionClip,
+          $$SessionClipsTableFilterComposer,
+          $$SessionClipsTableOrderingComposer,
+          $$SessionClipsTableAnnotationComposer,
+          $$SessionClipsTableCreateCompanionBuilder,
+          $$SessionClipsTableUpdateCompanionBuilder,
+          (SessionClip, $$SessionClipsTableReferences),
+          SessionClip,
+          PrefetchHooks Function({bool sessionId})
+        > {
+  $$SessionClipsTableTableManager(_$AppDatabase db, $SessionClipsTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$SessionClipsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$SessionClipsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$SessionClipsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> sessionId = const Value.absent(),
+                Value<String> name = const Value.absent(),
+                Value<DateTime> startTime = const Value.absent(),
+                Value<DateTime> endTime = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => SessionClipsCompanion(
+                id: id,
+                sessionId: sessionId,
+                name: name,
+                startTime: startTime,
+                endTime: endTime,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String sessionId,
+                required String name,
+                required DateTime startTime,
+                required DateTime endTime,
+                Value<int> rowid = const Value.absent(),
+              }) => SessionClipsCompanion.insert(
+                id: id,
+                sessionId: sessionId,
+                name: name,
+                startTime: startTime,
+                endTime: endTime,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$SessionClipsTable, SessionClip>(table),
+                  $$SessionClipsTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({sessionId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (sessionId) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.sessionId,
+                                referencedTable: $$SessionClipsTableReferences
+                                    ._sessionIdTable(db),
+                                referencedColumn: $$SessionClipsTableReferences
+                                    ._sessionIdTable(db)
+                                    .id,
+                              )
+                              as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$SessionClipsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $SessionClipsTable,
+      SessionClip,
+      $$SessionClipsTableFilterComposer,
+      $$SessionClipsTableOrderingComposer,
+      $$SessionClipsTableAnnotationComposer,
+      $$SessionClipsTableCreateCompanionBuilder,
+      $$SessionClipsTableUpdateCompanionBuilder,
+      (SessionClip, $$SessionClipsTableReferences),
+      SessionClip,
+      PrefetchHooks Function({bool sessionId})
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -4644,4 +5431,6 @@ class $AppDatabaseManager {
       $$GpsPointsTableTableManager(_db, _db.gpsPoints);
   $$RangeMeasurementsTableTableManager get rangeMeasurements =>
       $$RangeMeasurementsTableTableManager(_db, _db.rangeMeasurements);
+  $$SessionClipsTableTableManager get sessionClips =>
+      $$SessionClipsTableTableManager(_db, _db.sessionClips);
 }

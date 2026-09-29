@@ -14,6 +14,22 @@ import 'package:tacktics/screens/home/widgets/SlideMenu/slide_menu_header.dart';
 /// ändert, daran denken, die Höhe nachzuziehen — und der Moduswechsel käme
 /// aus einem ganz anderen Widget (dem Scheren-Knopf im CollapsedBody), das
 /// von Höhen nichts wissen sollte.
+/// Höhe des zugeklappten Panels im Normalmodus.
+const kSlideMenuCollapsedHeight = 130.0;
+
+/// Dasselbe im Trim-Modus — Speed-Profil, Griffe und Knopfreihe brauchen mehr.
+const kSlideMenuTrimHeight = 190.0;
+
+/// Der Kopf sitzt über dem Body und zählt zur sichtbaren Höhe dazu.
+const kSlideMenuHeaderHeight = 22.0;
+
+/// Was das Panel im zugeklappten Zustand von der Karte verdeckt.
+///
+/// Öffentlich, weil die Karte darunter durchläuft: ihre Attribution muss
+/// oberhalb dieser Kante bleiben, sonst ist sie hinter dem Panel unsichtbar.
+const kSlideMenuCollapsedCover =
+    kSlideMenuCollapsedHeight + kSlideMenuHeaderHeight;
+
 class SlideMenu extends ConsumerStatefulWidget {
   const SlideMenu({super.key});
 
@@ -28,7 +44,7 @@ class _SlideMenuState extends ConsumerState<SlideMenu> {
   /// Zugeklappte Höhe je Modus. Der Trim-Modus braucht mehr: Speed-Profil,
   /// Handles und eine Knopfreihe passen nicht in die 130 der Statistikleiste.
   double _collapsedHeight(MenuMode mode) =>
-      mode == MenuMode.trim ? 190.0 : 130.0;
+      mode == MenuMode.trim ? kSlideMenuTrimHeight : kSlideMenuCollapsedHeight;
 
   double get _expandedHeight => MediaQuery.of(context).size.height * 0.6;
 

@@ -1,14 +1,31 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
-<!-- permisson for BLE -->
+<!-- BLE ab Android 12 (API 31) -->
 <uses-permission android:name="android.permission.BLUETOOTH_SCAN" />
 <uses-permission android:name="android.permission.BLUETOOTH_ADVERTISE" />
 <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
+<!-- BLE bis Android 11. Die drei Berechtigungen darüber gibt es dort noch
+     nicht; ohne diese beiden bleibt Bluetooth auf älteren Geräten stumm.
+     maxSdkVersion, damit Android 12+ sie gar nicht erst anfragt — dort
+     gelten die neuen. Das Standortrecht, das ein BLE-Scan bis Android 11
+     zusätzlich braucht, hat die App ohnehin. -->
+<uses-permission android:name="android.permission.BLUETOOTH" android:maxSdkVersion="30" />
+<uses-permission android:name="android.permission.BLUETOOTH_ADMIN" android:maxSdkVersion="30" />
 <!-- permisson for GPS -->
 <uses-permission android:name="android.permission.INTERNET" />
 <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
 <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
 <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
 <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
+<!-- Ab Android 13 nötig, damit die Benachrichtigung des Vordergrunddienstes
+     überhaupt sichtbar wird. Der Dienst läuft auch ohne sie weiter, aber
+     dann sieht niemand, dass aufgezeichnet wird. -->
+<uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+<!-- Für enableWakeLock in der foregroundNotificationConfig (gps_service.dart).
+     Ohne sie wirft der Positionsstream beim Start eine PlatformException und
+     es kommt kein einziger Fix an — nicht etwa nur kein Wakelock.
+     wakelock_plus bringt sie NICHT mit: das hält den Bildschirm über ein
+     Fensterflag wach und braucht deshalb keine Berechtigung. -->
+<uses-permission android:name="android.permission.WAKE_LOCK" />
     <application
         android:label="Tacktics"
         android:name="${applicationName}"

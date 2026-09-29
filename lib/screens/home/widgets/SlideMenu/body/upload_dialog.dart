@@ -62,7 +62,6 @@ class _UploadDialogState extends ConsumerState<UploadDialog> {
         });
       }
     } catch (e) {
-      debugPrint('resolveTraining failed: $e');
       if (!mounted) return;
       setState(() {
         _step = _UploadStep.enterCode;
@@ -80,13 +79,9 @@ class _UploadDialogState extends ConsumerState<UploadDialog> {
     });
 
     try {
-      debugPrint('📤 Starting upload for session: ${widget.session.id}');
-
       final points = await ref
           .read(sessionRepositoryProvider)
           .getPointsForSession(widget.session.id);
-      debugPrint('📊 Loaded ${points.length} GPS points');
-
       if (points.isEmpty) {
         if (!mounted) return;
         setState(() {
@@ -99,24 +94,17 @@ class _UploadDialogState extends ConsumerState<UploadDialog> {
       final rangeMeasurements = await ref
         .read(rangeMeasurementRepositoryProvider)
         .getRangeMeasurementsForSession(widget.session.id);
-      debugPrint('📊 Loaded ${rangeMeasurements.length} RangeMeasurements');
-
       // Boot kann gelöscht worden sein — Upload läuft dann ohne Bootsinfos
       final boatId = widget.session.boatId;
       final boat = boatId == null
           ? null
           : await ref.read(boatRepositoryProvider).getBoatById(boatId);
-
-      debugPrint('🚀 Uploading to Supabase...');
       await ref
           .read(uploadServiceProvider)
           .uploadSession(widget.session, boat, points, rangeMeasurements, training.id);
-      debugPrint('✅ Upload successful');
-
       if (!mounted) return;
       setState(() => _step = _UploadStep.done);
     } catch (e) {
-      debugPrint('uploadSession failed: $e');
       if (!mounted) return;
       // Dank Upsert ist ein erneuter Versuch immer sicher
       setState(() {

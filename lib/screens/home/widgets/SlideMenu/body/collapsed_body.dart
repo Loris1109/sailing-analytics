@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tacktics/controllers/recording_controller.dart';
+import 'package:tacktics/data/services/gps_service.dart';
 import 'package:tacktics/providers/repository_providers.dart';
 import 'package:tacktics/providers/ui_providers.dart';
 import 'package:tacktics/screens/home/shadow_icon_button.dart';
@@ -137,15 +138,55 @@ class CollapsedBody extends ConsumerWidget {
     );
     if (calibrated != true) return; // User hat abgebrochen
 
-    await controller.startRecording(
+    final failure = await controller.startRecording(
       name: 'Training ${now.day}.${now.month}.${now.year % 100}',
       boatId: activeBoot.id,
     );
 
-    if (context.mounted) {
-      Navigator.of(
-        context,
-      ).push(MaterialPageRoute(builder: (_) => const RacingContainerScreen()));
+    if (!context.mounted) return;
+
+    // Erst prüfen, dann navigieren. Vorher ging es in jedem Fall weiter —
+    // wer die Standortfreigabe ablehnte, landete auf einem Racing-Screen,
+    // der nichts aufzeichnete und nicht sagte, warum.
+    if (failure != null) {
+      _showStartFailure(context, failure);
+      return;
     }
+
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (_) => const RacingContainerScreen()));
+  }
+
+  /// Sagt, was schiefging — und wo es zu beheben ist.
+  ///
+  /// Der dauerhaft abgelehnte Fall bekommt die Einstellungen an einen Tipp
+  /// auf die Meldung gehängt, statt den Nutzer von sich aus dorthin zu
+  /// werfen: so weiß er vorher, wohin er geht und warum.
+  void _showStartFailure(BuildContext context, StartFailure failure) {
+    final (message, onTap) = switch (failure) {
+      StartFailure.locationServiceOff => (
+        'Der Standortdienst ist ausgeschaltet. Schalte GPS ein und versuch es erneut.',
+        null,
+      ),
+      StartFailure.locationDenied => (
+        'Ohne Standortfreigabe kann Tacktics nichts aufzeichnen.',
+        null,
+      ),
+      StartFailure.locationDeniedForever => (
+        'Die Standortfreigabe ist dauerhaft abgelehnt — tippen, um sie in den Einstellungen zu erlauben.',
+        GpsService.openSettings,
+      ),
+      StartFailure.alreadyRecording => (
+        'Es läuft bereits eine Aufzeichnung.',
+        null,
+      ),
+    };
+
+    showTopSnackBar(
+      Overlay.of(context),
+      CustomSnackBar.error(message: message),
+      onTap: onTap,
+    );
   }
 }

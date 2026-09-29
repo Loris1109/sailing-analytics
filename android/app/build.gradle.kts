@@ -1,3 +1,13 @@
+import java.util.Properties
+import java.io.FileInputStream
+
+val keystoreProperties = Properties()
+val keystorePropertiesFile = rootProject.file("key.properties")
+
+if (keystorePropertiesFile.exists()) {
+    keystoreProperties.load(FileInputStream(keystorePropertiesFile))
+}
+
 plugins {
     id("com.android.application")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
@@ -15,21 +25,44 @@ android {
     }
 
     defaultConfig {
-        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
         applicationId = "app.tacktics"
-        // You can update the following values to match your application needs.
-        // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
     }
 
+    signingConfigs {
+        create("release") {
+            // Nur füllen, wenn key.properties wirklich da ist.
+            //
+            // Ohne diese Prüfung wirft `as String` auf einem fehlenden
+            // Eintrag — und zwar beim KONFIGURIEREN, nicht erst beim Bauen.
+            // Damit scheitert jeder Gradle-Task, auch ein Debug-Build: wer
+            // das Repo ohne Keystore klont, könnte die App nicht einmal
+            // starten. Der Keystore gehört aber bewusst nicht ins Repo.
+            if (keystorePropertiesFile.exists()) {
+                keyAlias = keystoreProperties["keyAlias"] as String
+                keyPassword = keystoreProperties["keyPassword"] as String
+                storeFile = (keystoreProperties["storeFile"] as String).let { file(it) }
+                storePassword = keystoreProperties["storePassword"] as String
+            }
+        }
+    }
+
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig = signingConfigs.getByName("debug")
+            // Mit Keystore echt signieren, sonst Debug — damit
+            // `flutter run --release` auch ohne key.properties läuft.
+            //
+            // Ein so gebautes Bundle lehnt Play ab, und das ist die richtige
+            // Reihenfolge: ein fehlender Keystore fällt beim Hochladen auf,
+            // ein kaputter Build fiele schon beim Entwickeln auf.
+            signingConfig = if (keystorePropertiesFile.exists()) {
+                signingConfigs.getByName("release")
+            } else {
+                signingConfigs.getByName("debug")
+            }
         }
     }
 }

@@ -62,14 +62,12 @@ class _FeedbackDialogState extends ConsumerState<FeedbackDialog> {
     } on FeedbackException catch (e) {
       // Nicht als Verbindungsproblem ausgeben — sonst versucht man es
       // endlos erneut, während in Wahrheit die Tabelle nicht passt
-      debugPrint('submitFeedback rejected: ${e.message}');
       if (!mounted) return;
       setState(() {
         _step = _FeedbackStep.compose;
         _error = 'Vom Server abgelehnt: ${e.message}';
       });
     } catch (e) {
-      debugPrint('submitFeedback failed: $e');
       if (!mounted) return;
       setState(() {
         _step = _FeedbackStep.compose;

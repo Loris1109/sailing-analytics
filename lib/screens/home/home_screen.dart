@@ -7,6 +7,7 @@ import 'package:latlong2/latlong.dart';
 import 'package:tacktics/controllers/recording_controller.dart';
 import 'package:tacktics/data/entities/gps_point.dart';
 import 'package:tacktics/providers/repository_providers.dart';
+import 'package:tacktics/providers/map_providers.dart';
 import 'package:tacktics/providers/ui_providers.dart';
 import 'package:tacktics/screens/home/widgets/SlideMenu/slide_menu.dart';
 import 'package:tacktics/screens/home/widgets/compassPanel/compass_panel.dart';
@@ -138,6 +139,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
             pathMode: pathMode,
             maxKnots: maxKnots,
+            // Solange der Cache noch anläuft, `null` — die Karte lädt dann
+            // eben ohne. Auf ihn zu warten hieße, den ersten Frame zu
+            // verzögern, und das für einen reinen Beschleuniger.
+            tileProvider: ref.watch(tileProviderProvider).value,
           ), // SlideMenu am unteren Rand
           Positioned(bottom: 0, left: 0, right: 0, child: SlideMenu()),
 

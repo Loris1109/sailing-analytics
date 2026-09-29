@@ -17,6 +17,24 @@ import '../data/services/sensor_math.dart';
 import '../data/services/sensor_service.dart';
 import '../providers/repository_providers.dart';
 
+/// Warum ein Startversuch nicht zu einer Aufzeichnung geführt hat.
+///
+/// Es gibt bewusst keinen BLE-Fall: Bluetooth kann den Start nicht mehr
+/// verhindern, siehe RecordingController._startBleIfPossible.
+enum StartFailure {
+  /// Standortdienst im Gerät ausgeschaltet.
+  locationServiceOff,
+
+  /// Freigabe abgelehnt — beim nächsten Versuch wird wieder gefragt.
+  locationDenied,
+
+  /// Dauerhaft abgelehnt. Nur noch über die Systemeinstellungen zu lösen.
+  locationDeniedForever,
+
+  /// Es läuft bereits eine Aufzeichnung.
+  alreadyRecording,
+}
+
 class RecordingState {
   final bool isRecording;
   final String? activeSessionId;
@@ -26,7 +44,6 @@ class RecordingState {
   final double? lastCog;
   final double? lastMagHeading;
   final double? lastAccuracy;
-  final bool permissionDenied;
 
   const RecordingState({
     this.isRecording = false,
@@ -37,7 +54,6 @@ class RecordingState {
     this.lastCog,
     this.lastMagHeading,
     this.lastAccuracy,
-    this.permissionDenied = false,
   });
 
   RecordingState copyWith({
@@ -49,7 +65,6 @@ class RecordingState {
     double? lastCog,
     double? lastMagHeading,
     double? lastAccuracy,
-    bool? permissionDenied,
     // copyWith kann ein nullbares Feld sonst nie zurück auf null setzen
     bool clearCompletedSessionId = false,
   }) {
@@ -64,7 +79,6 @@ class RecordingState {
       lastCog: lastCog ?? this.lastCog,
       lastMagHeading: lastMagHeading ?? this.lastMagHeading,
       lastAccuracy: lastAccuracy ?? this.lastAccuracy,
-      permissionDenied: permissionDenied ?? this.permissionDenied,
     );
   }
 }
@@ -100,31 +114,39 @@ class RecordingController extends Notifier<RecordingState> {
     state = state.copyWith(clearCompletedSessionId: true);
   }
 
-  Future<void> startRecording({
+  /// Startet eine Aufzeichnung. Gibt `null` zurück, wenn sie läuft — sonst
+  /// den Grund, aus dem sie es nicht tut.
+  ///
+  /// Genau EINE Sache darf den Start verhindern: der Standort. Ohne ihn gibt
+  /// es nichts aufzuzeichnen. Alles andere — Bluetooth, Benachrichtigungen,
+  /// ein inzwischen gelöschtes Boot — ist Zusatzausrüstung und degradiert,
+  /// statt abzubrechen. Und jeder Abbruch, der doch passiert, wird
+  /// zurückgemeldet: ein stilles `return` hat den Aufrufer vorher trotzdem
+  /// zum Racing-Screen weiterziehen lassen.
+  Future<StartFailure?> startRecording({
     required String name,
     required String boatId,
   }) async {
     dev.log('🎬 RECORDING START REQUESTED: $name');
     if (state.isRecording) {
       dev.log('⚠️ Recording already in progress, ignoring');
-      return;
+      return StartFailure.alreadyRecording;
     }
 
-    final hasPermission = await GpsService.requestPermission();
-    if (!hasPermission) {
-      dev.log('❌ GPS permission denied');
-      state = state.copyWith(permissionDenied: true);
-      return;
+    final readiness = await GpsService.ensureReady();
+    if (readiness != LocationReadiness.ready) {
+      dev.log('❌ Standort nicht verfügbar: $readiness');
+      return switch (readiness) {
+        LocationReadiness.serviceDisabled => StartFailure.locationServiceOff,
+        LocationReadiness.deniedForever => StartFailure.locationDeniedForever,
+        _ => StartFailure.locationDenied,
+      };
     }
     dev.log('✅ GPS permission granted');
 
-    final hasBLEPermission = await BleService.requestPermission();
-    if (!hasBLEPermission) {
-      dev.log('❌ BLE permission denied');
-      state = state.copyWith(permissionDenied: true);
-      return;
-    }
-    dev.log('✅ BLE permission granted');
+    // Gleich hinterher, solange der Nutzer ohnehin bei den Dialogen ist.
+    // Blockiert bewusst nicht — siehe ensureNotificationPermission.
+    await GpsService.ensureNotificationPermission();
 
     final rmRepo = ref.read(rangeMeasurementRepositoryProvider);
     final sessionRepo = ref.read(sessionRepositoryProvider);
@@ -134,17 +156,13 @@ class RecordingController extends Notifier<RecordingState> {
     );
     dev.log('✅ Session created: $sessionId');
 
-    final activeBoat = await ref.watch(boatRepositoryProvider).getActiveBoat();
+    // Ohne `!`: das Boot kann zwischen der Prüfung im Aufrufer und hier
+    // gelöscht worden sein. Die Nummer braucht nur das BLE-Advertising —
+    // fehlt sie, wird eben nicht gesendet, aufgezeichnet wird trotzdem.
+    final activeBoat = await ref.read(boatRepositoryProvider).getActiveBoat();
     dev.log('✅ Active boat: ${activeBoat?.sailNumber}');
 
-    // BLE: Start Advertising
-    final bleNotifier = ref.read(bleStateProvider.notifier);
-    await bleNotifier.startAdvertising(activeBoat!.sailNumber);
-    dev.log('✅ BLE Advertising started');
-
-    // BLE: Start Scanning
-    await bleNotifier.startScanning();
-    dev.log('✅ BLE Scan subscribed');
+    await _startBleIfPossible(activeBoat?.sailNumber);
 
     // GPS: Start listening
     _gpsSub = GpsService.getStream().listen(
@@ -167,6 +185,35 @@ class RecordingController extends Notifier<RecordingState> {
 
     dev.log('✅ Recording started successfully');
     state = RecordingState(isRecording: true, activeSessionId: sessionId);
+    return null;
+  }
+
+  /// Startet Advertising und Scan, wenn es geht — und schweigt, wenn nicht.
+  ///
+  /// Bluetooth trägt bei Tacktics das Peer-Ranging zu anderen Booten. Das ist
+  /// eine Zusatzfunktion; eine Regatta ohne sie aufzuzeichnen ist allemal
+  /// besser, als sie gar nicht aufzuzeichnen. Vorher brach ein abgelehnter
+  /// Dialog den ganzen Start ab.
+  ///
+  /// Der try/catch ist nicht vorsorglich: `BleService.requestPermission` ruft
+  /// `FlutterBluePlus.turnOn()` auf, und das WIRFT, wenn der Nutzer den
+  /// System-Dialog ablehnt. Ungefangen riss die Exception den Start mit.
+  Future<void> _startBleIfPossible(String? sailNumber) async {
+    try {
+      if (!await BleService.requestPermission()) {
+        dev.log('ℹ️ BLE nicht freigegeben — Aufzeichnung läuft ohne');
+        return;
+      }
+      final ble = ref.read(bleStateProvider.notifier);
+      if (sailNumber != null) {
+        await ble.startAdvertising(sailNumber);
+        dev.log('✅ BLE Advertising started');
+      }
+      await ble.startScanning();
+      dev.log('✅ BLE Scan subscribed');
+    } catch (e) {
+      dev.log('ℹ️ BLE nicht verfügbar, Aufzeichnung läuft ohne: $e');
+    }
   }
 
   DateTime? _lastPositionTime;
@@ -326,12 +373,17 @@ class RecordingController extends Notifier<RecordingState> {
     _orientationSub = null;
     dev.log('✅ All subscriptions cancelled');
 
-    // BLE: Stop
-    final bleNotifier = ref.read(bleStateProvider.notifier);
-    await bleNotifier.stopAdvertising();
-    dev.log('✅ BLE Advertising stopped');
-    await bleNotifier.stopScanning();
-    dev.log('✅ BLE Scan stopped');
+    // BLE: Stop. Gefangen wie beim Start — lief die Aufzeichnung ohne
+    // Bluetooth, gibt es hier nichts zu stoppen, und ein Fehler beim
+    // Aufräumen darf die Session nicht unbeendet zurücklassen.
+    try {
+      final bleNotifier = ref.read(bleStateProvider.notifier);
+      await bleNotifier.stopAdvertising();
+      await bleNotifier.stopScanning();
+      dev.log('✅ BLE gestoppt');
+    } catch (e) {
+      dev.log('ℹ️ BLE-Stopp übersprungen: $e');
+    }
 
     // Filter-Referenzen zurücksetzen — die nächste Session darf nicht
     // gegen den letzten Punkt dieser Session vergleichen

@@ -500,28 +500,24 @@ class $SessionsTable extends Sessions with TableInfo<$SessionsTable, Session> {
       'REFERENCES boats (id) ON DELETE SET NULL',
     ),
   );
-  static const VerificationMeta _startTimeMeta = const VerificationMeta(
-    'startTime',
-  );
   @override
-  late final GeneratedColumn<DateTime> startTime = GeneratedColumn<DateTime>(
-    'start_time',
-    aliasedName,
-    false,
-    type: DriftSqlType.dateTime,
-    requiredDuringInsert: true,
-  );
-  static const VerificationMeta _endTimeMeta = const VerificationMeta(
-    'endTime',
-  );
+  late final GeneratedColumnWithTypeConverter<DateTime, int> startTime =
+      GeneratedColumn<int>(
+        'start_time',
+        aliasedName,
+        false,
+        type: DriftSqlType.int,
+        requiredDuringInsert: true,
+      ).withConverter<DateTime>($SessionsTable.$converterstartTime);
   @override
-  late final GeneratedColumn<DateTime> endTime = GeneratedColumn<DateTime>(
-    'end_time',
-    aliasedName,
-    true,
-    type: DriftSqlType.dateTime,
-    requiredDuringInsert: false,
-  );
+  late final GeneratedColumnWithTypeConverter<DateTime?, int> endTime =
+      GeneratedColumn<int>(
+        'end_time',
+        aliasedName,
+        true,
+        type: DriftSqlType.int,
+        requiredDuringInsert: false,
+      ).withConverter<DateTime?>($SessionsTable.$converterendTimen);
   static const VerificationMeta _isCompleteMeta = const VerificationMeta(
     'isComplete',
   );
@@ -676,20 +672,6 @@ class $SessionsTable extends Sessions with TableInfo<$SessionsTable, Session> {
         boatId.isAcceptableOrUnknown(data['boat_id']!, _boatIdMeta),
       );
     }
-    if (data.containsKey('start_time')) {
-      context.handle(
-        _startTimeMeta,
-        startTime.isAcceptableOrUnknown(data['start_time']!, _startTimeMeta),
-      );
-    } else if (isInserting) {
-      context.missing(_startTimeMeta);
-    }
-    if (data.containsKey('end_time')) {
-      context.handle(
-        _endTimeMeta,
-        endTime.isAcceptableOrUnknown(data['end_time']!, _endTimeMeta),
-      );
-    }
     if (data.containsKey('is_complete')) {
       context.handle(
         _isCompleteMeta,
@@ -777,13 +759,17 @@ class $SessionsTable extends Sessions with TableInfo<$SessionsTable, Session> {
         DriftSqlType.string,
         data['${effectivePrefix}boat_id'],
       ),
-      startTime: attachedDatabase.typeMapping.read(
-        DriftSqlType.dateTime,
-        data['${effectivePrefix}start_time'],
-      )!,
-      endTime: attachedDatabase.typeMapping.read(
-        DriftSqlType.dateTime,
-        data['${effectivePrefix}end_time'],
+      startTime: $SessionsTable.$converterstartTime.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.int,
+          data['${effectivePrefix}start_time'],
+        )!,
+      ),
+      endTime: $SessionsTable.$converterendTimen.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.int,
+          data['${effectivePrefix}end_time'],
+        ),
       ),
       isComplete: attachedDatabase.typeMapping.read(
         DriftSqlType.bool,
@@ -828,6 +814,13 @@ class $SessionsTable extends Sessions with TableInfo<$SessionsTable, Session> {
   $SessionsTable createAlias(String alias) {
     return $SessionsTable(attachedDatabase, alias);
   }
+
+  static TypeConverter<DateTime, int> $converterstartTime =
+      const EpochMillisConverter();
+  static TypeConverter<DateTime, int> $converterendTime =
+      const EpochMillisConverter();
+  static TypeConverter<DateTime?, int?> $converterendTimen =
+      NullAwareTypeConverter.wrap($converterendTime);
 }
 
 class Session extends DataClass implements Insertable<Session> {
@@ -869,9 +862,15 @@ class Session extends DataClass implements Insertable<Session> {
     if (!nullToAbsent || boatId != null) {
       map['boat_id'] = Variable<String>(boatId);
     }
-    map['start_time'] = Variable<DateTime>(startTime);
+    {
+      map['start_time'] = Variable<int>(
+        $SessionsTable.$converterstartTime.toSql(startTime),
+      );
+    }
     if (!nullToAbsent || endTime != null) {
-      map['end_time'] = Variable<DateTime>(endTime);
+      map['end_time'] = Variable<int>(
+        $SessionsTable.$converterendTimen.toSql(endTime),
+      );
     }
     map['is_complete'] = Variable<bool>(isComplete);
     map['is_synced'] = Variable<bool>(isSynced);
@@ -1155,8 +1154,8 @@ class SessionsCompanion extends UpdateCompanion<Session> {
     Expression<String>? id,
     Expression<String>? name,
     Expression<String>? boatId,
-    Expression<DateTime>? startTime,
-    Expression<DateTime>? endTime,
+    Expression<int>? startTime,
+    Expression<int>? endTime,
     Expression<bool>? isComplete,
     Expression<bool>? isSynced,
     Expression<double>? distance,
@@ -1236,10 +1235,14 @@ class SessionsCompanion extends UpdateCompanion<Session> {
       map['boat_id'] = Variable<String>(boatId.value);
     }
     if (startTime.present) {
-      map['start_time'] = Variable<DateTime>(startTime.value);
+      map['start_time'] = Variable<int>(
+        $SessionsTable.$converterstartTime.toSql(startTime.value),
+      );
     }
     if (endTime.present) {
-      map['end_time'] = Variable<DateTime>(endTime.value);
+      map['end_time'] = Variable<int>(
+        $SessionsTable.$converterendTimen.toSql(endTime.value),
+      );
     }
     if (isComplete.present) {
       map['is_complete'] = Variable<bool>(isComplete.value);
@@ -1326,17 +1329,15 @@ class $GpsPointsTable extends GpsPoints
       'REFERENCES sessions (id) ON DELETE CASCADE',
     ),
   );
-  static const VerificationMeta _timestampMeta = const VerificationMeta(
-    'timestamp',
-  );
   @override
-  late final GeneratedColumn<DateTime> timestamp = GeneratedColumn<DateTime>(
-    'timestamp',
-    aliasedName,
-    false,
-    type: DriftSqlType.dateTime,
-    requiredDuringInsert: true,
-  );
+  late final GeneratedColumnWithTypeConverter<DateTime, int> timestamp =
+      GeneratedColumn<int>(
+        'timestamp',
+        aliasedName,
+        false,
+        type: DriftSqlType.int,
+        requiredDuringInsert: true,
+      ).withConverter<DateTime>($GpsPointsTable.$convertertimestamp);
   static const VerificationMeta _latMeta = const VerificationMeta('lat');
   @override
   late final GeneratedColumn<double> lat = GeneratedColumn<double>(
@@ -1454,14 +1455,6 @@ class $GpsPointsTable extends GpsPoints
     } else if (isInserting) {
       context.missing(_sessionIdMeta);
     }
-    if (data.containsKey('timestamp')) {
-      context.handle(
-        _timestampMeta,
-        timestamp.isAcceptableOrUnknown(data['timestamp']!, _timestampMeta),
-      );
-    } else if (isInserting) {
-      context.missing(_timestampMeta);
-    }
     if (data.containsKey('lat')) {
       context.handle(
         _latMeta,
@@ -1539,10 +1532,12 @@ class $GpsPointsTable extends GpsPoints
         DriftSqlType.string,
         data['${effectivePrefix}session_id'],
       )!,
-      timestamp: attachedDatabase.typeMapping.read(
-        DriftSqlType.dateTime,
-        data['${effectivePrefix}timestamp'],
-      )!,
+      timestamp: $GpsPointsTable.$convertertimestamp.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.int,
+          data['${effectivePrefix}timestamp'],
+        )!,
+      ),
       lat: attachedDatabase.typeMapping.read(
         DriftSqlType.double,
         data['${effectivePrefix}lat'],
@@ -1582,6 +1577,9 @@ class $GpsPointsTable extends GpsPoints
   $GpsPointsTable createAlias(String alias) {
     return $GpsPointsTable(attachedDatabase, alias);
   }
+
+  static TypeConverter<DateTime, int> $convertertimestamp =
+      const EpochMillisConverter();
 }
 
 class GpsPoint extends DataClass implements Insertable<GpsPoint> {
@@ -1614,7 +1612,11 @@ class GpsPoint extends DataClass implements Insertable<GpsPoint> {
     final map = <String, Expression>{};
     map['id'] = Variable<String>(id);
     map['session_id'] = Variable<String>(sessionId);
-    map['timestamp'] = Variable<DateTime>(timestamp);
+    {
+      map['timestamp'] = Variable<int>(
+        $GpsPointsTable.$convertertimestamp.toSql(timestamp),
+      );
+    }
     map['lat'] = Variable<double>(lat);
     map['lon'] = Variable<double>(lon);
     map['sog'] = Variable<double>(sog);
@@ -1823,7 +1825,7 @@ class GpsPointsCompanion extends UpdateCompanion<GpsPoint> {
   static Insertable<GpsPoint> custom({
     Expression<String>? id,
     Expression<String>? sessionId,
-    Expression<DateTime>? timestamp,
+    Expression<int>? timestamp,
     Expression<double>? lat,
     Expression<double>? lon,
     Expression<double>? sog,
@@ -1890,7 +1892,9 @@ class GpsPointsCompanion extends UpdateCompanion<GpsPoint> {
       map['session_id'] = Variable<String>(sessionId.value);
     }
     if (timestamp.present) {
-      map['timestamp'] = Variable<DateTime>(timestamp.value);
+      map['timestamp'] = Variable<int>(
+        $GpsPointsTable.$convertertimestamp.toSql(timestamp.value),
+      );
     }
     if (lat.present) {
       map['lat'] = Variable<double>(lat.value);
@@ -2034,17 +2038,15 @@ class $RangeMeasurementsTable extends RangeMeasurements
     type: DriftSqlType.int,
     requiredDuringInsert: false,
   );
-  static const VerificationMeta _timestampMeta = const VerificationMeta(
-    'timestamp',
-  );
   @override
-  late final GeneratedColumn<DateTime> timestamp = GeneratedColumn<DateTime>(
-    'timestamp',
-    aliasedName,
-    false,
-    type: DriftSqlType.dateTime,
-    requiredDuringInsert: true,
-  );
+  late final GeneratedColumnWithTypeConverter<DateTime, int> timestamp =
+      GeneratedColumn<int>(
+        'timestamp',
+        aliasedName,
+        false,
+        type: DriftSqlType.int,
+        requiredDuringInsert: true,
+      ).withConverter<DateTime>($RangeMeasurementsTable.$convertertimestamp);
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -2127,14 +2129,6 @@ class $RangeMeasurementsTable extends RangeMeasurements
         quality.isAcceptableOrUnknown(data['quality']!, _qualityMeta),
       );
     }
-    if (data.containsKey('timestamp')) {
-      context.handle(
-        _timestampMeta,
-        timestamp.isAcceptableOrUnknown(data['timestamp']!, _timestampMeta),
-      );
-    } else if (isInserting) {
-      context.missing(_timestampMeta);
-    }
     return context;
   }
 
@@ -2176,10 +2170,12 @@ class $RangeMeasurementsTable extends RangeMeasurements
         DriftSqlType.int,
         data['${effectivePrefix}quality'],
       ),
-      timestamp: attachedDatabase.typeMapping.read(
-        DriftSqlType.dateTime,
-        data['${effectivePrefix}timestamp'],
-      )!,
+      timestamp: $RangeMeasurementsTable.$convertertimestamp.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.int,
+          data['${effectivePrefix}timestamp'],
+        )!,
+      ),
     );
   }
 
@@ -2187,6 +2183,9 @@ class $RangeMeasurementsTable extends RangeMeasurements
   $RangeMeasurementsTable createAlias(String alias) {
     return $RangeMeasurementsTable(attachedDatabase, alias);
   }
+
+  static TypeConverter<DateTime, int> $convertertimestamp =
+      const EpochMillisConverter();
 }
 
 class RangeMeasurement extends DataClass
@@ -2228,7 +2227,11 @@ class RangeMeasurement extends DataClass
     if (!nullToAbsent || quality != null) {
       map['quality'] = Variable<int>(quality);
     }
-    map['timestamp'] = Variable<DateTime>(timestamp);
+    {
+      map['timestamp'] = Variable<int>(
+        $RangeMeasurementsTable.$convertertimestamp.toSql(timestamp),
+      );
+    }
     return map;
   }
 
@@ -2412,7 +2415,7 @@ class RangeMeasurementsCompanion extends UpdateCompanion<RangeMeasurement> {
     Expression<int>? rssi,
     Expression<int>? distance,
     Expression<int>? quality,
-    Expression<DateTime>? timestamp,
+    Expression<int>? timestamp,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -2483,7 +2486,9 @@ class RangeMeasurementsCompanion extends UpdateCompanion<RangeMeasurement> {
       map['quality'] = Variable<int>(quality.value);
     }
     if (timestamp.present) {
-      map['timestamp'] = Variable<DateTime>(timestamp.value);
+      map['timestamp'] = Variable<int>(
+        $RangeMeasurementsTable.$convertertimestamp.toSql(timestamp.value),
+      );
     }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
@@ -2547,28 +2552,24 @@ class $SessionClipsTable extends SessionClips
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _startTimeMeta = const VerificationMeta(
-    'startTime',
-  );
   @override
-  late final GeneratedColumn<DateTime> startTime = GeneratedColumn<DateTime>(
-    'start_time',
-    aliasedName,
-    false,
-    type: DriftSqlType.dateTime,
-    requiredDuringInsert: true,
-  );
-  static const VerificationMeta _endTimeMeta = const VerificationMeta(
-    'endTime',
-  );
+  late final GeneratedColumnWithTypeConverter<DateTime, int> startTime =
+      GeneratedColumn<int>(
+        'start_time',
+        aliasedName,
+        false,
+        type: DriftSqlType.int,
+        requiredDuringInsert: true,
+      ).withConverter<DateTime>($SessionClipsTable.$converterstartTime);
   @override
-  late final GeneratedColumn<DateTime> endTime = GeneratedColumn<DateTime>(
-    'end_time',
-    aliasedName,
-    false,
-    type: DriftSqlType.dateTime,
-    requiredDuringInsert: true,
-  );
+  late final GeneratedColumnWithTypeConverter<DateTime, int> endTime =
+      GeneratedColumn<int>(
+        'end_time',
+        aliasedName,
+        false,
+        type: DriftSqlType.int,
+        requiredDuringInsert: true,
+      ).withConverter<DateTime>($SessionClipsTable.$converterendTime);
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -2610,22 +2611,6 @@ class $SessionClipsTable extends SessionClips
     } else if (isInserting) {
       context.missing(_nameMeta);
     }
-    if (data.containsKey('start_time')) {
-      context.handle(
-        _startTimeMeta,
-        startTime.isAcceptableOrUnknown(data['start_time']!, _startTimeMeta),
-      );
-    } else if (isInserting) {
-      context.missing(_startTimeMeta);
-    }
-    if (data.containsKey('end_time')) {
-      context.handle(
-        _endTimeMeta,
-        endTime.isAcceptableOrUnknown(data['end_time']!, _endTimeMeta),
-      );
-    } else if (isInserting) {
-      context.missing(_endTimeMeta);
-    }
     return context;
   }
 
@@ -2647,14 +2632,18 @@ class $SessionClipsTable extends SessionClips
         DriftSqlType.string,
         data['${effectivePrefix}name'],
       )!,
-      startTime: attachedDatabase.typeMapping.read(
-        DriftSqlType.dateTime,
-        data['${effectivePrefix}start_time'],
-      )!,
-      endTime: attachedDatabase.typeMapping.read(
-        DriftSqlType.dateTime,
-        data['${effectivePrefix}end_time'],
-      )!,
+      startTime: $SessionClipsTable.$converterstartTime.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.int,
+          data['${effectivePrefix}start_time'],
+        )!,
+      ),
+      endTime: $SessionClipsTable.$converterendTime.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.int,
+          data['${effectivePrefix}end_time'],
+        )!,
+      ),
     );
   }
 
@@ -2662,6 +2651,11 @@ class $SessionClipsTable extends SessionClips
   $SessionClipsTable createAlias(String alias) {
     return $SessionClipsTable(attachedDatabase, alias);
   }
+
+  static TypeConverter<DateTime, int> $converterstartTime =
+      const EpochMillisConverter();
+  static TypeConverter<DateTime, int> $converterendTime =
+      const EpochMillisConverter();
 }
 
 class SessionClip extends DataClass implements Insertable<SessionClip> {
@@ -2683,8 +2677,16 @@ class SessionClip extends DataClass implements Insertable<SessionClip> {
     map['id'] = Variable<String>(id);
     map['session_id'] = Variable<String>(sessionId);
     map['name'] = Variable<String>(name);
-    map['start_time'] = Variable<DateTime>(startTime);
-    map['end_time'] = Variable<DateTime>(endTime);
+    {
+      map['start_time'] = Variable<int>(
+        $SessionClipsTable.$converterstartTime.toSql(startTime),
+      );
+    }
+    {
+      map['end_time'] = Variable<int>(
+        $SessionClipsTable.$converterendTime.toSql(endTime),
+      );
+    }
     return map;
   }
 
@@ -2802,8 +2804,8 @@ class SessionClipsCompanion extends UpdateCompanion<SessionClip> {
     Expression<String>? id,
     Expression<String>? sessionId,
     Expression<String>? name,
-    Expression<DateTime>? startTime,
-    Expression<DateTime>? endTime,
+    Expression<int>? startTime,
+    Expression<int>? endTime,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -2847,10 +2849,14 @@ class SessionClipsCompanion extends UpdateCompanion<SessionClip> {
       map['name'] = Variable<String>(name.value);
     }
     if (startTime.present) {
-      map['start_time'] = Variable<DateTime>(startTime.value);
+      map['start_time'] = Variable<int>(
+        $SessionClipsTable.$converterstartTime.toSql(startTime.value),
+      );
     }
     if (endTime.present) {
-      map['end_time'] = Variable<DateTime>(endTime.value);
+      map['end_time'] = Variable<int>(
+        $SessionClipsTable.$converterendTime.toSql(endTime.value),
+      );
     }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
@@ -3420,15 +3426,17 @@ class $$SessionsTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
-  ColumnFilters<DateTime> get startTime => $composableBuilder(
-    column: $table.startTime,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnWithTypeConverterFilters<DateTime, DateTime, int> get startTime =>
+      $composableBuilder(
+        column: $table.startTime,
+        builder: (column) => ColumnWithTypeConverterFilters(column),
+      );
 
-  ColumnFilters<DateTime> get endTime => $composableBuilder(
-    column: $table.endTime,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnWithTypeConverterFilters<DateTime?, DateTime, int> get endTime =>
+      $composableBuilder(
+        column: $table.endTime,
+        builder: (column) => ColumnWithTypeConverterFilters(column),
+      );
 
   ColumnFilters<bool> get isComplete => $composableBuilder(
     column: $table.isComplete,
@@ -3593,12 +3601,12 @@ class $$SessionsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
-  ColumnOrderings<DateTime> get startTime => $composableBuilder(
+  ColumnOrderings<int> get startTime => $composableBuilder(
     column: $table.startTime,
     builder: (column) => ColumnOrderings(column),
   );
 
-  ColumnOrderings<DateTime> get endTime => $composableBuilder(
+  ColumnOrderings<int> get endTime => $composableBuilder(
     column: $table.endTime,
     builder: (column) => ColumnOrderings(column),
   );
@@ -3687,10 +3695,10 @@ class $$SessionsTableAnnotationComposer
   GeneratedColumn<String> get name =>
       $composableBuilder(column: $table.name, builder: (column) => column);
 
-  GeneratedColumn<DateTime> get startTime =>
+  GeneratedColumnWithTypeConverter<DateTime, int> get startTime =>
       $composableBuilder(column: $table.startTime, builder: (column) => column);
 
-  GeneratedColumn<DateTime> get endTime =>
+  GeneratedColumnWithTypeConverter<DateTime?, int> get endTime =>
       $composableBuilder(column: $table.endTime, builder: (column) => column);
 
   GeneratedColumn<bool> get isComplete => $composableBuilder(
@@ -4163,10 +4171,11 @@ class $$GpsPointsTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
-  ColumnFilters<DateTime> get timestamp => $composableBuilder(
-    column: $table.timestamp,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnWithTypeConverterFilters<DateTime, DateTime, int> get timestamp =>
+      $composableBuilder(
+        column: $table.timestamp,
+        builder: (column) => ColumnWithTypeConverterFilters(column),
+      );
 
   ColumnFilters<double> get lat => $composableBuilder(
     column: $table.lat,
@@ -4271,7 +4280,7 @@ class $$GpsPointsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
-  ColumnOrderings<DateTime> get timestamp => $composableBuilder(
+  ColumnOrderings<int> get timestamp => $composableBuilder(
     column: $table.timestamp,
     builder: (column) => ColumnOrderings(column),
   );
@@ -4352,7 +4361,7 @@ class $$GpsPointsTableAnnotationComposer
   GeneratedColumn<String> get id =>
       $composableBuilder(column: $table.id, builder: (column) => column);
 
-  GeneratedColumn<DateTime> get timestamp =>
+  GeneratedColumnWithTypeConverter<DateTime, int> get timestamp =>
       $composableBuilder(column: $table.timestamp, builder: (column) => column);
 
   GeneratedColumn<double> get lat =>
@@ -4719,10 +4728,11 @@ class $$RangeMeasurementsTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
-  ColumnFilters<DateTime> get timestamp => $composableBuilder(
-    column: $table.timestamp,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnWithTypeConverterFilters<DateTime, DateTime, int> get timestamp =>
+      $composableBuilder(
+        column: $table.timestamp,
+        builder: (column) => ColumnWithTypeConverterFilters(column),
+      );
 
   $$SessionsTableFilterComposer get sessionId {
     final $$SessionsTableFilterComposer composer = $composerBuilder(
@@ -4810,7 +4820,7 @@ class $$RangeMeasurementsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
-  ColumnOrderings<DateTime> get timestamp => $composableBuilder(
+  ColumnOrderings<int> get timestamp => $composableBuilder(
     column: $table.timestamp,
     builder: (column) => ColumnOrderings(column),
   );
@@ -4889,7 +4899,7 @@ class $$RangeMeasurementsTableAnnotationComposer
   GeneratedColumn<int> get quality =>
       $composableBuilder(column: $table.quality, builder: (column) => column);
 
-  GeneratedColumn<DateTime> get timestamp =>
+  GeneratedColumnWithTypeConverter<DateTime, int> get timestamp =>
       $composableBuilder(column: $table.timestamp, builder: (column) => column);
 
   $$SessionsTableAnnotationComposer get sessionId {
@@ -5162,15 +5172,17 @@ class $$SessionClipsTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
-  ColumnFilters<DateTime> get startTime => $composableBuilder(
-    column: $table.startTime,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnWithTypeConverterFilters<DateTime, DateTime, int> get startTime =>
+      $composableBuilder(
+        column: $table.startTime,
+        builder: (column) => ColumnWithTypeConverterFilters(column),
+      );
 
-  ColumnFilters<DateTime> get endTime => $composableBuilder(
-    column: $table.endTime,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnWithTypeConverterFilters<DateTime, DateTime, int> get endTime =>
+      $composableBuilder(
+        column: $table.endTime,
+        builder: (column) => ColumnWithTypeConverterFilters(column),
+      );
 
   $$SessionsTableFilterComposer get sessionId {
     final $$SessionsTableFilterComposer composer = $composerBuilder(
@@ -5215,12 +5227,12 @@ class $$SessionClipsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
-  ColumnOrderings<DateTime> get startTime => $composableBuilder(
+  ColumnOrderings<int> get startTime => $composableBuilder(
     column: $table.startTime,
     builder: (column) => ColumnOrderings(column),
   );
 
-  ColumnOrderings<DateTime> get endTime => $composableBuilder(
+  ColumnOrderings<int> get endTime => $composableBuilder(
     column: $table.endTime,
     builder: (column) => ColumnOrderings(column),
   );
@@ -5264,10 +5276,10 @@ class $$SessionClipsTableAnnotationComposer
   GeneratedColumn<String> get name =>
       $composableBuilder(column: $table.name, builder: (column) => column);
 
-  GeneratedColumn<DateTime> get startTime =>
+  GeneratedColumnWithTypeConverter<DateTime, int> get startTime =>
       $composableBuilder(column: $table.startTime, builder: (column) => column);
 
-  GeneratedColumn<DateTime> get endTime =>
+  GeneratedColumnWithTypeConverter<DateTime, int> get endTime =>
       $composableBuilder(column: $table.endTime, builder: (column) => column);
 
   $$SessionsTableAnnotationComposer get sessionId {

@@ -9,6 +9,7 @@ import 'package:tacktics/data/entities/boat.dart';
 import 'package:tacktics/data/entities/session.dart';
 import 'package:tacktics/data/entities/session_with_boat.dart';
 import 'package:tacktics/data/services/session_stats.dart';
+import 'epoch_millis_converter.dart';
 import 'tables.dart';
 
 // This tells drift which tables exist and what version the schema is
@@ -21,8 +22,11 @@ part 'app_database.g.dart';
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
+  /// Für Tests: eigene Datei oder In-Memory-DB statt des App-Ordners.
+  AppDatabase.forTesting(super.executor);
+
   @override
-  int get schemaVersion => 9;
+  int get schemaVersion => 10;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -67,6 +71,32 @@ class AppDatabase extends _$AppDatabase {
       if (from < 9) {
         await m.createTable(sessionClips);
         await m.createIndex(sessionClipsSession);
+      }
+
+      // 10: Zeitstempel in Millisekunden statt Sekunden (EpochMillisConverter).
+      // Die Spalten bleiben INTEGER, nur die Einheit ändert sich — ohne
+      // Umrechnung läsen sich alte Sekundenwerte als Millisekunden, und jede
+      // bestehende Session läge im Januar 1970.
+      //
+      // `< 1e11` macht den Schritt wiederholbar: als Sekunden ist das das
+      // Jahr 5138, als Millisekunden der März 1973 — ein schon umgerechneter
+      // Wert wird nie ein zweites Mal multipliziert. NULL (end_time einer
+      // offenen Session) bleibt NULL.
+      if (from < 10) {
+        const columns = {
+          'gps_points': ['timestamp'],
+          'range_measurements': ['timestamp'],
+          'sessions': ['start_time', 'end_time'],
+          'session_clips': ['start_time', 'end_time'],
+        };
+        for (final MapEntry(key: table, value: cols) in columns.entries) {
+          for (final col in cols) {
+            await customStatement(
+              'UPDATE $table SET "$col" = "$col" * 1000 '
+              'WHERE "$col" < 100000000000',
+            );
+          }
+        }
       }
     },
     // Läuft NACH onCreate/onUpgrade, die Migration selbst also noch ohne

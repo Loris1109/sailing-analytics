@@ -1,5 +1,10 @@
 import 'package:drift/drift.dart';
 
+import 'epoch_millis_converter.dart';
+
+// Zeitspalten: alle über EpochMillisConverter statt dateTime() — Drift
+// speichert dateTime() nur sekundengenau, siehe dort.
+
 //RangeMeasurements table
 // Beide Indizes bedienen die Cascades: ohne sie muss SQLite beim Löschen
 // einer Session bzw. eines GPS-Punkts die ganze Tabelle scannen — bei
@@ -23,7 +28,7 @@ class RangeMeasurements extends Table {
   IntColumn get distance =>
       integer().nullable()(); // nur bei UWB gefüllt (Zentimeter)
   IntColumn get quality => integer().nullable()(); // UWB-Qualitätsindikator
-  DateTimeColumn get timestamp => dateTime()();
+  IntColumn get timestamp => integer().map(const EpochMillisConverter())();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -64,8 +69,12 @@ class Sessions extends Table {
       .named('boat_id')
       .nullable()
       .references(Boats, #id, onDelete: KeyAction.setNull)();
-  DateTimeColumn get startTime => dateTime().named('start_time')();
-  DateTimeColumn get endTime => dateTime().named('end_time').nullable()();
+  IntColumn get startTime =>
+      integer().named('start_time').map(const EpochMillisConverter())();
+  IntColumn get endTime => integer()
+      .named('end_time')
+      .nullable()
+      .map(const EpochMillisConverter())();
   BoolColumn get isComplete =>
       boolean().named('is_complete').withDefault(const Constant(false))();
   BoolColumn get isSynced =>
@@ -119,8 +128,13 @@ class SessionClips extends Table {
       .named('session_id')
       .references(Sessions, #id, onDelete: KeyAction.cascade)();
   TextColumn get name => text()();
-  DateTimeColumn get startTime => dateTime().named('start_time')();
-  DateTimeColumn get endTime => dateTime().named('end_time')();
+  // Auch die Grenzen in Millisekunden: TrimRange.contains vergleicht sie mit
+  // den Punktzeiten, ein auf Sekunden gekürztes Ende schnitte den letzten
+  // Punkt des Ausschnitts ab
+  IntColumn get startTime =>
+      integer().named('start_time').map(const EpochMillisConverter())();
+  IntColumn get endTime =>
+      integer().named('end_time').map(const EpochMillisConverter())();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -138,7 +152,7 @@ class GpsPoints extends Table {
   TextColumn get sessionId => text()
       .named('session_id')
       .references(Sessions, #id, onDelete: KeyAction.cascade)();
-  DateTimeColumn get timestamp => dateTime()();
+  IntColumn get timestamp => integer().map(const EpochMillisConverter())();
   RealColumn get lat => real()();
   RealColumn get lon => real()();
   RealColumn get sog => real()();

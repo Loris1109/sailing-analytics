@@ -69,6 +69,15 @@ class GpxExportService {
     }
     b.writeln('    <type>Sailing</type>');
     b.writeln('    <trkseg>');
+
+    // Einmal gruppieren statt pro Punkt die ganze Liste zu durchsuchen: mit
+    // jedem BLE-Paket als eigener Zeile sind das Zehntausende Messungen pro
+    // Stunde, und Punkte × Messungen wird schnell quadratisch
+    final measurementsByPoint = <String, List<RangeMeasurementEntity>>{};
+    for (final m in rangeMeasurements) {
+      (measurementsByPoint[m.gpsPointId] ??= []).add(m);
+    }
+
     for (final p in points) {
       b.writeln(
         '      <trkpt lat="${p.lat.toStringAsFixed(6)}" '
@@ -81,14 +90,14 @@ class GpxExportService {
       b.writeln('          <st:heading>${p.magHeading.toStringAsFixed(1)}</st:heading>');
       b.writeln('          <st:heel>${p.heel.toStringAsFixed(1)}</st:heel>');
 
-      final measurementsForPoint = rangeMeasurements
-          .where((m) => m.gpsPointId == p.id)
-          .toList();
-      
-      if (measurementsForPoint.isNotEmpty) {
+      final measurementsForPoint = measurementsByPoint[p.id];
+      if (measurementsForPoint != null) {
         b.writeln('          <st:rangeMeasurements>');
         for (final m in measurementsForPoint) {
           b.writeln('            <st:measurement>');
+          // Mehrere Messungen je Punkt — erst der eigene Zeitstempel sagt,
+          // wann zwischen diesem und dem nächsten Fix sie gemessen wurde
+          b.writeln('              <st:time>${_formatTime(m.timestamp)}</st:time>');
           b.writeln('              <st:peerId>${_escapeXml(m.peerId)}</st:peerId>');
           b.writeln('              <st:tech>${m.tech}</st:tech>');
           if (m.rssi != null) {

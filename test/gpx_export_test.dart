@@ -4,6 +4,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:tacktics/data/entities/boat.dart';
 import 'package:tacktics/data/entities/gps_point.dart';
+import 'package:tacktics/data/entities/range_measurements.dart';
 import 'package:tacktics/data/entities/session.dart';
 import 'package:tacktics/data/services/gpx_export_service.dart';
 
@@ -99,5 +100,44 @@ void main() {
     final gpx = service.buildGpx(session, null, _points(0, 2), []);
 
     expect(gpx, contains('<name>Tag 1 &amp; 2 &lt;Test&gt;</name>'));
+  });
+
+  test('mehrere BLE-Pakete je Punkt: jedes unter seinem Punkt, mit eigener Zeit', () {
+    RangeMeasurementEntity ble(String pointId, int ms, int rssi) =>
+        RangeMeasurementEntity(
+          id: '$pointId-$ms',
+          sessionId: 's1',
+          gpsPointId: pointId,
+          peerId: 'GER 7',
+          tech: 'ble',
+          rssi: rssi,
+          timestamp: _t0.add(Duration(milliseconds: ms)),
+        );
+
+    final gpx = service.buildGpx(_session, _boat, _points(0, 2), [
+      ble('0', 100, -60),
+      ble('0', 200, -61),
+      ble('1', 60100, -70),
+      ble('0', 300, -62),
+      // Punkt gehört nicht zum Export (z. B. außerhalb eines Ausschnitts)
+      ble('99', 999, -99),
+    ]);
+
+    // [0] ist der Kopf, [1] und [2] die beiden Punkte
+    final trkpts = gpx.split('<trkpt ');
+    expect(trkpts, hasLength(3));
+
+    final first = trkpts[1];
+    expect('<st:measurement>'.allMatches(first), hasLength(3));
+    expect(first, contains('<st:time>2026-09-09T12:00:00.100Z</st:time>'));
+    expect(first, contains('<st:time>2026-09-09T12:00:00.300Z</st:time>'));
+    expect(first, contains('<st:rssi>-62</st:rssi>'));
+
+    final second = trkpts[2];
+    expect('<st:measurement>'.allMatches(second), hasLength(1));
+    expect(second, contains('<st:time>2026-09-09T12:01:00.100Z</st:time>'));
+    expect(second, contains('<st:rssi>-70</st:rssi>'));
+
+    expect(gpx, isNot(contains('<st:rssi>-99</st:rssi>')));
   });
 }

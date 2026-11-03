@@ -97,9 +97,9 @@ class RecordingController extends Notifier<RecordingState> {
   double _pitch = 0;
   double _magHeading = 0;
 
-  // Advertisements, die älter als das hier sind, gelten als veraltet und
-  // werden nicht mehr mit einem neuen GPS-Punkt verknüpft
-  static const _maxAdvertisementAge = Duration(seconds: 1);
+  // Der zuletzt gespeicherte GPS-Punkt. Jedes BLE-Paket hängt an dem Punkt,
+  // der bei seinem Empfang der aktuellste war — siehe _flushBleSamples.
+  String? _lastGpsPointId;
 
   @override
   RecordingState build() => const RecordingState();
@@ -163,6 +163,12 @@ class RecordingController extends Notifier<RecordingState> {
     dev.log('✅ Active boat: ${activeBoat?.sailNumber}');
 
     await _startBleIfPossible(activeBoat?.sailNumber);
+
+    // Auch hier, nicht nur in stopRecording: ein _onPosition der letzten
+    // Session, das beim Stopp noch im savePoint hing, setzt die Id danach
+    // noch einmal — die neue Session hängte ihre ersten Pakete sonst an
+    // einen fremden Punkt
+    _lastGpsPointId = null;
 
     // GPS: Start listening
     _gpsSub = GpsService.getStream().listen(
@@ -260,10 +266,10 @@ class RecordingController extends Notifier<RecordingState> {
     );
     _lastPositionTime = now;
 
-    // RSSI-Puffer bei JEDEM Fix leeren, auch bei einem gleich verworfenen —
-    // sonst sammelt der Puffer über die Verwurfs-Strecke hinweg weiter und
-    // der nächste Median mittelt über mehrere Sekunden Bootsbewegung
-    final medians = ref.read(bleStateProvider.notifier).drainMedianRssi();
+    // BLE-Puffer bei JEDEM Fix leeren, auch bei einem gleich verworfenen —
+    // die Pakete seit dem letzten Fix gehören zum letzten akzeptierten
+    // Punkt, nicht zu diesem
+    await _flushBleSamples(sessionId, rmRepo);
 
     // ── GPS-Korrektionen ────────────────────────────────────────────
     // Alle Filter, die Roh-Fixe verwerfen oder korrigieren, leben hier.
@@ -325,34 +331,8 @@ class RecordingController extends Notifier<RecordingState> {
       ),
     );
 
-    // BLE-Peers mit diesem GPS-Punkt verknüpfen — nur wenn ihr letztes
-    // Advertisement noch aktuell ist, sonst würde eine veraltete RSSI-Messung
-    // fälschlich als "jetzt gemessen" markiert
-    final lastAdvertisements = ref.read(bleStateProvider).lastAdvertisements;
-    dev.log('📊 Processing ${lastAdvertisements.length} BLE advertisements for GPS point ${gpsPointId.substring(0, 8)}...');
-
-    for (final ad in lastAdvertisements.values) {
-      final age = now.difference(ad.timestamp);
-      if (age > _maxAdvertisementAge) {
-        dev.log('⏭️ Skipping stale ad from ${ad.peerId} (age: ${age.inMilliseconds}ms > ${_maxAdvertisementAge.inMilliseconds}ms)');
-        continue;
-      }
-      // Median über alle Pakete seit dem letzten Fix; Fallback auf den
-      // Rohwert, falls dieses Boot seit dem letzten Leeren nichts gesendet hat
-      final rssi = medians[ad.peerId] ?? ad.rssi;
-      dev.log('💾 Saving RSSI: ${ad.peerId} = ${rssi}dBm for GPS point ${gpsPointId.substring(0, 8)}...');
-      await rmRepo.insertRangeMeasurement(
-        RangeMeasurementEntity(
-          id: const Uuid().v4(),
-          sessionId: sessionId,
-          gpsPointId: gpsPointId,
-          peerId: ad.peerId,
-          tech: 'ble',
-          rssi: rssi,
-          timestamp: now,
-        ),
-      );
-    }
+    // Ab jetzt hängen neu empfangene BLE-Pakete an diesem Punkt
+    _lastGpsPointId = gpsPointId;
 
     state = state.copyWith(
       pointsSaved: state.pointsSaved + 1,
@@ -361,6 +341,52 @@ class RecordingController extends Notifier<RecordingState> {
       lastMagHeading: _magHeading,
       lastAccuracy: pos.accuracy,
     );
+  }
+
+  /// Schreibt alle BLE-Pakete seit dem letzten Aufruf als eigene Zeilen —
+  /// jedes mit seinem Empfangszeitpunkt, verknüpft mit dem GPS-Punkt, der
+  /// bei seinem Empfang der aktuellste war.
+  ///
+  /// Gemittelt wird hier nichts: die Auswertung arbeitet über die
+  /// Zeitstempel, der GPS-Punkt ist nur die Gruppierung (und hält über die
+  /// Cascade die Zeilen an ihrer Session).
+  Future<void> _flushBleSamples(
+    String sessionId,
+    RangeMeasurementRepository rmRepo,
+  ) async {
+    // Leeren und Zuordnung im selben synchronen Abschnitt — ein zweiter
+    // _onPosition, der während eines await dazwischenkommt, kann die beiden
+    // sonst gegeneinander verschieben
+    final samples = ref.read(bleStateProvider.notifier).drainSamples();
+    final gpsPointId = _lastGpsPointId;
+    if (samples.isEmpty) return;
+
+    // gpsPointId ist NOT NULL: vor dem ersten akzeptierten Fix gibt es noch
+    // keinen Punkt, an den die Pakete gehören könnten
+    if (gpsPointId == null) {
+      dev.log('⏭️ ${samples.length} BLE-Pakete vor dem ersten GPS-Punkt verworfen');
+      return;
+    }
+
+    try {
+      await rmRepo.insertRangeMeasurements([
+        for (final s in samples)
+          RangeMeasurementEntity(
+            id: const Uuid().v4(),
+            sessionId: sessionId,
+            gpsPointId: gpsPointId,
+            peerId: s.peerId,
+            tech: 'ble',
+            rssi: s.rssi,
+            timestamp: s.timestamp,
+          ),
+      ]);
+      dev.log('💾 ${samples.length} BLE-Pakete an GPS-Punkt ${gpsPointId.substring(0, 8)}… gespeichert');
+    } catch (e) {
+      // Verlorene RSSI-Werte sind ärgerlich, ein verlorener GPS-Punkt wäre
+      // schlimmer — deshalb hier fangen statt _onPosition abbrechen
+      dev.log('❌ BLE-Pakete nicht gespeichert: $e', error: e);
+    }
   }
 
   Future<void> stopRecording() async {
@@ -372,6 +398,16 @@ class RecordingController extends Notifier<RecordingState> {
     _accelSub = null;
     _orientationSub = null;
     dev.log('✅ All subscriptions cancelled');
+
+    // Letzte Pakete wegschreiben, BEVOR der Scan stoppt — stopScanning
+    // leert den Puffer
+    final activeId = state.activeSessionId;
+    if (activeId != null) {
+      await _flushBleSamples(
+        activeId,
+        ref.read(rangeMeasurementRepositoryProvider),
+      );
+    }
 
     // BLE: Stop. Gefangen wie beim Start — lief die Aufzeichnung ohne
     // Bluetooth, gibt es hier nichts zu stoppen, und ein Fehler beim
@@ -391,6 +427,7 @@ class RecordingController extends Notifier<RecordingState> {
     _lastAcceptedTime = null;
     _lastPositionTime = null;
     _lastValidCog = null;
+    _lastGpsPointId = null;
 
     final finishedId = state.activeSessionId;
     if (finishedId != null) {

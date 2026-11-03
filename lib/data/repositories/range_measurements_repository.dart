@@ -8,30 +8,8 @@ class RangeMeasurementRepository {
 
   RangeMeasurementRepository(this._db);
 
-  // Einzeln speichern (beim Recording, per BLE-Advertisement)
-  Future<void> insertRangeMeasurement(RangeMeasurementEntity m) async {
-    try {
-      await _db.insertRangeMeasurement(
-        RangeMeasurementsCompanion(
-          id: Value(m.id),
-          sessionId: Value(m.sessionId),
-          gpsPointId: Value(m.gpsPointId),
-          peerId: Value(m.peerId),
-          tech: Value(m.tech),
-          rssi: Value(m.rssi),
-          distance: Value(m.distance),
-          quality: Value(m.quality),
-          timestamp: Value(m.timestamp),
-        ),
-      );
-      dev.log('✅ RangeMeasurement saved: ${m.peerId}/${m.tech} for GPS ${m.gpsPointId.substring(0, 8)}...');
-    } catch (e) {
-      dev.log('❌ Failed to insert RangeMeasurement: $e', error: e);
-      rethrow;
-    }
-  }
-
-  // Batch speichern (beim Upload)
+  // Batch speichern — beim Recording alle BLE-Pakete seit dem letzten
+  // GPS-Fix in einer Transaktion, statt jedes Paket einzeln
   Future<void> insertRangeMeasurements(List<RangeMeasurementEntity> ms) async {
     await _db.insertRangeMeasurements(
       ms
